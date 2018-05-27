@@ -1,0 +1,1150 @@
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
+using Discord.Audio;
+using Discord.WebSocket;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using Discord.Commands;
+using Google.Apis.Services;
+using Google.Apis.YouTube.v3;
+using Google.Apis.YouTube.v3.Data;
+
+namespace FredBotNETCore.Modules.Public
+{
+    public class AudioModule : ModuleBase<SocketCommandContext>
+    {
+        static string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
+        YouTubeService youtubeService = new YouTubeService(new BaseClientService.Initializer()
+        {
+            ApiKey = new StreamReader(path: Path.Combine(downloadPath, "YouTubeApiKey.txt")).ReadLine(),
+            ApplicationName = "Fred bot"
+        });
+        private IVoiceChannel _voiceChannel;
+        private static TaskCompletionSource<bool> _tcs = new TaskCompletionSource<bool>();
+        private CancellationTokenSource _disposeToken = new CancellationTokenSource();
+        static IAudioClient _internalAudio;
+        private static IAudioClient Audio
+        {
+            get
+            {
+                return _internalAudio;
+            }
+            set => _internalAudio = value;
+        }
+        /// <summary>
+        /// Tuple(FilePath, Video Name, Duration, Requested by, channel, thumbnail, url)
+        /// </summary>
+        static Queue<Tuple<string, string, string, string, string, string, string>> _internalQueue = new Queue<Tuple<string, string, string, string, string, string, string>>();
+        private static Queue<Tuple<string, string, string, string, string, string, string>> Queue
+        {
+            get
+            {
+                return _internalQueue;
+            }
+            set => _internalQueue = value;
+        }
+        static bool _internalPlaying = false;
+        private static bool Playing
+        {
+            get
+            {
+                return _internalPlaying;
+            }
+            set
+            {
+                _internalPlaying = value;
+            }
+        }
+        static bool _internalPause = false;
+        private static bool Pause
+        {
+            get
+            {
+                return _internalPause;
+            }
+            set
+            {
+                new Thread(() => _tcs.TrySetResult(value)).Start();
+                _internalPause = value;
+            }
+        }
+        static bool _internalSkip = false;
+        private static bool Skip
+        {
+            get
+            {
+                bool ret = _internalSkip;
+                _internalSkip = false;
+                return ret;
+            }
+            set => _internalSkip = value;
+        }
+        static int _internalSkipCount = 0;
+        private static int SkipCount
+        {
+            get
+            {
+                return _internalSkipCount;
+            }
+            set => _internalSkipCount = value;
+        }
+        static bool _internalLoop = false;
+        private static bool Loop
+        {
+            get
+            {
+                return _internalLoop;
+            }
+            set => _internalLoop = value;
+        }
+        static Queue<Tuple<string, string, string, string, string, string, string>> _internalNowPlaying = new Queue<Tuple<string, string, string, string, string, string, string>>();
+        private static Queue<Tuple<string, string, string, string, string, string, string>> NowPlaying
+        {
+            get
+            {
+                return _internalNowPlaying;
+            }
+            set => _internalNowPlaying = value;
+        }
+        static bool _musicStarted = false;
+        private static bool MusicStarted
+        {
+            get
+            {
+                return _musicStarted;
+            }
+            set => _musicStarted = value;
+        }
+        static string _internalPlayingUrl;
+        private static string PlayingUrl
+        {
+            get
+            {
+                return _internalPlayingUrl;
+            }
+            set => _internalPlayingUrl = value;
+        }
+        private async Task SendQueue(IMessageChannel channel)
+        {
+            EmbedBuilder builder = new EmbedBuilder()
+            {
+                Author = new EmbedAuthorBuilder { Name = $"Queue ({_internalQueue.Count}/20)" },
+                Footer = new EmbedFooterBuilder() { Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})", IconUrl = Context.User.GetAvatarUrl() },
+                Color = Pause ? new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256)) : new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256))
+            };
+            builder.WithCurrentTimestamp();
+            if (_internalQueue.Count == 0)
+            {
+                await channel.SendMessageAsync($"{Context.User.Mention} the queue is currently empty.");
+            }
+            else
+            {
+                int count = 1;
+                foreach (Tuple<string, string, string, string, string, string, string> song in _internalQueue)
+                {
+                    builder.AddField($"{count}. {song.Item2} ({song.Item3})", $"by {Context.Guild.GetUser(Convert.ToUInt64(song.Item4)).Username}#{Context.Guild.GetUser(Convert.ToUInt64(song.Item4)).Discriminator}");
+                    count++;
+                }
+
+                await channel.SendMessageAsync("", embed: builder.Build());
+            }
+        }
+
+        [Command("add", RunMode = RunMode.Async)]
+        [Alias("addsong")]
+        [Summary("Adds a song to play.")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Add([Remainder] string url = null)
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                if (string.IsNullOrWhiteSpace(url))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Title = "Command: /add",
+                        Description = "**Description:** Add a song to the music queue.\n**Usage:** /add [url]\n**Example:** /add https://www.youtube.com/watch?v=ifFNeqzB5os",
+                        Color = new Color(220, 220, 220)
+                    };
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                    if (_voiceChannel == null)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                    }
+                    else if (_voiceChannel.Id != 259900874204119054)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    }
+                    else
+                    {
+                        bool result = Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult)
+                                  && (uriResult.Scheme == "http" || uriResult.Scheme == "https");
+                        if (_internalQueue.Count >= 20)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue is full.");
+                        }
+                        else if (result)
+                        {
+                            if (url.Contains("&list="))
+                            {
+                                string[] urlS = url.Split("&list=");
+                                url = urlS[0];
+                            }
+                            Tuple<string, string> info = null;
+                            try
+                            {
+                                info = await DownloadHelper.GetInfo(url);
+                            }
+                            catch (Exception)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} this video URL is not supported.");
+                            }
+                            if (info != null)
+                            {
+                                if (info.Item2.Equals("0") && info.Item1.Equals("No Title found"))
+                                {
+                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} that is not a youtube video or it is a livestream.");
+                                    return;
+                                }
+                                string[] duration = info.Item2.Split(":");
+                                string[] urlS = url.Split("watch?v=");
+                                if (Convert.ToInt32(duration[0]) >= 10 || duration.Count() > 2)
+                                {
+                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
+                                }
+                                else if (_internalQueue.Any(x => x.Item1.Contains(urlS[1])))
+                                {
+                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
+                                }
+                                else
+                                {
+                                    var searchListRequest = youtubeService.Search.List("snippet");
+                                    searchListRequest.Q = info.Item1;
+                                    searchListRequest.MaxResults = 1;
+                                    searchListRequest.Type = "youtube#video";
+                                    var searchListResponse = await searchListRequest.ExecuteAsync();
+                                    string channel = "";
+                                    ThumbnailDetails thumbnails = null;
+                                    foreach (var searchResult in searchListResponse.Items)
+                                    {
+                                        switch (searchResult.Id.Kind)
+                                        {
+                                            case "youtube#video":
+                                                channel = searchResult.Snippet.ChannelTitle;
+                                                thumbnails = searchResult.Snippet.Thumbnails;
+                                                break;
+                                        }
+                                    }
+                                    EmbedBuilder embed = new EmbedBuilder()
+                                    {
+                                        Color = new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256)),
+                                        Author = new EmbedAuthorBuilder()
+                                        {
+                                            Name = "Add song",
+                                            Url = url
+                                        },
+                                        Fields = new List<EmbedFieldBuilder>
+                                        {
+                                            new EmbedFieldBuilder
+                                            {
+                                                Name = "Song",
+                                                Value = info.Item1,
+                                                IsInline = false
+                                            },
+                                            new EmbedFieldBuilder
+                                            {
+                                                Name = "Duration",
+                                                Value = info.Item2,
+                                                IsInline = false
+                                            },
+                                            new EmbedFieldBuilder
+                                            {
+                                                Name = "Channel",
+                                                Value = channel,
+                                                IsInline = false
+                                            }
+                                        },
+                                        Footer = new EmbedFooterBuilder()
+                                        {
+                                            IconUrl = Context.User.GetAvatarUrl(),
+                                            Text = $"Queued by {Context.User.Username}#{Context.User.Discriminator}"
+                                        },
+                                        ThumbnailUrl = thumbnails.High.Url
+                                    };
+                                    embed.WithCurrentTimestamp();
+                                    string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp");
+                                    string location = Path.Combine(downloadPath, urlS[1] + ".webm.part");
+                                    var vidInfo = new Tuple<string, string, string, string, string, string, string>(location, info.Item1, info.Item2, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
+                                    if (_internalQueue.Any(x => x.Item1.Contains(urlS[1])))
+                                    {
+                                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
+                                        return;
+                                    }
+                                    DirectoryInfo di = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Temp"));
+                                    foreach (FileInfo file in di.EnumerateFiles())
+                                    {
+                                        if (file.Name.Contains(urlS[1]))
+                                        {
+                                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} this song was recently added (within 10 minutes).");
+                                            return;
+                                        }
+                                    }
+                                    _internalQueue.Enqueue(vidInfo);
+                                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                                    if (Context.Guild.CurrentUser.VoiceChannel == null)
+                                    {
+                                        Audio = await _voiceChannel.ConnectAsync();
+                                    }
+                                    if (Playing)
+                                    {
+                                        Pause = false;
+                                    }
+                                    if (Pause)
+                                    {
+                                        Playing = false;
+                                    }
+                                    if (!MusicStarted)
+                                    {
+                                        Playing = true;
+                                        Pause = false;
+                                        MusicStarted = true;
+                                        Task.WaitAny(Task.Factory.StartNew(() => MusicPlay()), Task.Factory.StartNew(() => DownloadHelper.Download(url)));
+                                    }
+                                    else
+                                    {
+                                        await DownloadHelper.Download(url);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Tuple<string, string> info = null;
+                            var searchListRequest = youtubeService.Search.List("snippet");
+                            searchListRequest.Q = url;
+                            searchListRequest.MaxResults = 1;
+                            searchListRequest.Type = "video";
+                            var searchListResponse = await searchListRequest.ExecuteAsync();
+                            string channel = "";
+                            ThumbnailDetails thumbnails = null;
+                            foreach (var searchResult in searchListResponse.Items)
+                            {
+                                switch (searchResult.Id.Kind)
+                                {
+                                    case "youtube#video":
+                                        channel = searchResult.Snippet.ChannelTitle;
+                                        thumbnails = searchResult.Snippet.Thumbnails;
+                                        url = "https://www.youtube.com/watch?v=" + searchResult.Id.VideoId;
+                                        break;
+                                }
+                            }
+                            string[] urlS = url.Split("watch?v=");
+                            info = await DownloadHelper.GetInfo(url);
+                            if (info.Item2.Equals("0") && info.Item1.Equals("No Title found"))
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that is not a youtube video or it is a livestream.");
+                                return;
+                            }
+                            string[] duration = info.Item2.Split(":");
+
+                            if (Convert.ToInt32(duration[0]) >= 10 || duration.Count() > 2)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
+                            }
+                            else if (_internalQueue.Any(x => x.Item1.Contains(urlS[1])))
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
+                            }
+                            else
+                            {
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Color = new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256)),
+                                    Author = new EmbedAuthorBuilder()
+                                    {
+                                        Name = "Add song",
+                                        Url = url
+                                    },
+                                    Fields = new List<EmbedFieldBuilder>
+                                        {
+                                            new EmbedFieldBuilder
+                                            {
+                                                Name = "Song",
+                                                Value = info.Item1,
+                                                IsInline = false
+                                            },
+                                            new EmbedFieldBuilder
+                                            {
+                                                Name = "Duration",
+                                                Value = info.Item2,
+                                                IsInline = false
+                                            },
+                                            new EmbedFieldBuilder
+                                            {
+                                                Name = "Channel",
+                                                Value = channel,
+                                                IsInline = false
+                                            }
+                                        },
+                                    Footer = new EmbedFooterBuilder()
+                                    {
+                                        IconUrl = Context.User.GetAvatarUrl(),
+                                        Text = $"Queued by {Context.User.Username}#{Context.User.Discriminator}"
+                                    },
+                                    ThumbnailUrl = thumbnails.High.Url
+                                };
+                                embed.WithCurrentTimestamp();
+                                string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp");
+                                string location = Path.Combine(downloadPath, urlS[1] + ".webm.part");
+                                var vidInfo = new Tuple<string, string, string, string, string, string, string>(location, info.Item1, info.Item2, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
+                                if (_internalQueue.Any(x => x.Item1.Contains(urlS[1])))
+                                {
+                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
+                                    return;
+                                }
+                                DirectoryInfo di = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Temp"));
+                                foreach (FileInfo file in di.EnumerateFiles())
+                                {
+                                    if (file.Name.Contains(urlS[1]))
+                                    {
+                                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} this song was recently added (within 10 minutes).");
+                                        return;
+                                    }
+                                }
+                                _internalQueue.Enqueue(vidInfo);
+                                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                                if (Context.Guild.CurrentUser.VoiceChannel == null)
+                                {
+                                    Audio = await _voiceChannel.ConnectAsync();
+                                }
+                                if (Playing)
+                                {
+                                    Pause = false;
+                                }
+                                if (Pause)
+                                {
+                                    Playing = false;
+                                }
+                                if (!MusicStarted)
+                                {
+                                    Playing = true;
+                                    Pause = false;
+                                    MusicStarted = true;
+                                    Task.WaitAny(Task.Factory.StartNew(() => MusicPlay()), Task.Factory.StartNew(() => DownloadHelper.Download(url)));
+                                }
+                                else
+                                {
+                                    await DownloadHelper.Download(url);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("queue", RunMode = RunMode.Async)]
+        [Alias("q")]
+        [Summary("Displays song queue.")]
+        [RequireContext(ContextType.Guild)]
+        public async Task ShowQueue()
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                if (_voiceChannel == null)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                }
+                else if (_voiceChannel.Id != 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else
+                {
+                    await SendQueue(Context.Channel);
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("loop", RunMode = RunMode.Async)]
+        [Alias("repeat", "queueloop", "loopqueue", "qloop", "loopq")]
+        [Summary("Toggles looping of the queue.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task QueueLoop()
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                if (_voiceChannel == null)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                }
+                else if (_voiceChannel.Id != 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else
+                {
+                    if (Loop)
+                    {
+                        Loop = false;
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue will no longer loop.");
+                    }
+                    else
+                    {
+                        Loop = true;
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue will now loop.");
+                    }
+                }
+            }
+        }
+
+        [Command("pause", RunMode = RunMode.Async)]
+        [Alias("p", "pausemusic")]
+        [Summary("pauses the music")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task PauseMusic()
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                if (_voiceChannel == null)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                }
+                else if (_voiceChannel.Id != 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else
+                {
+                    if (Pause)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the music is already paused.");
+                    }
+                    else
+                    {
+                        Pause = true;
+                        Playing = false;
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} paused the music.");
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("resume", RunMode = RunMode.Async)]
+        [Summary("Resumes play of music or adds another song.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task Resume()
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                if (_voiceChannel == null)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                }
+                else if (_voiceChannel.Id != 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else
+                {
+                    if (!Playing)
+                    {
+                        Pause = false;
+                        Playing = true;
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} resumed the music.");
+                    }
+                }
+            }
+        }
+
+        [Command("play", RunMode = RunMode.Async)]
+        [Alias("playmusic")]
+        [Summary("Resumes play of music or adds another song.")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Play([Remainder] string url = null)
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                if (url == null)
+                {
+                    SocketGuildUser user = Context.User as SocketGuildUser;
+                    if (user.Roles.Any(e => e.Name.ToUpperInvariant() == "Server Staff".ToUpperInvariant()) && !Playing)
+                    {
+                        Pause = false;
+                        Playing = true;
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} resumed the music.");
+                    }
+                    else
+                    {
+                        await Add(url);
+                    }
+                }
+                else
+                {
+                    await Add(url);
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("qremove", RunMode = RunMode.Async)]
+        [Alias("queueremove")]
+        [Summary("Remove an item from the queue.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task QueueRemove(string position = null)
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                if (string.IsNullOrWhiteSpace(position) || !int.TryParse(position, out int pos) || pos < 1)
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Title = "Command: /qremove",
+                        Description = "**Description:** Remove a song from the queue.\n**Usage:** /qremove [position]\n**Example:** /qremove 1",
+                        Color = new Color(220, 220, 220)
+                    };
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (_internalQueue.Count <= 0)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is nothing in the queue.");
+                    }
+                    else if (_internalQueue.Count < pos)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is not that many items in the queue.");
+                    }
+                    else
+                    {
+                        var item = _internalQueue.ElementAt(pos-1);
+                        _internalQueue = new Queue<Tuple<string, string, string, string, string, string, string>>(_internalQueue.Where(s => s != item));
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} removed **{item.Item2}** from the queue.");
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("qclear", RunMode = RunMode.Async)]
+        [Alias("clearqueue", "clearq")]
+        [Summary("Removes all songs from the queue")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task QueueClear()
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                if (_voiceChannel == null)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                }
+                else if (_voiceChannel.Id != 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else
+                {
+                    if (_internalQueue.Count <= 0)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue is already empty.");
+                    }
+                    else
+                    {
+                        _internalQueue.Clear();
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} cleared the queue.");
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("come", RunMode = RunMode.Async)]
+        [Alias("summon")]
+        [Summary("Brings bot to voice channel")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task Come()
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                if (_voiceChannel == null)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                }
+                else if (_voiceChannel.Id != 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else if (Context.Guild.CurrentUser.VoiceChannel != null && Context.Guild.CurrentUser.VoiceChannel.Id == 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I am already in the Music voice channel.");
+                }
+                else
+                {
+                    Audio?.Dispose();
+                    await Context.Channel.SendMessageAsync($"Joined voice channel `{_voiceChannel.Name}`.");
+                    Audio = await _voiceChannel.ConnectAsync();
+                    return;
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("skip", RunMode = RunMode.Async)]
+        [Alias("skipsong")]
+        [Summary("Votes to skip current song")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SkipSong()
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                if (_voiceChannel == null)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                }
+                else if (_voiceChannel.Id != 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else
+                {
+                    if (NowPlaying.Count <= 0)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is nothing to skip.");
+                    }
+                    else
+                    {
+                        int users = await _voiceChannel.GetUsersAsync().Count();
+                        int votesNeeded = Convert.ToInt32(Math.Round(Convert.ToDouble((await _voiceChannel.GetUsersAsync().Count()) / 3)));
+                        if (votesNeeded < 1)
+                        {
+                            votesNeeded = 1;
+                        }
+                        SkipCount++;
+                        if (votesNeeded - SkipCount == 0)
+                        {
+                            Skip = true;
+                            Pause = false;
+                            await Context.Channel.SendMessageAsync($"**{NowPlaying.Peek().Item2}** requested by **{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Username}#{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Discriminator}** was skipped.");
+                        }
+                        else
+                        {
+                            if (votesNeeded - SkipCount == 1)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} voted to skip **{NowPlaying.Peek().Item2}**. {votesNeeded - SkipCount} more vote needed to skip.");
+                            }
+                            else
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} voted to skip **{NowPlaying.Peek().Item2}**. {votesNeeded - SkipCount} more votes needed to skip.");
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("forceskip", RunMode = RunMode.Async)]
+        [Alias("fskip", "forceskipsong")]
+        [Summary("Skips the current song.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task ForceSkip()
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                if (_voiceChannel == null)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                }
+                else if (_voiceChannel.Id != 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else
+                {
+                    if (NowPlaying.Count <= 0)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is nothing to skip.");
+                    }
+                    else
+                    {
+                        Skip = true;
+                        Pause = false;
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} force skipped **{NowPlaying.Peek().Item2}** requested by **{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Username}#{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Discriminator}**.");
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("np", RunMode = RunMode.Async)]
+        [Alias("nowplaying")]
+        [Summary("Displays current song playing.")]
+        [RequireContext(ContextType.Guild)]
+        public async Task NP()
+        {
+            try
+            {
+                if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+                {
+                    _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                    if (_voiceChannel == null)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                    }
+                    else if (_voiceChannel.Id != 259900874204119054)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    }
+                    else
+                    {
+                        if (NowPlaying.Count <= 0)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} nothing is playing right now.");
+                        }
+                        else
+                        {
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256)),
+                                Author = new EmbedAuthorBuilder()
+                                {
+                                    Name = "Now playing",
+                                    Url = NowPlaying.Peek().Item7
+                                },
+                                Fields = new List<EmbedFieldBuilder>
+                                {
+                                new EmbedFieldBuilder
+                                {
+                                    Name = "Song",
+                                    Value = NowPlaying.Peek().Item2,
+                                    IsInline = false
+                                },
+                                new EmbedFieldBuilder
+                                {
+                                    Name = "Duration",
+                                    Value = NowPlaying.Peek().Item3,
+                                    IsInline = false
+                                },
+                                new EmbedFieldBuilder
+                                {
+                                    Name = "Channel",
+                                    Value = NowPlaying.Peek().Item5,
+                                    IsInline = false
+                                }
+                                },
+                                Footer = new EmbedFooterBuilder()
+                                {
+                                    IconUrl = Context.User.GetAvatarUrl(),
+                                    Text = $"Queued by {Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Username}#{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Discriminator}"
+                                },
+                                ThumbnailUrl = NowPlaying.Peek().Item6
+                            };
+                            embed.WithCurrentTimestamp();
+                            await Context.Channel.SendMessageAsync("", false, embed.Build());
+                        }
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
+            catch(Exception e)
+            {
+                await PublicModule.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+            }
+        }
+
+        [Command("voiceping")]
+        [Alias("voicelatency")]
+        [Summary("Gets bot voice latency.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task VoiceLatency()
+        {
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            {
+                if (Audio != null)
+                {
+                    await Context.Channel.SendMessageAsync($"Websocket Latency: **{Audio.Latency}** ms\nUDP Latency: **{Audio.UdpLatency}** ms");
+                }
+                else
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I am not in a voice channel.");
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("stop", RunMode = RunMode.Async)]
+        [Alias("stopmusic")]
+        [Summary("Stops the music and makes bot leave voice channel.")]
+        [RequireOwner]
+        public async Task Stop()
+        {
+            try
+            {
+                if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+                {
+                    _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                    if (_voiceChannel == null)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                    }
+                    else if (_voiceChannel.Id != 259900874204119054)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    }
+                    else
+                    {
+                        _internalQueue.Clear();
+                        NowPlaying.Clear();
+                        Playing = false;
+                        Pause = true;
+                        await Audio.StopAsync();
+                        await ReplyAsync($"The music was successfully stopped by {Context.User.Mention} .");
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
+            catch(Exception e)
+            {
+                await PublicModule.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+            }
+        }
+
+        #region Audio
+
+        private static Process GetFfmpeg(string path)
+        {
+            ProcessStartInfo ffmpeg = new ProcessStartInfo
+            {
+                FileName = "ffmpeg",
+                Arguments = $"-xerror -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
+                UseShellExecute = false,
+                RedirectStandardOutput = true
+            };
+            return Process.Start(ffmpeg);
+        }
+
+        private async Task SendAudio(string path)
+        {
+            while (!File.Exists(path))
+            {
+                path = path.Replace("webm.part", "mp3");
+                await Task.Delay(500);
+                if (!File.Exists(path))
+                {
+                    path = path.Replace("mp3", "webm.part");
+                }
+            }
+            Process ffmpeg = GetFfmpeg(path);
+            using (Stream output = ffmpeg.StandardOutput.BaseStream)
+            {
+                using (AudioOutStream discord = Audio.CreatePCMStream(AudioApplication.Mixed, 64000))
+                {
+                    int bufferSize = 1024;
+                    int bytesSent = 0;
+                    bool fail = false;
+                    bool exit = false;
+                    byte[] buffer = new byte[bufferSize];
+
+                    while (
+                        !Skip &&                                    
+                        !fail &&                                    
+                        !_disposeToken.IsCancellationRequested &&   
+                        !exit                                       
+                            )
+                    {
+                        try
+                        {
+                            int read = await output.ReadAsync(buffer, 0, bufferSize, _disposeToken.Token);
+                            if (read == 0)
+                            {
+                                exit = true;
+                                break;
+                            }
+
+                            await discord.WriteAsync(buffer, 0, read, _disposeToken.Token);
+
+                            if (Pause)
+                            {
+                                bool pauseAgain;
+
+                                do
+                                {
+                                    pauseAgain = await _tcs.Task;
+                                    _tcs = new TaskCompletionSource<bool>();
+                                } while (pauseAgain);
+                            }
+
+                            bytesSent += read;
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            exit = true;
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine(e.Message + e.StackTrace);
+                            fail = true;
+                        }
+                    }
+                    await discord.FlushAsync();
+                }
+            }
+        }
+
+        private async Task RemoveFiles()
+        {
+            string[] id = PlayingUrl.Split("watch?v=");
+            DirectoryInfo di = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Temp"));
+            await Task.Delay(600000);
+            foreach (FileInfo file in di.EnumerateFiles())
+            {
+                if (file.Name.Contains(id[1]))
+                {
+                    file.Delete();
+                }
+            }
+        }
+
+        private async Task MusicPlay()
+        {
+            bool next = false;
+            await Task.Delay(10000);
+            while (true)
+            {
+                try
+                {
+                    bool pause = false;
+                    if (!next)
+                    {
+                        pause = await _tcs.Task;
+                        _tcs = new TaskCompletionSource<bool>();
+                    }
+                    else
+                    {
+                        next = false;
+                    }
+                    if (!(_internalQueue.Count <= 0))
+                    {
+                        if (!pause)
+                        {
+                            var song = _internalQueue.Peek();
+                            await Context.Channel.SendMessageAsync($"Now playing: **{song.Item2}** ({song.Item3})");
+                            NowPlaying.Enqueue(song);
+                            await SendAudio(song.Item1);
+                            SkipCount = 0;
+                            try
+                            {
+                                PlayingUrl = song.Item7;
+                                var _ = RemoveFiles();
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.Message, e.StackTrace);
+                            }
+                            finally
+                            {
+                                if (Loop)
+                                {
+                                    var item = _internalQueue.Peek();
+                                    if (song == item)
+                                    {
+                                        _internalQueue.Dequeue();
+                                        _internalQueue.Enqueue(song);
+                                    }
+                                    NowPlaying.Dequeue();
+                                }
+                                else
+                                {
+                                    var item = _internalQueue.Peek();
+                                    if (song == item)
+                                    {
+                                        _internalQueue.Dequeue();
+                                    }
+                                    NowPlaying.Dequeue();
+                                }
+                            }
+                            var voiceChannel = Context.Guild.CurrentUser.VoiceChannel;
+                            if (voiceChannel.Users.Count < 2)
+                            {
+                                await Context.Channel.SendMessageAsync("Voice channel empty. Pausing music.");
+                                Pause = true;
+                                Playing = false;
+                                await Audio.StopAsync();
+                            }
+                            next = true;
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    await PublicModule.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                }
+            }
+        }
+
+        #endregion
+    }
+}
