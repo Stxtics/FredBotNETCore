@@ -26,7 +26,7 @@ namespace FredBotNETCore
 
         public static IServiceProvider _provider;
 
-        // Convert our sync main to an async main.
+        // Convert sync main to an async main.
         public static void Main(string[] args)
         {
             new Program().Start().GetAwaiter().GetResult();
