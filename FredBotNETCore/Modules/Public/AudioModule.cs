@@ -313,8 +313,8 @@ namespace FredBotNETCore.Modules.Public
                                     }
                                     if (!MusicStarted)
                                     {
-                                        Playing = true;
                                         Pause = false;
+                                        Playing = true;
                                         MusicStarted = true;
                                         Task.WaitAny(Task.Factory.StartNew(() => MusicPlay()), Task.Factory.StartNew(() => DownloadHelper.Download(url)));
                                     }
@@ -435,8 +435,8 @@ namespace FredBotNETCore.Modules.Public
                                 }
                                 if (!MusicStarted)
                                 {
-                                    Playing = true;
                                     Pause = false;
+                                    Playing = true;
                                     MusicStarted = true;
                                     Task.WaitAny(Task.Factory.StartNew(() => MusicPlay()), Task.Factory.StartNew(() => DownloadHelper.Download(url)));
                                 }
@@ -953,12 +953,16 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
+                        var song = _internalQueue.Peek();
                         _internalQueue.Clear();
                         NowPlaying.Clear();
                         Playing = false;
                         Pause = true;
+                        MusicStarted = false;
                         await Audio.StopAsync();
                         await ReplyAsync($"The music was successfully stopped by {Context.User.Mention} .");
+                        PlayingUrl = song.Item7;
+                        var _ = RemoveFiles();
                     }
                 }
                 else
