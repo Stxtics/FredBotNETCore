@@ -259,3 +259,12 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/FredBotNETCore/TextFiles/DatabasePassword.txt
+/FredBotNETCore/TextFiles/DiscordStaff.txt
+/FredBotNETCore/TextFiles/DiscordStaffRoles.txt
+/FredBotNETCore/TextFiles/JoinableRoles.txt
+/FredBotNETCore/TextFiles/PR2Token.txt
+/FredBotNETCore/TextFiles/Token.txt
+/FredBotNETCore/TextFiles/WeatherAppID.txt
+/FredBotNETCore/TextFiles/YoutubeApiKey.txt
+/FredBotNETCore/TextFiles/youtube_client_secret.json

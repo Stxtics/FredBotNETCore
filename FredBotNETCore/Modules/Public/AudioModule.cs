@@ -17,7 +17,7 @@ namespace FredBotNETCore.Modules.Public
 {
     public class AudioModule : ModuleBase<SocketCommandContext>
     {
-        static string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
+        static readonly string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
         YouTubeService youtubeService = new YouTubeService(new BaseClientService.Initializer()
         {
             ApiKey = new StreamReader(path: Path.Combine(downloadPath, "YouTubeApiKey.txt")).ReadLine(),

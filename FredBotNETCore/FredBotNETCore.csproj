@@ -13,8 +13,8 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Addons.Preconditions" Version="1.2.0-alpha2" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00951" />
-    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-00951" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00957" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-00957" />
     <PackageReference Include="Google.Apis" Version="1.33.1" />
     <PackageReference Include="Google.Apis.Auth" Version="1.33.1" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.33.1.1226" />

@@ -2919,21 +2919,6 @@ namespace FredBotNETCore.Modules.Public
                             y.Value = channel.Position;
                             y.IsInline = true;
                         });
-                        if (channel.CategoryId != null)
-                        {
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Category ID";
-                                y.Value = channel.CategoryId;
-                                y.IsInline = true;
-                            });
-                            embed.AddField(async y =>
-                            {
-                                y.Name = "Category Name";
-                                y.Value = (await channel.GetCategoryAsync()).Name;
-                                y.IsInline = true;
-                            });
-                        }
                         if (channel is IVoiceChannel vChannel)
                         {
                             type = "Voice";
@@ -2949,6 +2934,21 @@ namespace FredBotNETCore.Modules.Public
                                 y.Value = vChannel.Bitrate;
                                 y.IsInline = true;
                             });
+                            if (vChannel.CategoryId != null)
+                            {
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Category ID";
+                                    y.Value = vChannel.CategoryId;
+                                    y.IsInline = true;
+                                });
+                                embed.AddField(async y =>
+                                {
+                                    y.Name = "Category Name";
+                                    y.Value = (await vChannel.GetCategoryAsync()).Name;
+                                    y.IsInline = true;
+                                });
+                            }
                             if (vChannel.UserLimit != null)
                             {
                                 embed.AddField(y =>
@@ -2992,6 +2992,21 @@ namespace FredBotNETCore.Modules.Public
                                 y.Value = $"`{tChannel.Mention.ToString()}`";
                                 y.IsInline = true;
                             });
+                            if (tChannel.CategoryId != null)
+                            {
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Category ID";
+                                    y.Value = tChannel.CategoryId;
+                                    y.IsInline = true;
+                                });
+                                embed.AddField(async y =>
+                                {
+                                    y.Name = "Category Name";
+                                    y.Value = (await tChannel.GetCategoryAsync()).Name;
+                                    y.IsInline = true;
+                                });
+                            }
                             string nsfw = "No";
                             if (tChannel.IsNsfw)
                             {
