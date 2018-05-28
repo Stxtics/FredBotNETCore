@@ -20,7 +20,7 @@ namespace FredBotNETCore.Modules.Public
         static readonly string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
         YouTubeService youtubeService = new YouTubeService(new BaseClientService.Initializer()
         {
-            ApiKey = new StreamReader(path: Path.Combine(downloadPath, "YouTubeApiKey.txt")).ReadLine(),
+            ApiKey = new StreamReader(path: Path.Combine(downloadPath, "YoutubeApiKey.txt")).ReadLine(),
             ApplicationName = "Fred bot"
         });
         private IVoiceChannel _voiceChannel;
