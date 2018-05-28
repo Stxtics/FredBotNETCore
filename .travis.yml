@@ -1,2 +1,6 @@
 language: csharp
 solution: FredBotNETCore.sln
+addons:
+  apt:
+    sources:
+      key_url: https://www.myget.org/F/discord-net/api/v3/index.json
