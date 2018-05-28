@@ -2,4 +2,4 @@ language: csharp
 solution: FredBotNETCore.sln
 before_install:
   - wget https://www.myget.org/F/discord-net/api/v3/index.json
-  - sudo dpkg -i discord-net/api/v3/index.json
+  - sudo dpkg -i F/discord-net/api/v3/index.json
