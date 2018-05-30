@@ -4,3 +4,21 @@ install:
   - curl -L -o nuget.exe https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
   - ls
   - mono nuget.exe restore FredBotNETCore.sln -Verbosity Detailed -NonInteractive -ConfigFile nuget.config
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "pIf+A701GyUFtqmM7YPjFq9y+YyT7TtNASR5/0PzstcrrjFktc1uJc1BJmcnahwZu9qfPu4vypEXpdPkD4aCQ3wcC4yRpjv7VYQpppvZxhbQ+1/p0UX+G2IBZoifOuWwM0skXveBrBk1MI7ft71fsDOB92D5MxaM/PiKpYOCZTOZAPZkyYK+U95+XzpwiqmFeb8RIKueDq8wRyImEioQJ1Xl5yeVAWVUyrJWFHsasxxh6m2W8Mpm1L/3Mv85dcqj6awym965pMgn8kQVkVpC394a8+Hty9LyBKWwskvmn/6T26sONTvByBkw5KQLpbDxaynHaTbJOylZ8eygBTQ/wKIC6ati6oSPtszrkt4J0XW4HfbfROtaP57/SrkO0viY5VDmH3pljTT0Np4rWCXYaLF/asDqnRKVzeTSy2Dcdhr/VuXtXEyhlBgywTCZh2LbnejMD5qn/SJ6oc1pqbspNiQGsPyCw/tmvXIkyL0EGltwE/1icOj/z77/TcxTnLguYYYeZbtKFryZVezbtueSESs4CZDLBAnr0hT4t9iGNlNH4vxIIDcDfgYXQ76xbhrrymd0wGLdoxCHir5nRofoNrF7XyVXlPDWmIKIBk9NVpQfcl9diBoCUbFUdxjCXmznxDgZ7urPzTSQ1DWBoe9T57nnj3fpxJWyVBcFPQaQlUo="
+
+before_install:
+  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+
+addons:
+  coverity_scan:
+    project:
+      name: "Stxtics/FredBotNETCore"
+      description: "Fred the G. Cactus bot for PRG"
+    notification_email: stxtics123@gmail.com
+    build_command_prepend: "msbuild"
+    build_command: "msbuild /p:Configuration=Release FredBotNETCore.sln"
+    branch_pattern: coverity_scan
