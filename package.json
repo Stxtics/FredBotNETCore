@@ -1,5 +1,0 @@
-{
-  "scripts": {
-    "travis-ci": "npm run lint && jest packages --ci --runInBand --coverage && cat ./coverage/lcov.info | coveralls"
-  }
-}
