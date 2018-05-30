@@ -1,4 +1,4 @@
 language: csharp
 solution: FredBotNETCore.sln
 install:
- - dotnet restore -s https://www.myget.org/F/discord-net/api/v3/index.json
+ - mono restore -s https://www.myget.org/F/discord-net/api/v3/index.json
