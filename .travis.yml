@@ -1,4 +1,6 @@
 language: csharp
 solution: FredBotNETCore.sln
 install:
- - mono nuget.exe restore -s https://www.myget.org/F/discord-net/api/v3/index.json
+  - curl -L -o nuget.exe https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+  - ls
+  - mono nuget.exe restore FredBotNETCore.sln -Verbosity Detailed -NonInteractive -ConfigFile nuget.config
