@@ -183,7 +183,7 @@ namespace FredBotNETCore
                 }
                 SocketGuild Guild = _client.GetGuild(249657315576381450);
                 SocketRole RoleM = Guild.GetRole(307631922094407682);
-                SocketTextChannel channel = _client.GetChannel(249678944956055562) as SocketTextChannel;
+                SocketTextChannel channel = Guild.GetTextChannel(249678944956055562);
                 await RoleM.ModifyAsync(x => x.Mentionable = true);
                 await channel.SendMessageAsync($"{RoleM.Mention} A happy hour has just started on Server: {Name}");
                 await RoleM.ModifyAsync(x => x.Mentionable = false);
@@ -193,7 +193,7 @@ namespace FredBotNETCore
         public static async Task AnnouceHintUpdatedAsync(string hint = null, bool newArti = false)
         {
             SocketGuild Guild = _client.GetGuild(249657315576381450);
-            SocketTextChannel channel = _client.GetChannel(249678944956055562) as SocketTextChannel;
+            SocketTextChannel channel = Guild.GetTextChannel(249678944956055562);
             if (newArti)
             {
                 await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = true);
@@ -215,7 +215,7 @@ namespace FredBotNETCore
 
         public static async Task RemovePermInvitesAsync()
         {
-            IGuild guild = _client.GetGuild(249657315576381450);
+            SocketGuild guild = _client.GetGuild(249657315576381450);
             var invites = guild.GetInvitesAsync();
             RequestOptions options = new RequestOptions()
             {
@@ -277,7 +277,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
+            SocketTextChannel log = role.Guild.GetTextChannel(327575359765610496);
             if (role.Name != role2.Name)
             {
                 await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The role **{role.Name}** was renamed to **{role2.Name}**.");
@@ -316,7 +316,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
+            SocketTextChannel log = role.Guild.GetTextChannel(327575359765610496);
             await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Role deleted: **{role.Name}**.");
         }
 
@@ -326,128 +326,113 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
+            SocketTextChannel log = role.Guild.GetTextChannel(327575359765610496);
             await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Role created: **{role.Name}**.");
         }
 
         public async Task AnnounceChannelUpdated(SocketChannel channel, SocketChannel channel2)
         {
-            SocketGuildChannel gChannel = _client.GetChannel(channel.Id) as SocketGuildChannel;
-            if (gChannel.Guild.Id != 249657315576381450)
+            if ((channel as SocketGuildChannel).Guild.Id != 249657315576381450)
             {
                 return;
             }
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
-            if (channel is ITextChannel)
+            SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(327575359765610496);
+            if (channel is SocketTextChannel)
             {
-                ITextChannel iChannel = channel as ITextChannel;
-                ITextChannel iChannel2 = channel2 as ITextChannel;
-                if (iChannel.Name != iChannel2.Name)
+                if ((channel as SocketTextChannel).Name != (channel2 as SocketTextChannel).Name)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The text channel **{iChannel.Name}** was renamed to **{iChannel2.Name}**.");
+                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The text channel **{(channel as SocketTextChannel).Name}** was renamed to **{(channel2 as SocketTextChannel).Name}**.");
                 }
-                else if (iChannel.Topic != iChannel2.Topic)
+                else if ((channel as SocketTextChannel).Topic != (channel2 as SocketTextChannel).Topic)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {iChannel.Mention}'s topic was changed from **{iChannel2.Topic}** to **{iChannel2.Topic}**.");
+                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketTextChannel).Mention}'s topic was changed from **{(channel2 as SocketTextChannel).Topic}** to **{(channel2 as SocketTextChannel).Topic}**.");
                 }
-                else if (iChannel.IsNsfw != iChannel2.IsNsfw)
+                else if ((channel as SocketTextChannel).IsNsfw != (channel2 as SocketTextChannel).IsNsfw)
                 {
-                    if (iChannel.IsNsfw)
+                    if ((channel as SocketTextChannel).IsNsfw)
                     {
-                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {iChannel.Mention} is no longer NSFW.");
+                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketTextChannel).Mention} is no longer NSFW.");
                     }
                     else
                     {
-                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {iChannel.Mention} is now NSFW.");
+                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketTextChannel).Mention} is now NSFW.");
                     }
                 }
             }
-            else if (channel is IVoiceChannel)
+            else if (channel is SocketVoiceChannel)
             {
-                IVoiceChannel iChannel = channel as IVoiceChannel;
-                IVoiceChannel iChannel2 = channel2 as IVoiceChannel;
-                if (iChannel.Name != iChannel2.Name)
+                if ((channel as SocketVoiceChannel).Name != (channel2 as SocketVoiceChannel).Name)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The text channel **{iChannel.Name}** was renamed to **{iChannel2.Name}**.");
+                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The text channel **{(channel as SocketVoiceChannel).Name}** was renamed to **{(channel2 as SocketVoiceChannel).Name}**.");
                 }
-                else if (iChannel.Bitrate != iChannel2.Bitrate)
+                else if ((channel as SocketVoiceChannel).Bitrate != (channel2 as SocketVoiceChannel).Bitrate)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}] {iChannel.Name}'s birate was changed from **{iChannel.Bitrate}** to **{iChannel2.Bitrate}**.");
+                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}] {(channel as SocketVoiceChannel).Name}'s birate was changed from **{(channel as SocketVoiceChannel).Bitrate}** to **{(channel2 as SocketVoiceChannel).Bitrate}**.");
                 }
-                else if (iChannel.UserLimit != iChannel2.UserLimit)
+                else if ((channel as SocketVoiceChannel).UserLimit != (channel2 as SocketVoiceChannel).UserLimit)
                 {
-                    if (iChannel.UserLimit == null)
+                    if ((channel as SocketVoiceChannel).UserLimit == null)
                     {
-                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {iChannel.Name}'s user limit was changed from **unlimited** to **{iChannel2.UserLimit}**.");
+                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketVoiceChannel).Name}'s user limit was changed from **unlimited** to **{(channel2 as SocketVoiceChannel).UserLimit}**.");
                     }
-                    else if (iChannel2.UserLimit == null)
+                    else if ((channel2 as SocketVoiceChannel).UserLimit == null)
                     {
-                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {iChannel.Name}'s user limit was changed from **{iChannel.UserLimit}** to **unlimited**.");
+                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketVoiceChannel).Name}'s user limit was changed from **{(channel as SocketVoiceChannel).UserLimit}** to **unlimited**.");
                     }
                     else
                     {
-                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {iChannel.Name}'s user limit was changed from **{iChannel.UserLimit}** to **{iChannel2.UserLimit}**.");
+                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketVoiceChannel).Name}'s user limit was changed from **{(channel as SocketVoiceChannel).UserLimit}** to **{(channel2 as SocketVoiceChannel).UserLimit}**.");
                     }
                 }
             }
-            else if (channel is ICategoryChannel)
+            else if (channel is SocketCategoryChannel)
             {
-                ICategoryChannel iChannel = channel as ICategoryChannel;
-                ICategoryChannel iChannel2 = channel2 as ICategoryChannel;
-                if (iChannel.Name != iChannel2.Name)
+                if ((channel as SocketCategoryChannel).Name != (channel2 as SocketCategoryChannel).Name)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The category channel **{iChannel.Name}** was renamed to **{iChannel2.Name}**.");
+                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The category channel **{(channel as SocketCategoryChannel).Name}** was renamed to **{(channel2 as SocketCategoryChannel).Name}**.");
                 }
             }
         }
 
         public async Task AnnounceChannelDestroyed(SocketChannel channel)
         {
-            SocketGuildChannel channel2 = _client.GetChannel(channel.Id) as SocketGuildChannel;
-            if (channel2.Guild.Id != 249657315576381450)
+            if ((channel as SocketGuildChannel).Guild.Id != 249657315576381450)
             {
                 return;
             }
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
-            if (channel is ITextChannel)
+            SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(327575359765610496);
+            if (channel is SocketTextChannel)
             {
-                ITextChannel tChannel = _client.GetChannel(channel.Id) as ITextChannel;
-                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Text channel deleted: **{tChannel.Name}**.");
+                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Text channel deleted: **{(channel as SocketGuildChannel).Name}**.");
             }
-            else if (channel is IVoiceChannel)
+            else if (channel is SocketVoiceChannel)
             {
-                IVoiceChannel vChannel = _client.GetChannel(channel.Id) as IVoiceChannel;
-                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Voice channel deleted: **{vChannel.Name}**.");
+                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Voice channel deleted: **{(channel as SocketGuildChannel).Name}**.");
             }
-            else if (channel is ICategoryChannel)
+            else if (channel is SocketCategoryChannel)
             {
-                ICategoryChannel cChannel = _client.GetChannel(channel.Id) as ICategoryChannel;
-                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Category channel deleted: **{cChannel.Name}**.");
+                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Category channel deleted: **{(channel as SocketGuildChannel).Name}**.");
             }
         }
 
         public async Task AnnounceChannelCreated(SocketChannel channel)
         {
-            SocketGuildChannel channel2 = _client.GetChannel(channel.Id) as SocketGuildChannel;
-            if (channel2.Guild.Id != 249657315576381450)
+            if ((channel as SocketGuildChannel).Guild.Id != 249657315576381450)
             {
                 return;
             }
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
-            if (channel is ITextChannel)
+            SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(327575359765610496);
+            if (channel is SocketTextChannel)
             {
-                ITextChannel tChannel = _client.GetChannel(channel.Id) as ITextChannel;
-                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Text channel created: {tChannel.Mention}.");
+                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Text channel created: {(channel as SocketTextChannel).Mention}.");
             }
-            else if (channel is IVoiceChannel)
+            else if (channel is SocketVoiceChannel)
             {
-                IVoiceChannel vChannel = _client.GetChannel(channel.Id) as IVoiceChannel;
-                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Voice channel created: **{vChannel.Name}**.");
+                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Voice channel created: **{(channel as SocketGuildChannel).Name}**.");
             }
-            else if (channel is ICategoryChannel)
+            else if (channel is SocketCategoryChannel)
             {
-                ICategoryChannel cChannel = _client.GetChannel(channel.Id) as ICategoryChannel;
-                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Category channel created: **{cChannel.Name}**.");
+                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Category channel created: **{(channel as SocketGuildChannel).Name}**.");
             }
         }
 
@@ -461,7 +446,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
+            SocketTextChannel log = user.Guild.GetTextChannel(327575359765610496);
             if (user.Nickname != user2.Nickname)
             {
                 string nickname = user.Nickname;
@@ -530,14 +515,14 @@ namespace FredBotNETCore
 
         public async Task AnnounceMessageDeleted(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
         {
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
             IMessage message2 = await message.GetOrDownloadAsync();
-            ITextChannel channel2 = _client.GetChannel(channel.Id) as ITextChannel;
-            if (channel2.Id == log.Id || channel2.GuildId != 249657315576381450)
+            SocketTextChannel channel2 = channel as SocketTextChannel;
+            SocketTextChannel log = channel2.Guild.GetTextChannel(327575359765610496);
+            if (channel2.Id == log.Id || channel2.Guild.Id != 249657315576381450)
             {
                 return;
             }
-            foreach(IBan ban in await _client.GetGuild(249657315576381450).GetBansAsync())
+            foreach(Discord.Rest.RestBan ban in await channel2.Guild.GetBansAsync())
             {
                 if (ban.User.Id == message2.Author.Id)
                 {
@@ -554,7 +539,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
+            SocketTextChannel log = guild.GetTextChannel(327575359765610496);
             await log.SendMessageAsync($":hammer: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** was unbanned from the guild.");
         }
 
@@ -564,7 +549,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
+            SocketTextChannel log = guild.GetTextChannel(327575359765610496);
             await log.SendMessageAsync($":hammer: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** was banned from the guild. " +
                 $"Total members: **{guild.MemberCount - 1}**");
         }
@@ -573,13 +558,9 @@ namespace FredBotNETCore
         {
             if (user.Guild.Id == 249657315576381450)
             {
-                SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
-                SocketTextChannel channel = _client.GetChannel(249657315576381450) as SocketTextChannel;
-                IEnumerable<SocketRole> members = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Members".ToUpper());
-                IEnumerable<SocketRole> verified = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Verified".ToUpper());
-                IEnumerable<SocketRole> muted = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Muted".ToUpper());
-                ITextChannel rules = user.Guild.GetChannel(249682754407497728) as ITextChannel;
-                ITextChannel roles = user.Guild.GetChannel(260272249976782848) as ITextChannel;
+                SocketTextChannel log = user.Guild.GetTextChannel(327575359765610496), channel = user.Guild.GetTextChannel(249657315576381450);
+                IEnumerable<SocketRole> members = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Members".ToUpper()), verified = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Verified".ToUpper()), muted = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Muted".ToUpper());
+                SocketTextChannel rules = user.Guild.GetTextChannel(249682754407497728), roles = user.Guild.GetTextChannel(260272249976782848);
                 await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** joined the guild. " +
                     $"Total members: **{user.Guild.MemberCount}**");
                 var result = Database.CheckExistingUser(user);
@@ -629,15 +610,15 @@ namespace FredBotNETCore
             {
                 return;
             }
-            foreach (IBan ban in await _client.GetGuild(249657315576381450).GetBansAsync())
+            foreach (Discord.Rest.RestBan ban in await user.Guild.GetBansAsync())
             {
                 if (ban.User.Id == user.Id)
                 {
                     return;
                 }
             }
-            SocketTextChannel channel = _client.GetChannel(249657315576381450) as SocketTextChannel;
-            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
+            SocketTextChannel channel = user.Guild.GetTextChannel(249657315576381450);
+            SocketTextChannel log = user.Guild.GetTextChannel(327575359765610496);
             EmbedBuilder embed = new EmbedBuilder()
             {
                 Color = new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256)),
