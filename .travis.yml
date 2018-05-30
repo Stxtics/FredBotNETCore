@@ -5,5 +5,4 @@ install:
   - ls
   - mono nuget.exe restore FredBotNETCore.sln -Verbosity Detailed -NonInteractive -ConfigFile nuget.config
 script:
-  - npm i -g npm
   - npm run travis-ci
