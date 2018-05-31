@@ -20,5 +20,5 @@ addons:
       description: "Fred the G. Cactus bot for PRG"
     notification_email: stxtics123@gmail.com
     build_command_prepend: "msbuild"
-    build_command: "msbuild /p:Configuration=Release FredBotNETCore.sln"
+    build_command: "/p:Configuration=Release FredBotNETCore.sln"
     branch_pattern: coverity_scan
