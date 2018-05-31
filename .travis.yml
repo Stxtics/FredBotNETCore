@@ -12,7 +12,6 @@ env:
 
 before_install:
   - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
-
 addons:
   coverity_scan:
     project:
@@ -20,5 +19,7 @@ addons:
       description: "Fred the G. Cactus bot for PRG"
     notification_email: stxtics123@gmail.com
     build_command_prepend: "msbuild"
-    build_command: "/p:Configuration=Release FredBotNETCore.sln"
+    build_command: "/p:Configuration=Release"
     branch_pattern: coverity_scan
+script:
+  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
