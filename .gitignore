@@ -268,3 +268,5 @@ __pycache__/
 /FredBotNETCore/TextFiles/WeatherAppID.txt
 /FredBotNETCore/TextFiles/YoutubeApiKey.txt
 /FredBotNETCore/TextFiles/youtube_client_secret.json
+/FredBotNETCore/TextFiles/BlacklistedMusic.txt
+/FredBotNETCore/TextFiles/BlacklistedSuggestions.txt

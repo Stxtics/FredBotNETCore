@@ -154,6 +154,18 @@ namespace FredBotNETCore.Modules.Public
             }
         }
 
+        public static bool Blacklisted(SocketUser user)
+        {
+            if (File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt")).Contains(user.Id.ToString()))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         [Command("add", RunMode = RunMode.Async)]
         [Alias("addsong")]
         [Summary("Adds a song to play.")]
@@ -162,6 +174,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 if (string.IsNullOrWhiteSpace(url))
                 {
                     EmbedBuilder embed = new EmbedBuilder()
@@ -463,6 +479,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
                 if (_voiceChannel == null)
                 {
@@ -492,6 +512,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
                 if (_voiceChannel == null)
                 {
@@ -526,6 +550,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
                 if (_voiceChannel == null)
                 {
@@ -563,6 +591,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
                 if (_voiceChannel == null)
                 {
@@ -592,6 +624,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 if (url == null)
                 {
                     SocketGuildUser user = Context.User as SocketGuildUser;
@@ -626,6 +662,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 if (string.IsNullOrWhiteSpace(position) || !int.TryParse(position, out int pos) || pos < 1)
                 {
                     EmbedBuilder embed = new EmbedBuilder()
@@ -669,6 +709,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
                 if (_voiceChannel == null)
                 {
@@ -706,6 +750,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
                 if (_voiceChannel == null)
                 {
@@ -741,6 +789,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
                 if (_voiceChannel == null)
                 {
@@ -800,6 +852,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
                 if (_voiceChannel == null)
                 {
@@ -839,6 +895,10 @@ namespace FredBotNETCore.Modules.Public
             {
                 if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
                 {
+                    if (Blacklisted(Context.User))
+                    {
+                        return;
+                    }
                     _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
                     if (_voiceChannel == null)
                     {
@@ -917,6 +977,10 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
                 if (Audio != null)
                 {
                     await Context.Channel.SendMessageAsync($"Websocket Latency: **{Audio.Latency}** ms\nUDP Latency: **{Audio.UdpLatency}** ms");
@@ -942,6 +1006,10 @@ namespace FredBotNETCore.Modules.Public
             {
                 if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
                 {
+                    if (Blacklisted(Context.User))
+                    {
+                        return;
+                    }
                     _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
                     if (_voiceChannel == null)
                     {

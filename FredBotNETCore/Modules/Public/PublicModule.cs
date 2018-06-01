@@ -383,6 +383,12 @@ namespace FredBotNETCore.Modules.Public
             await Context.User.SendMessageAsync("", false, embed.Build());
             embed.Title = "";
             embed.Description = "**Moderator**\n" +
+                "/blacklistmusic - Blacklist a user from using music commands.\n" +
+                "/unblacklistmusic - Unblacklist a user from using music commands.\n" +
+                "/listblacklistedmusic - List blacklisted users from music commands.\n" +
+                "/blacklistsuggestions - Blacklist a user from using /suggest.\n" +
+                "/unblacklistsuggestions - Unblacklist a user from using /suggest.\n" +
+                "/listblacklistedsuggestions - List blacklisted users from suggestions.\n" +
                 "/channelinfo - Get info about a channel.\n" +
                 "/rolecolor - Change color of a role.\n" +
                 "/nick - Set bot nickname.\n" +
@@ -634,7 +640,10 @@ namespace FredBotNETCore.Modules.Public
             {
                 return;
             }
-
+            if (File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedSuggestions.txt")).Contains(Context.User.Id.ToString()))
+            {
+                return;
+            }
             if (suggestion == null)
             {
                 EmbedBuilder embed = new EmbedBuilder()
@@ -2741,6 +2750,310 @@ namespace FredBotNETCore.Modules.Public
         #endregion
 
         #region Moderator
+
+        [Command("blacklistmusic", RunMode = RunMode.Async)]
+        [Alias("musicblacklist")]
+        [Summary("Blacklist a user from using music commands.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task BlacklistMusic([Remainder] string username = null)
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /blacklistmusic";
+                    embed.Description = "**Description:** Blacklist a user from using music commands.\n**Usage:** /blacklistmusic [user]\n**Example:** /blacklistmusic Jiggmin";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    {
+                        IUser user = await UserInGuildAsync(Context.Guild, username);
+                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt"));
+                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                        {
+                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is already blacklisted from using music commands.");
+                        }
+                        else
+                        {
+                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
+                            await Context.Channel.SendMessageAsync($"Blacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("unblacklistmusic", RunMode = RunMode.Async)]
+        [Alias("musicunblacklist")]
+        [Summary("Unblacklist a user from using music commands.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task UnblacklistMusic([Remainder] string username = null)
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /unblacklistmusic";
+                    embed.Description = "**Description:** Unblacklist a user from using music commands.\n**Usage:** /unblacklistmusic [user]\n**Example:** /unblacklistmusic Jiggmin";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    {
+                        IUser user = await UserInGuildAsync(Context.Guild, username);
+                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt"));
+                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                        {
+                            currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
+                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
+                            await Context.Channel.SendMessageAsync($"Removed blacklisted music user **{user.Username}#{user.Discriminator}**.");
+                        }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is not blacklisted from using music commands.");
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("listblacklistedmusic", RunMode = RunMode.Async)]
+        [Alias("lbm", "blacklistedmusic")]
+        [Summary("Lists blacklisted users from music commands.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task ListBlacklistedMusic()
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                var blacklistedMusic = new StreamReader(path: Path.Combine(downloadPath, "BlacklistedMusic.txt"));
+                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                {
+                    IconUrl = Context.Guild.IconUrl,
+                    Name = "List Blacklisted Music"
+                };
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(rand.Next(255), rand.Next(255), rand.Next(255)),
+                    Author = auth
+                };
+                string blacklistedUsers = "";
+                string line = blacklistedMusic.ReadLine();
+                while (line != null)
+                {
+                    string user = (Context.Guild.GetUser(Convert.ToUInt64(line))).Username + "#" + (Context.Guild.GetUser(Convert.ToUInt64(line))).Discriminator;
+                    blacklistedUsers = blacklistedUsers + user + "\n";
+                    line = blacklistedMusic.ReadLine();
+                }
+                blacklistedMusic.Close();
+                if (blacklistedUsers.Length <= 0)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} there are no blacklisted users from music commands.");
+                }
+                else
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Blacklisted Music Users";
+                        y.Value = blacklistedUsers;
+                        y.IsInline = false;
+                    });
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("blacklistsuggestions", RunMode = RunMode.Async)]
+        [Alias("blacklistsuggestion","suggestionblacklist","suggestionsblacklist")]
+        [Summary("Blacklist a user from using the /suggest command")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task BlacklistSuggestions([Remainder] string username = null)
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /blacklistsuggestions";
+                    embed.Description = "**Description:** Blacklist a user from using the /suggest command.\n**Usage:** /blacklistsuggestions [user]\n**Example:** /blacklistsuggestions Jiggmin";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    {
+                        IUser user = await UserInGuildAsync(Context.Guild, username);
+                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedSuggestions.txt"));
+                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                        {
+                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is already blacklisted from suggestions.");
+                        }
+                        else
+                        {
+                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
+                            SocketTextChannel suggestions = Context.Guild.GetTextChannel(249684395454234624);
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = $"Blacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                            };
+                            await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny, PermValue.Deny), options);
+                            await Context.Channel.SendMessageAsync($"Blacklisted **{user.Username}#{user.Discriminator}** from suggestions.");
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("unblacklistsuggestions", RunMode = RunMode.Async)]
+        [Alias("unblacklistsuggestion", "suggestionunblacklist", "suggestionsunblacklist")]
+        [Summary("Unblacklist a user from using the /suggest command")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task UnblacklistSuggestions([Remainder] string username = null)
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /unblacklistsuggestions";
+                    embed.Description = "**Description:** Unblacklist a user from using the /suggest command.\n**Usage:** /unblacklistsuggestions [user]\n**Example:** /unblacklistsuggestions Jiggmin";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    {
+                        IUser user = await UserInGuildAsync(Context.Guild, username);
+                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedSuggestions.txt"));
+                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                        {
+                            currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
+                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
+                            SocketTextChannel suggestions = Context.Guild.GetTextChannel(249684395454234624);
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = $"Unblacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                            };
+                            await suggestions.RemovePermissionOverwriteAsync(user, options);
+                            await Context.Channel.SendMessageAsync($"Removed blacklisted suggestions user **{user.Username}#{user.Discriminator}**.");
+                        }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is not blacklisted from suggestions.");
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("listblacklistedsuggestions", RunMode = RunMode.Async)]
+        [Alias("lbs", "listblacklistedsuggestion", "blacklistedsuggestions")]
+        [Summary("Lists blacklisted users from suggestions.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task ListBlacklistedSuggestions()
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                var blacklistedsuggestions = new StreamReader(path: Path.Combine(downloadPath, "BlacklistedSuggestions.txt"));
+                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                {
+                    IconUrl = Context.Guild.IconUrl,
+                    Name = "List Blacklisted Suggestions"
+                };
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(rand.Next(255), rand.Next(255), rand.Next(255)),
+                    Author = auth
+                };
+                string blacklistedUsers = "";
+                string line = blacklistedsuggestions.ReadLine();
+                while (line != null)
+                {
+                    string user = (Context.Guild.GetUser(Convert.ToUInt64(line))).Username + "#" + (Context.Guild.GetUser(Convert.ToUInt64(line))).Discriminator;
+                    blacklistedUsers = blacklistedUsers + user + "\n";
+                    line = blacklistedsuggestions.ReadLine();
+                }
+                blacklistedsuggestions.Close();
+                if (blacklistedUsers.Length <= 0)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} there are no blacklisted suggestions users.");
+                }
+                else
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Blacklisted Suggestions Users";
+                        y.Value = blacklistedUsers;
+                        y.IsInline = false;
+                    });
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
 
         [Command("channelinfo", RunMode = RunMode.Async)]
         [Alias("infochannel", "channel", "ci")]
