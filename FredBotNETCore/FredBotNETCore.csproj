@@ -13,11 +13,11 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Addons.Preconditions" Version="1.2.0-alpha2" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00957" />
-    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-00957" />
-    <PackageReference Include="Google.Apis" Version="1.33.1" />
-    <PackageReference Include="Google.Apis.Auth" Version="1.33.1" />
-    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.33.1.1226" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00965" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-00965" />
+    <PackageReference Include="Google.Apis" Version="1.34.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.34.0" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.34.0.1226" />
     <PackageReference Include="MySql.Data.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
@@ -34,7 +34,7 @@
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.0-rc1" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.0" />
     <PackageReference Include="System.Threading.Timer" Version="4.3.0" />
   </ItemGroup>
 
