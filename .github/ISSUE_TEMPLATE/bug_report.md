@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create an issue to improve the bot.
+about: Report a bug that occurs when using the bot.
 
 ---
 

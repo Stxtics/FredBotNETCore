@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest a new command to be added or improvements to existing commands.
+about: Suggest something to be added or improvements to things that already exist.
 
 ---
 
