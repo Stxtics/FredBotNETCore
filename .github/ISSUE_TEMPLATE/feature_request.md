@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest a something to be added or improvements to things that already exist.
+about: Suggest something to be added or improvements to things that already exist.
 
 ---
 
