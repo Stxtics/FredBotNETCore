@@ -246,7 +246,8 @@ namespace FredBotNETCore.Modules.Public
             }
             return channel;
         }
-        string appid = new StreamReader(path: Path.Combine(downloadPath, "WeatherAppID.txt")).ReadLine();
+
+        readonly string appid = new StreamReader(path: Path.Combine(downloadPath, "WeatherAppID.txt")).ReadLine();
         public async Task<String> GetWeatherAsync(string city)
         {
             var httpClient = new HttpClient();
@@ -372,17 +373,14 @@ namespace FredBotNETCore.Modules.Public
             {
                 Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
             };
-            embed.Title = "Fred the G. Cactus Commands";
-            embed.Description = "**Manager**\n" +
+            string help = "**Manager**\n" +
                 "/clearwarn - Clear warnings for a user.\n" +
                 "/addmod - Add a server mod or role.\n" +
                 "/delmod - Delete a server mod or role.\n" +
                 "/listmods - List server mod roles and users.\n" +
                 "/addjoinablerole - Add a joinable role.\n" +
-                "/deljoinablerole - Remove a joinable role.";
-            await Context.User.SendMessageAsync("", false, embed.Build());
-            embed.Title = "";
-            embed.Description = "**Moderator**\n" +
+                "/deljoinablerole - Remove a joinable role.\n" +
+                "**Moderator**\n" +
                 "/blacklistmusic - Blacklist a user from using music commands.\n" +
                 "/unblacklistmusic - Unblacklist a user from using music commands.\n" +
                 "/listblacklistedmusic - List blacklisted users from music commands.\n" +
@@ -424,10 +422,8 @@ namespace FredBotNETCore.Modules.Public
                 "/kick - Kicks the user mentioned.Reason needed.\n" +
                 "/ban - Bans the user mentioned.Reason needed.\n" +
                 "**PR2 Staff Member Only**\n" +
-                "/promote - Says about a PR2 Promotion. PR2 Admins only";
-            await Context.User.SendMessageAsync("", false, embed.Build());
-            embed.Title = "";
-            embed.Description = "**PR2 Discussion Only**\n" +
+                "/promote - Says about a PR2 Promotion. PR2 Admins only\n" +
+                "**PR2 Discussion Only**\n" +
                 "/hint - Tell you the current hint for the artifact location.\n" +
                 "/view - Gives you info of a PR2 user, or multiple if each name seperated by | .\n" +
                 "/viewid - Same as /view but with user ID instead of username.\n" +
@@ -467,7 +463,14 @@ namespace FredBotNETCore.Modules.Public
                 "/suggest - Lets you add a suggestion for the suggestions channel.\n" +
                 "/verify - Gives you instructions on how to get verified(if you are not).\n" +
                 "/weather - Get weather for a city.";
-            await Context.User.SendMessageAsync("", false, embed.Build());
+            embed.Title = "Fred the G. Cactus Commands";
+            var parts = help.SplitInParts(2000);
+            foreach(string part in parts)
+            {
+                embed.Description = part;
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                embed.Title = "";
+            }
         }
 
         #endregion
