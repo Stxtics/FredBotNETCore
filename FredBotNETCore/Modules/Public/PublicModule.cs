@@ -468,7 +468,7 @@ namespace FredBotNETCore.Modules.Public
             foreach(string part in parts)
             {
                 embed.Description = part;
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await Context.User.SendMessageAsync("", false, embed.Build());
                 embed.Title = "";
             }
         }
