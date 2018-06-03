@@ -2938,7 +2938,7 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 AuditLogReason = $"Blacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
                             };
-                            await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny, PermValue.Deny), options);
+                            await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny), options);
                             await Context.Channel.SendMessageAsync($"Blacklisted **{user.Username}#{user.Discriminator}** from suggestions.");
                         }
                     }
