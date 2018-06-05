@@ -4919,7 +4919,7 @@ namespace FredBotNETCore.Modules.Public
                 });
                 embed.AddField(y =>
                 {
-                    y.Name = "Roles";
+                    y.Name = $"Roles [{roles.Count}]";
                     y.Value = roleList;
                     y.IsInline = false;
                 });
