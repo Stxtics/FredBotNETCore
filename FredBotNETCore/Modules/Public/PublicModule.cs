@@ -261,6 +261,32 @@ namespace FredBotNETCore.Modules.Public
 
         #region Owner
 
+        [Command("removeverified")]
+        [Alias("verifiedremove")]
+        [RequireContext(ContextType.Guild)]
+        [RequireOwner]
+        public async Task RemoveVerified()
+        {
+            if (Context.Guild.Id != 249657315576381450)
+            {
+                return;
+            }
+            else
+            {
+                foreach(SocketGuildUser user in Context.Guild.Users)
+                {
+                    string pr2name = Database.GetPR2Name(user as IUser);
+                    if (pr2name == null || pr2name.Length <= 0 || pr2name.Equals("Not verified"))
+                    {
+                        SocketRole verified = Context.Guild.GetRole(255513962798514177);
+                        SocketRole members = Context.Guild.GetRole(253265134393229312);
+                        await user.RemoveRoleAsync(verified);
+                        await user.AddRoleAsync(members);
+                    }
+                }
+            }
+        }
+
         [Command("gettime")]
         [Alias("gt")]
         [Summary("Converts time from int to date time")]
@@ -819,8 +845,15 @@ namespace FredBotNETCore.Modules.Public
                     if (userID != 1)
                     {
                         SocketGuild guild = CommandHandler._client.GetGuild(249657315576381450);
-                        IUser user = guild.GetUser(userID);
-                        await Context.Channel.SendMessageAsync($"Here's what I remember: `{Uri.UnescapeDataString(levelname)}`. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)} ({user.Username}#{user.Discriminator})!!");
+                        try
+                        {
+                            IUser user = guild.GetUser(userID);
+                            await Context.Channel.SendMessageAsync($"Here's what I remember: `{Uri.UnescapeDataString(levelname)}`. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)} ({user.Username}#{user.Discriminator})!!");
+                        }
+                        catch
+                        {
+                            await Context.Channel.SendMessageAsync($"Here's what I remember: `{Uri.UnescapeDataString(levelname)}`. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)}!!");
+                        }
                     }
                     else
                     {
