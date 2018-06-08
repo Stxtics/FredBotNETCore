@@ -261,33 +261,7 @@ namespace FredBotNETCore.Modules.Public
 
         #region Owner
 
-        [Command("removeverified")]
-        [Alias("verifiedremove")]
-        [RequireContext(ContextType.Guild)]
-        [RequireOwner]
-        public async Task RemoveVerified()
-        {
-            if (Context.Guild.Id != 249657315576381450)
-            {
-                return;
-            }
-            else
-            {
-                foreach(SocketGuildUser user in Context.Guild.Users)
-                {
-                    string pr2name = Database.GetPR2Name(user as IUser);
-                    if (pr2name == null || pr2name.Length <= 0 || pr2name.Equals("Not verified"))
-                    {
-                        SocketRole verified = Context.Guild.GetRole(255513962798514177);
-                        SocketRole members = Context.Guild.GetRole(253265134393229312);
-                        await user.RemoveRoleAsync(verified);
-                        await user.AddRoleAsync(members);
-                    }
-                }
-            }
-        }
-
-        [Command("gettime")]
+        [Command("gettime", RunMode = RunMode.Async)]
         [Alias("gt")]
         [Summary("Converts time from int to date time")]
         [RequireOwner]
