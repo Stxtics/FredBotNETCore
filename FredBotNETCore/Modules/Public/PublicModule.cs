@@ -587,25 +587,22 @@ namespace FredBotNETCore.Modules.Public
                                 }
                                 Database.VerifyUser(user, username);
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully changed your verified account from {pr2name} to {username}.");
-                                ITextChannel channel = guild.GetTextChannel(327575359765610496);
+                                SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
                                 await channel.SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {Context.User.Mention} changed their verified account from **{pr2name}** to **{username}**.");
                             }
                             else
                             {
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully verified your PR2 Account.");
-                                ITextChannel channel = guild.GetTextChannel(327575359765610496);
+                                SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
                                 await channel.SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Verified {Context.User.Mention} who is **{username}** on PR2.");
                                 IEnumerable<SocketRole> role = guild.Roles.Where(input => input.Name.ToUpper() == "Verified".ToUpper());
                                 IEnumerable<SocketRole> role2 = guild.Roles.Where(input => input.Name.ToUpper() == "Members".ToUpper());
-                                if (!user.Roles.Any(e => e.Position > verified.Position))
+                                RequestOptions options = new RequestOptions()
                                 {
-                                    RequestOptions options = new RequestOptions()
-                                    {
-                                        AuditLogReason = "Verifying User."
-                                    };
-                                    await user.AddRolesAsync(role, options);
-                                    await user.RemoveRolesAsync(role2, options);
-                                }
+                                    AuditLogReason = "Verifying User."
+                                };
+                                await user.AddRolesAsync(role, options);
+                                await user.RemoveRolesAsync(role2, options);
                             }
                             break;
                         }
