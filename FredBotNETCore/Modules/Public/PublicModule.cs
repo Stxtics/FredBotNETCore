@@ -13,6 +13,7 @@ using System.Globalization;
 using System.IO;
 using Newtonsoft.Json;
 using static FredBotNETCore.WeatherDataCurrent;
+using Newtonsoft.Json.Linq;
 
 namespace FredBotNETCore.Modules.Public
 {
@@ -1772,7 +1773,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (fahuser.Contains("<@"))
+                    if (fahuser.Contains("<@") && fahuser.Contains(">"))
                     {
                         var server = CommandHandler._client.GetGuild(249657315576381450);
                         ulong id = 0;
@@ -1805,80 +1806,65 @@ namespace FredBotNETCore.Modules.Public
                             return;
                         }
                     }
+                    HttpClient web = new HttpClient();
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = fahuser,
+                        IconUrl = "https://pbs.twimg.com/profile_images/53706032/Fold003_400x400.png",
+                        Url = "https://stats.foldingathome.org/donor/" + fahuser.Replace(' ', '_')
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
+                        Author = author
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        IconUrl = Context.User.GetAvatarUrl(),
+                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    string text;
                     try
                     {
-                        HttpClient web = new HttpClient();
-                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                        {
-                            Name = fahuser,
-                            IconUrl = "https://pbs.twimg.com/profile_images/53706032/Fold003_400x400.png",
-                            Url = "http://fah-web2.stanford.edu/cgi-bin/main.py?qtype=userpage&username=" + fahuser.Replace(' ', '_') + "&teamnum=143016"
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
-                            Author = author
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            IconUrl = Context.User.GetAvatarUrl(),
-                            Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        if (fahuser.Contains(' '))
-                        {
-                            fahuser = fahuser.Replace(' ', '_');
-                        }
-                        fahuser = Uri.EscapeDataString(fahuser);
-                        try
-                        {
-
-                            String text = await web.GetStringAsync("http://fah-web2.stanford.edu/cgi-bin/main.py?qtype=userpage&username=" + fahuser + "&teamnum=143016");
-                            if (text.Contains("There was an error accessing/using the database."))
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} There was an error accessing/using the database. The Folding@home team is working to fix this issue.");
-                            }
-                            else
-                            {
-                                string[] fahuserinfo = text.Split('>');
-                                string donor = fahuserinfo[120].TrimEnd(new char[] { 'A', '/', '<', ' ' });
-                                string score = Int32.Parse(fahuserinfo[143].Substring(1).TrimEnd(new char[] { 'b', '/', '<', ' ' })).ToString("N0");
-                                string rank = Int32.Parse(fahuserinfo[155].Substring(1).TrimEnd(new char[] { 'b', '/', '<', ' ' })).ToString("N0");
-                                string wu = Int32.Parse(fahuserinfo[165].Substring(1).TrimEnd(new char[] { 'b', '/', '<', ' ' })).ToString("N0");
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Score";
-                                    y.Value = $"{score}";
-                                    y.IsInline = true;
-                                });
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Overall Rank";
-                                    y.Value = $"{rank}";
-                                    y.IsInline = true;
-                                });
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Completed WUs";
-                                    y.Value = $"{wu}";
-                                    y.IsInline = true;
-                                });
-
-                                await Context.Channel.SendMessageAsync("", false, embed.Build());
-                            }
-                        }
-                        catch (IndexOutOfRangeException)
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{Uri.UnescapeDataString(fahuser)}` does not exist or could not be found.");
-                            return;
-                        }
+                        text = await web.GetStringAsync("https://stats.foldingathome.org/api/donor/" + fahuser.Replace(' ', '_'));
                     }
-                    catch (WebException e) when (e.Status == WebExceptionStatus.Timeout)
+                    catch(HttpRequestException)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} Folding @ Home is currently updating.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser}` does not exist or could not be found.");
                         return;
                     }
+                    var o = JObject.Parse(text).GetValue("teams");
+                    JArray array = JArray.Parse(o.ToString());
+                    JObject stats = new JObject();
+                    foreach (JObject jobject in array)
+                    {
+                        if (Convert.ToInt32(jobject.GetValue("team")) == 143016)
+                        {
+                            stats = jobject;
+                            break;
+                        }
+                    }
+                    embed.AddField(y =>
+                    {
+                        y.Name = $"Score";
+                        y.Value = $"{Convert.ToInt32(stats.GetValue("credit")).ToString("N0")}";
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Completed WUs";
+                        y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0")}";
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Last WU";
+                        y.Value = $"{stats.GetValue("last")}";
+                        y.IsInline = true;
+                    });
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
             }
             else

@@ -138,9 +138,9 @@ namespace FredBotNETCore
                     await CommandHandler.RemovePermInvitesAsync();
                     #endregion
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    await CommandHandler.SendError(e.Message, e.StackTrace);
+                    //ignore
                 }
             }
         }    
