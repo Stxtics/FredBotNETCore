@@ -6,7 +6,6 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System.Diagnostics;
 using System.Text;
-using System.Net;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Globalization;
@@ -1119,7 +1118,8 @@ namespace FredBotNETCore.Modules.Public
                                     }
                                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                     {
-                                        Name = $"-- {name} --"
+                                        Name = $"-- {name} --",
+                                        Url = "https://pr2hub.com/player_search.php?name=" + name
                                     };
                                     embed.WithAuthor(author);
                                     embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
@@ -1280,7 +1280,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
                         Name = $"-- {name} --",
-                        Url = "http://pr2hub.com/guild_search.php?name=" + guildname.Replace(" ", "%20")
+                        Url = "https://pr2hub.com/guild_search.php?name=" + guildname.Replace(" ", "%20")
                     };
                     EmbedBuilder embed = new EmbedBuilder()
                     {
