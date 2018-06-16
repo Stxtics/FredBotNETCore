@@ -1187,7 +1187,8 @@ namespace FredBotNETCore.Modules.Public
                         }
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
-                            Name = $"-- {name} --"
+                            Name = $"-- {name} --",
+                            Url = "https://pr2hub.com/player_search.php?name=" + name
                         };
                         embed.WithAuthor(author);
                         embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
