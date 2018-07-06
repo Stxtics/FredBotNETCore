@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.WebSocket;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -79,7 +80,7 @@ namespace FredBotNETCore
         {
             var database = new Database("FredBotDatabase");
 
-            var str = string.Format("INSERT INTO fredbottable (user_id, username, pr2_name ) VALUES ('{0}', '{1}', 'Not verified')", user.Id, user.Username);
+            var str = string.Format("INSERT INTO fredbottable (user_id, username, pr2_name, balance ) VALUES ('{0}', '{1}', 'Not verified', '{2}')", user.Id, user.Username, 10);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -122,6 +123,70 @@ namespace FredBotNETCore
                 database.CloseConnection();
                 return;
             }
+        }
+
+        public static void SetLastUsed(SocketUser user, string date)
+        {
+            var database = new Database("FredBotDatabase");
+            try
+            {
+                var str = string.Format("UPDATE fredbottable SET last_used = '{1}' WHERE user_id = {0}", user.Id, date);
+                var reader = database.FireCommand(str);
+                reader.Close();
+                database.CloseConnection();
+                return;
+            }
+            catch (Exception)
+            {
+                database.CloseConnection();
+                return;
+            }
+        }
+
+        public static string GetLastUsed(SocketUser user)
+        {
+            string lastUsed = "";
+            var database = new Database("FredBotDatabase");
+            var str = string.Format("SELECT * FROM fredbottable WHERE user_id = '{0}'", user.Id);
+            var tableName = database.FireCommand(str);
+            while (tableName.Read())
+            {
+                lastUsed = (string)tableName["last_used"];
+            }
+            database.CloseConnection();
+            return lastUsed;
+        }
+
+        public static void SetBalance(SocketUser user, int bal)
+        {
+            var database = new Database("FredBotDatabase");
+            try
+            {
+                var str = string.Format("UPDATE fredbottable SET balance = '{1}' WHERE user_id = {0}", user.Id, bal);
+                var reader = database.FireCommand(str);
+                reader.Close();
+                database.CloseConnection();
+                return;
+            }
+            catch(Exception)
+            {
+                database.CloseConnection();
+                return;
+            }
+        }
+
+        public static int GetBalance(SocketUser user)
+        {
+            int bal = 0;
+            var database = new Database("FredBotDatabase");
+            var str = string.Format("SELECT * FROM fredbottable WHERE user_id = '{0}'", user.Id);
+            var tableName = database.FireCommand(str);
+            while(tableName.Read())
+            {
+                bal = (int)tableName["balance"];
+            }
+            database.CloseConnection();
+            return bal;
         }
 
         public static string GetPR2Name(IUser user)

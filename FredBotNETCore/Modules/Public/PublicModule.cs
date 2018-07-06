@@ -104,9 +104,9 @@ namespace FredBotNETCore.Modules.Public
             return tChannel;
         }
 
-        public static async Task<IUser> UserInGuildAsync(IGuild guild, string username)
+        public static SocketUser UserInGuild(SocketGuild guild, string username)
         {
-            IUser user = null;
+            SocketUser user = null;
             ulong userId = 0;
             if (username.ElementAt(0).Equals('<') && username.ElementAt(username.Length - 1).Equals('>'))
             {
@@ -141,22 +141,22 @@ namespace FredBotNETCore.Modules.Public
             }
             if (userId != 0)
             {
-                foreach (IGuildUser gUser in await guild.GetUsersAsync())
+                foreach (SocketGuildUser gUser in guild.Users)
                 {
                     if (gUser.Id == userId)
                     {
-                        user = CommandHandler._client.GetUser(gUser.Id) as IUser;
+                        user = CommandHandler._client.GetUser(gUser.Id) as SocketUser;
                         break;
                     }
                 }
             }
             else
             {
-                foreach (IGuildUser gUser in await guild.GetUsersAsync())
+                foreach (SocketGuildUser gUser in guild.Users)
                 {
                     if (gUser.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        user = CommandHandler._client.GetUser(gUser.Id) as IUser;
+                        user = CommandHandler._client.GetUser(gUser.Id) as SocketUser;
                         break;
                     }
                 }
@@ -260,6 +260,25 @@ namespace FredBotNETCore.Modules.Public
         #endregion
 
         #region Owner
+
+        [Command("setbalance", RunMode = RunMode.Async)]
+        [Alias("balanceset")]
+        [Summary("Sets balance for a user")]
+        [RequireContext(ContextType.Guild)]
+        [RequireOwner]
+        public async Task SetBalance(string username = null, int bal = 0)
+        {
+            if (UserInGuild(Context.Guild, username) != null)
+            {
+                SocketUser user = UserInGuild(Context.Guild, username);
+                Database.SetBalance(user, bal);
+                await Context.Channel.SendMessageAsync($"Successfully set **{user.Username}#{user.Discriminator}'s** balance to **${bal}**.");
+            }
+            else
+            {
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username}` does not exist or could not be found.");
+            }
+        }
 
         [Command("gettime", RunMode = RunMode.Async)]
         [Alias("gt")]
@@ -477,6 +496,166 @@ namespace FredBotNETCore.Modules.Public
 
         #region Everyone
 
+        [Command("balance", RunMode = RunMode.Async)]
+        [Alias("bal")]
+        [Summary("Tells a user how much money they have.")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Balance()
+        {
+            var result = Database.CheckExistingUser(Context.User);
+            if (result.Count() <= 0)
+            {
+                Database.EnterUser(Context.User);
+            }
+            string pr2name = Database.GetPR2Name(Context.User);
+            if (pr2name.Equals("Not verified") || pr2name.Length <= 0)
+            {
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to verify yourself to use this command.");
+            }
+            else
+            {
+                int bal = Database.GetBalance(Context.User);
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} your balance is **${bal}**.");
+            }
+        }
+
+        [Command("jackpot", RunMode = RunMode.Async)]
+        [Alias("lottobal")]
+        [Summary("See how much money is in the jackpot.")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Jackpot()
+        {
+            var result = Database.CheckExistingUser(Context.User);
+            if (result.Count() <= 0)
+            {
+                Database.EnterUser(Context.User);
+            }
+            string pr2name = Database.GetPR2Name(Context.User);
+            if (pr2name.Equals("Not verified") || pr2name.Length <= 0)
+            {
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to verify yourself to use this command.");
+            }
+            else
+            {
+                StreamReader lotto = new StreamReader(path: Path.Combine(downloadPath, "LottoBalance.txt"));
+                int lottobal = Convert.ToInt32(lotto.ReadLine());
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the jackpot is currently worth **${lottobal}**.");
+            } 
+        }
+
+        [Command("lotto", RunMode = RunMode.Async)]
+        [Alias("lottery")]
+        [Summary("Have a go at winning the jackpot.")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Lotto(string ticketsS = null)
+        {
+            var result = Database.CheckExistingUser(Context.User);
+            if (result.Count() <= 0)
+            {
+                Database.EnterUser(Context.User);
+            }
+            string pr2name = Database.GetPR2Name(Context.User);
+            if (pr2name.Equals("Not verified") || pr2name.Length <= 0)
+            {
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to verify yourself to use this command.");
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(ticketsS) || !int.TryParse(ticketsS, out int tickets))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220)
+                    };
+                    embed.Title = "Command: /lotto";
+                    embed.Title = "**Description:** Enter the lottery.\n**Usage:** /lotto [tickets]\n**Example:** /lotto 10";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (tickets > Database.GetBalance(Context.User))
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you don't have enough money to buy that many tickets");
+                    }
+                    else
+                    {
+                        StreamReader lotto = new StreamReader(path: Path.Combine(downloadPath, "LottoBalance.txt"));
+                        Database.SetBalance(Context.User, Database.GetBalance(Context.User) - tickets);
+                        int lottobal = Convert.ToInt32(lotto.ReadLine());
+                        int chance = (tickets / lottobal) * 100;
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        {
+                            Name = "Lottery",
+                            IconUrl = Context.User.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
+                            Author = auth,
+                            Description = $"Jackpot: ${lottobal}\nScratching Tickets..."
+                        };
+                        var message = await Context.Channel.SendMessageAsync("", false, embed.Build());
+                        await Task.Delay(500);
+                        if (chance >= 100)
+                        {
+                            embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} won the jackpot of ${lottobal}!";
+                            await message.ModifyAsync(x => x.Embed = embed.Build());
+                            Database.SetBalance(Context.User, Database.GetBalance(Context.User) + lottobal);
+                            File.WriteAllText(Path.Combine(downloadPath, "LottoBalance.txt"), "100");
+                        }
+                        else
+                        {
+                            int random = rand.Next(100);
+                            if (random <= chance)
+                            {
+                                embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} won the jackpot of ${lottobal}!";
+                                await message.ModifyAsync(x => x.Embed = embed.Build());
+                                Database.SetBalance(Context.User, Database.GetBalance(Context.User) + lottobal);
+                                File.WriteAllText(Path.Combine(downloadPath, "LottoBalance.txt"), "100");
+                            }
+                            else
+                            {
+                                embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} did not win the jackpot of ${lottobal}!";
+                                await message.ModifyAsync(x => x.Embed = embed.Build());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        [Command("daily")]
+        [Alias("work")]
+        [Summary("Collect daily cash.")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Daily()
+        {
+            var result = Database.CheckExistingUser(Context.User);
+            if (result.Count() <= 0)
+            {
+                Database.EnterUser(Context.User);
+            }
+            string pr2name = Database.GetPR2Name(Context.User);
+            if (pr2name.Equals("Not verified") || pr2name.Length <= 0)
+            {
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to verify yourself to use this command.");
+            }
+            else
+            {
+                string date = DateTime.Now.Day + "/" + DateTime.Now.Month + "/" + DateTime.Now.Year;
+                if (Database.GetLastUsed(Context.User).Equals(date))
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have already used this command today.");
+                }
+                else
+                {
+                    int money = rand.Next(5, 50);
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you worked for ${money} today.");
+                    Database.SetBalance(Context.User, Database.GetBalance(Context.User) + money);
+                }
+            }
+        }
+
         [Command("verify", RunMode = RunMode.Async)]
         [Alias("verifyme")]
         [Summary("Verifies a user on the server.")]
@@ -662,7 +841,7 @@ namespace FredBotNETCore.Modules.Public
                     return;
                 }
                 SocketTextChannel channel = Context.Guild.GetChannel(249684395454234624) as SocketTextChannel;
-                EmbedAuthorBuilder auth = new EmbedAuthorBuilder() // Shows the Name of the user
+                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     Name = Context.User.Username + "#" + Context.User.Discriminator,
                     IconUrl = Context.User.GetAvatarUrl(),
@@ -2398,12 +2577,12 @@ namespace FredBotNETCore.Modules.Public
                 embed.WithCurrentTimestamp();
                 if (count == 0)
                 {
-                    author.Name = $"__Happy Hour Server__";
+                    author.Name = $"Happy Hour Server";
                     embed.Description = $"This server currently has a happy hour on it: {hhServers.TrimEnd(new char[] { ' ', ',' })}";
                 }
                 else
                 {
-                    author.Name = $"__Happy Hour Servers__";
+                    author.Name = $"Happy Hour Servers";
                     embed.Description = $"These are the current servers with happy hour on them: {hhServers}";
                 }
 
@@ -2766,9 +2945,9 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    if (UserInGuild(Context.Guild, username) != null)
                     {
-                        IUser user = await UserInGuildAsync(Context.Guild, username);
+                        IUser user = UserInGuild(Context.Guild, username);
                         string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt"));
                         if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                         {
@@ -2814,9 +2993,9 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    if (UserInGuild(Context.Guild, username) != null)
                     {
-                        IUser user = await UserInGuildAsync(Context.Guild, username);
+                        IUser user = UserInGuild(Context.Guild, username);
                         string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt"));
                         if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                         {
@@ -2912,9 +3091,9 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    if (UserInGuild(Context.Guild, username) != null)
                     {
-                        IUser user = await UserInGuildAsync(Context.Guild, username);
+                        IUser user = UserInGuild(Context.Guild, username);
                         string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedSuggestions.txt"));
                         if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                         {
@@ -2966,9 +3145,9 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    if (UserInGuild(Context.Guild, username) != null)
                     {
-                        IUser user = await UserInGuildAsync(Context.Guild, username);
+                        IUser user = UserInGuild(Context.Guild, username);
                         string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedSuggestions.txt"));
                         if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                         {
@@ -3464,9 +3643,9 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (await UserInGuildAsync(Context.Guild, username) != null)
+                if (UserInGuild(Context.Guild, username) != null)
                 {
-                    IUser user = await UserInGuildAsync(Context.Guild, username);
+                    IUser user = UserInGuild(Context.Guild, username);
                     auth.Name = $"Warnings - {user.Username}#{user.Discriminator}";
                     auth.IconUrl = user.GetAvatarUrl();
                     warnings = Database.Warnings(user);
@@ -3654,9 +3833,9 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (await UserInGuildAsync(Context.Guild, username) != null)
+                if (UserInGuild(Context.Guild, username) != null)
                 {
-                    IUser user = await UserInGuildAsync(Context.Guild, username);
+                    IUser user = UserInGuild(Context.Guild, username);
                     if (CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
@@ -3751,9 +3930,9 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (await UserInGuildAsync(Context.Guild, username) != null)
+                if (UserInGuild(Context.Guild, username) != null)
                 {
-                    IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                    IUser iUser = UserInGuild(Context.Guild, username);
                     SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                     if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                     {
@@ -3849,9 +4028,9 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (await UserInGuildAsync(Context.Guild, username) != null)
+                if (UserInGuild(Context.Guild, username) != null)
                 {
-                    IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                    IUser iUser = UserInGuild(Context.Guild, username);
                     SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                     if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                     {
@@ -3998,9 +4177,9 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    if (UserInGuild(Context.Guild, username) != null)
                     {
-                        IUser user = await UserInGuildAsync(Context.Guild, username);
+                        IUser user = UserInGuild(Context.Guild, username);
                         List<string> modlogs = Database.Modlogs(user);
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
@@ -4180,9 +4359,9 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    if (UserInGuild(Context.Guild, username) != null)
                     {
-                        IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                        IUser iUser = UserInGuild(Context.Guild, username);
                         SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                         if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                         {
@@ -4495,9 +4674,9 @@ namespace FredBotNETCore.Modules.Public
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                     return;
                 }
-                if (await UserInGuildAsync(Context.Guild, username) != null)
+                if (UserInGuild(Context.Guild, username) != null)
                 {
-                    IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                    IUser iUser = UserInGuild(Context.Guild, username);
                     SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                     if (type.Equals("temp", StringComparison.InvariantCultureIgnoreCase) || type.Equals("temporary", StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -4564,9 +4743,9 @@ namespace FredBotNETCore.Modules.Public
                 await Context.Channel.SendMessageAsync("", false, embed.Build());
                 return;
             }
-            if (await UserInGuildAsync(Context.Guild, username) != null)
+            if (UserInGuild(Context.Guild, username) != null)
             {
-                IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                IUser iUser = UserInGuild(Context.Guild, username);
                 SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                 if (!user.Roles.Any(e => e.Name == "Temp Mod"))
                 {
@@ -4611,9 +4790,9 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (await UserInGuildAsync(Context.Guild, username) != null)
+                if (UserInGuild(Context.Guild, username) != null)
                 {
-                    IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                    IUser iUser = UserInGuild(Context.Guild, username);
                     SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                     if (!user.Roles.Any(e => e.Name == "Muted"))
                     {
@@ -4791,9 +4970,9 @@ namespace FredBotNETCore.Modules.Public
             {
                 username = Context.User.Username;
             }
-            if (await UserInGuildAsync(Context.Guild, username) != null)
+            if (UserInGuild(Context.Guild, username) != null)
             {
-                IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                IUser iUser = UserInGuild(Context.Guild, username);
                 SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                 IApplication application = await Context.Client.GetApplicationInfoAsync(); // Gets The Client's info
                 string createdMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.CreatedAt.Month);
@@ -5075,9 +5254,9 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (await UserInGuildAsync(Context.Guild, username) != null)
+                if (UserInGuild(Context.Guild, username) != null)
                 {
-                    IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                    IUser iUser = UserInGuild(Context.Guild, username);
                     SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                     var usermessages = (Context.Channel.GetMessagesAsync().Flatten()).Where(x => x.Author == user).Take(delete);
                     if (delete == 1)
@@ -5129,9 +5308,9 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    if (UserInGuild(Context.Guild, username) != null)
                     {
-                        IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                        IUser iUser = UserInGuild(Context.Guild, username);
                         SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                         if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                         {
@@ -5226,9 +5405,9 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (await UserInGuildAsync(Context.Guild, username) != null)
+                    if (UserInGuild(Context.Guild, username) != null)
                     {
-                        IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                        IUser iUser = UserInGuild(Context.Guild, username);
                         SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                         if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                         {
@@ -5322,9 +5501,9 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (await UserInGuildAsync(Context.Guild, username) != null)
+                if (UserInGuild(Context.Guild, username) != null)
                 {
-                    IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                    IUser iUser = UserInGuild(Context.Guild, username);
                     SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                     if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                     {
@@ -5495,9 +5674,9 @@ namespace FredBotNETCore.Modules.Public
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you cannot temp mod yourself.");
                 return;
             }
-            if (await UserInGuildAsync(Context.Guild, username) != null)
+            if (UserInGuild(Context.Guild, username) != null)
             {
-                IUser iUser = await UserInGuildAsync(Context.Guild, username);
+                IUser iUser = UserInGuild(Context.Guild, username);
                 SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                 double minutes = Math.Round(Convert.ToDouble(time), 0);
                 ITextChannel roles = user.Guild.GetChannel(260272249976782848) as ITextChannel;
@@ -5628,9 +5807,9 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (await UserInGuildAsync(Context.Guild, username) != null)
+                if (UserInGuild(Context.Guild, username) != null)
                 {
-                    IUser user = await UserInGuildAsync(Context.Guild, username);
+                    IUser user = UserInGuild(Context.Guild, username);
                     int warnCount = Convert.ToInt32(Database.WarnCount(user));
                     if (warnCount == 0)
                     {
@@ -5758,9 +5937,9 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (await UserInGuildAsync(Context.Guild, username) != null)
+                if (UserInGuild(Context.Guild, username) != null)
                 {
-                    IUser user = await UserInGuildAsync(Context.Guild, username);
+                    IUser user = UserInGuild(Context.Guild, username);
                     SocketGuildUser gUser = Context.Guild.GetUser(user.Id);
                     if (nickname.Length > 32)
                     {
@@ -5999,9 +6178,9 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"Added mod role **{role.Name}**.");
                         }
                     }
-                    else if (await UserInGuildAsync(Context.Guild, mod) != null)
+                    else if (UserInGuild(Context.Guild, mod) != null)
                     {
-                        IUser user = await UserInGuildAsync(Context.Guild, mod);
+                        IUser user = UserInGuild(Context.Guild, mod);
                         string currentModUsers = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
                         if (currentModUsers.Contains(user.Id.ToString()))
                         {
@@ -6066,9 +6245,9 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{mod}` is not a mod role.");
                         }
                     }
-                    else if (await UserInGuildAsync(Context.Guild, mod) != null)
+                    else if (UserInGuild(Context.Guild, mod) != null)
                     {
-                        ulong userID = (await UserInGuildAsync(Context.Guild, mod)).Id;
+                        ulong userID = (UserInGuild(Context.Guild, mod)).Id;
                         string modUsers = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
                         if (modUsers.Contains(userID.ToString()))
                         {
