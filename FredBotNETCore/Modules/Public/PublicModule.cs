@@ -616,6 +616,8 @@ namespace FredBotNETCore.Modules.Public
                             else
                             {
                                 embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} did not win the jackpot of ${lottobal}!";
+                                int newbal = lottobal + tickets;
+                                File.WriteAllText(Path.Combine(downloadPath, "LottoBalance.txt"), newbal.ToString());
                                 await message.ModifyAsync(x => x.Embed = embed.Build());
                             }
                         }
