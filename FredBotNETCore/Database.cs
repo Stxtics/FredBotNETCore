@@ -88,6 +88,26 @@ namespace FredBotNETCore
             return null;
         }
 
+        public static List<String> GetTop()
+        {
+            var result = new List<String>();
+            var database = new Database("FredBotDatabase");
+
+            var str = string.Format("SELECT * FROM fredbottable ORDER BY balance desc");
+            var tableName = database.FireCommand(str);
+            int count = 0;
+            while (tableName.Read() && count < 10)
+            {
+                var userId = (string)tableName["user_id"];
+
+                result.Add(userId);
+                count++;
+            }
+            database.CloseConnection();
+
+            return result;
+        }
+
         public static List<String> CheckForVerified(IUser user, string pr2name)
         {
             var result = new List<String>();

@@ -543,6 +543,50 @@ namespace FredBotNETCore.Modules.Public
             } 
         }
 
+        [Command("leaderboard", RunMode = RunMode.Async)]
+        [Alias("lb")]
+        [Summary("Shows users with the most money.")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Leaderboard()
+        {
+            var result = Database.CheckExistingUser(Context.User);
+            if (result.Count() <= 0)
+            {
+                Database.EnterUser(Context.User);
+            }
+            string pr2name = Database.GetPR2Name(Context.User);
+            if (pr2name.Equals("Not verified") || pr2name.Length <= 0)
+            {
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to verify yourself to use this command.");
+            }
+            else
+            {
+                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                {
+                    Name = "Leaderboard",
+                    IconUrl = Context.Guild.IconUrl
+                };
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
+                    Author = auth,
+                };
+                List<string> topUsers = Database.GetTop();
+                List<string> topBalance = null;
+                foreach (string userid in topUsers)
+                {
+                    topBalance.Add("$" + Database.GetBalance(CommandHandler._client.GetUser(Convert.ToUInt64(userid))).ToString());
+                }
+                string leaderboard = null;
+                for (int i = 0; i < 10; i++)
+                {
+                    leaderboard = leaderboard + (CommandHandler._client.GetUser(Convert.ToUInt64(topUsers.ElementAt(i))).Username + "#" + CommandHandler._client.GetUser(Convert.ToUInt64(topUsers.ElementAt(i))).Discriminator + " - $" + topBalance.ElementAt(i) + "\n");
+                }
+                embed.Description = leaderboard;
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+        }
+
         [Command("lotto", RunMode = RunMode.Async)]
         [Alias("lottery")]
         [Summary("Have a go at winning the jackpot.")]
@@ -575,14 +619,14 @@ namespace FredBotNETCore.Modules.Public
                 {
                     if (tickets > Database.GetBalance(Context.User))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you don't have enough money to buy that many tickets");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you don't have enough money to buy that many tickets.");
                     }
                     else
                     {
                         StreamReader lotto = new StreamReader(path: Path.Combine(downloadPath, "LottoBalance.txt"));
                         Database.SetBalance(Context.User, Database.GetBalance(Context.User) - tickets);
                         int lottobal = Convert.ToInt32(lotto.ReadLine());
-                        int chance = (tickets / lottobal) * 100;
+                        int chance = Convert.ToInt32((tickets / (lottobal + 0.00)) * 100);
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
                             Name = "Lottery",
@@ -615,7 +659,7 @@ namespace FredBotNETCore.Modules.Public
                             }
                             else
                             {
-                                embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} did not win the jackpot of ${lottobal}!";
+                                embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} did not win the jackpot of ${lottobal}.";
                                 int newbal = lottobal + tickets;
                                 File.WriteAllText(Path.Combine(downloadPath, "LottoBalance.txt"), newbal.ToString());
                                 await message.ModifyAsync(x => x.Embed = embed.Build());
@@ -626,7 +670,7 @@ namespace FredBotNETCore.Modules.Public
             }
         }
 
-        [Command("daily")]
+        [Command("daily", RunMode = RunMode.Async)]
         [Alias("work")]
         [Summary("Collect daily cash.")]
         [RequireContext(ContextType.Guild)]
@@ -654,6 +698,7 @@ namespace FredBotNETCore.Modules.Public
                     int money = rand.Next(5, 50);
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you worked for ${money} today.");
                     Database.SetBalance(Context.User, Database.GetBalance(Context.User) + money);
+                    Database.SetLastUsed(Context.User, date);
                 }
             }
         }
