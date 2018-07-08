@@ -500,7 +500,7 @@ namespace FredBotNETCore.Modules.Public
         [Alias("bal")]
         [Summary("Tells a user how much money they have.")]
         [RequireContext(ContextType.Guild)]
-        public async Task Balance()
+        public async Task Balance([Remainder] string username = null)
         {
             var result = Database.CheckExistingUser(Context.User);
             if (result.Count() <= 0)
@@ -514,8 +514,24 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                int bal = Database.GetBalance(Context.User);
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} your balance is **${bal}**.");
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    int bal = Database.GetBalance(Context.User);
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} your balance is **${bal.ToString("N0")}**.");
+                }
+                else
+                {
+                    if (UserInGuild(Context.Guild, username) != null)
+                    {
+                        SocketUser user = UserInGuild(Context.Guild, username);
+                        int bal = Database.GetBalance(user);
+                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}'s** balance is **${bal.ToString("N0")}**.");
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username}` does not exist or could not be found.");
+                    }
+                }
             }
         }
 
@@ -539,7 +555,7 @@ namespace FredBotNETCore.Modules.Public
             {
                 StreamReader lotto = new StreamReader(path: Path.Combine(downloadPath, "LottoBalance.txt"));
                 int lottobal = Convert.ToInt32(lotto.ReadLine());
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the jackpot is currently worth **${lottobal}**.");
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the jackpot is currently worth **${lottobal.ToString("N0")}**.");
             } 
         }
 
@@ -571,19 +587,42 @@ namespace FredBotNETCore.Modules.Public
                     Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
                     Author = auth,
                 };
-                List<string> topUsers = Database.GetTop();
-                List<string> topBalance = null;
-                foreach (string userid in topUsers)
+                try
                 {
-                    topBalance.Add("$" + Database.GetBalance(CommandHandler._client.GetUser(Convert.ToUInt64(userid))).ToString());
+                    List<string> topUsers = Database.GetTop();
+                    List<string> topBalance = new List<string>();
+                    foreach (string userid in topUsers)
+                    {
+                        try
+                        {
+                            topBalance.Add("$" + Database.GetBalance(Context.Client.GetUser(Convert.ToUInt64(userid))).ToString("N0"));
+                        }
+                        catch (Exception)
+                        {
+                            //ignore
+                        }
+                    }
+                    string leaderboard = null;
+                    int i = 0;
+                    foreach (string userid in topUsers)
+                    {
+                        try
+                        {
+                            leaderboard = leaderboard + (Context.Client.GetUser(Convert.ToUInt64(userid)).Username + "#" + Context.Client.GetUser(Convert.ToUInt64(userid)).Discriminator + " - " + topBalance.ElementAt(i) + "\n");
+                            i++;
+                        }
+                        catch(Exception)
+                        {
+                            //ignore
+                        }
+                    }
+                    embed.Description = leaderboard;
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
-                string leaderboard = null;
-                for (int i = 0; i < 10; i++)
+                catch(Exception e)
                 {
-                    leaderboard = leaderboard + (CommandHandler._client.GetUser(Convert.ToUInt64(topUsers.ElementAt(i))).Username + "#" + CommandHandler._client.GetUser(Convert.ToUInt64(topUsers.ElementAt(i))).Discriminator + " - $" + topBalance.ElementAt(i) + "\n");
+                    await ExceptionInfo(Context.Client, e.Message, e.StackTrace);
                 }
-                embed.Description = leaderboard;
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
             }
         }
 
@@ -612,7 +651,7 @@ namespace FredBotNETCore.Modules.Public
                         Color = new Color(220, 220, 220)
                     };
                     embed.Title = "Command: /lotto";
-                    embed.Title = "**Description:** Enter the lottery.\n**Usage:** /lotto [tickets]\n**Example:** /lotto 10";
+                    embed.Description = "**Description:** Enter the lottery.\n**Usage:** /lotto [tickets]\n**Example:** /lotto 10";
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
@@ -636,13 +675,13 @@ namespace FredBotNETCore.Modules.Public
                         {
                             Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
                             Author = auth,
-                            Description = $"Jackpot: ${lottobal}\nScratching Tickets..."
+                            Description = $"Jackpot: ${lottobal.ToString("N0")}\nScratching Tickets..."
                         };
                         var message = await Context.Channel.SendMessageAsync("", false, embed.Build());
                         await Task.Delay(500);
                         if (chance >= 100)
                         {
-                            embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} won the jackpot of ${lottobal}!";
+                            embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0")}!";
                             await message.ModifyAsync(x => x.Embed = embed.Build());
                             Database.SetBalance(Context.User, Database.GetBalance(Context.User) + lottobal);
                             File.WriteAllText(Path.Combine(downloadPath, "LottoBalance.txt"), "100");
@@ -652,14 +691,14 @@ namespace FredBotNETCore.Modules.Public
                             int random = rand.Next(100);
                             if (random <= chance)
                             {
-                                embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} won the jackpot of ${lottobal}!";
+                                embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0")}!";
                                 await message.ModifyAsync(x => x.Embed = embed.Build());
                                 Database.SetBalance(Context.User, Database.GetBalance(Context.User) + lottobal);
                                 File.WriteAllText(Path.Combine(downloadPath, "LottoBalance.txt"), "100");
                             }
                             else
                             {
-                                embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} did not win the jackpot of ${lottobal}.";
+                                embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} did not win the jackpot of ${lottobal.ToString("N0")}.";
                                 int newbal = lottobal + tickets;
                                 File.WriteAllText(Path.Combine(downloadPath, "LottoBalance.txt"), newbal.ToString());
                                 await message.ModifyAsync(x => x.Embed = embed.Build());
@@ -740,7 +779,7 @@ namespace FredBotNETCore.Modules.Public
                         Color = new Color(220, 220, 220)
                     };
                     embed.Title = "Command: /verifycomplete";
-                    embed.Title = "**Description:** Verify your PR2 account.\n**Usage:** /verifycomplete [PR2 username]\n**Example:** /verifycomplete Jiggmin";
+                    embed.Description = "**Description:** Verify your PR2 account.\n**Usage:** /verifycomplete [PR2 username]\n**Example:** /verifycomplete Jiggmin";
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                     return;
                 }
@@ -2687,9 +2726,14 @@ namespace FredBotNETCore.Modules.Public
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the level `{level}` does not exist or could not be found.");
                         return;
                     }
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = $"-- {title} --"
+                    };
                     EmbedBuilder embed = new EmbedBuilder()
                     {
                         Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
+                        Author = author
                     };
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
@@ -2698,7 +2742,6 @@ namespace FredBotNETCore.Modules.Public
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
-                    embed.Title = $"-- {title} --";
                     if (note.Length <= 0)
                     {
                         embed.Description = $"**By:** {user}\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n-----";
