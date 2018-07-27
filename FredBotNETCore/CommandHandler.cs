@@ -584,6 +584,11 @@ namespace FredBotNETCore
                     {
                         AuditLogReason = "Auto Verify."
                     };
+                    string pr2name = Database.GetPR2Name(user);
+                    if (!user.Username.Equals(pr2name))
+                    {
+                        await user.ModifyAsync(x => x.Nickname = pr2name);
+                    }
                     await user.AddRolesAsync(roles: verified, options: options);
                     await user.SendMessageAsync($"Hello {user.Username} ! Welcome back to the Platform Racing Group.\nYou have been added to the verified role as you verified yourself the last time you were here.");
                 }
