@@ -854,6 +854,10 @@ namespace FredBotNETCore.Modules.Public
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully changed your verified account from {pr2name} to {username}.");
                                 SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
                                 await channel.SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {Context.User.Mention} changed their verified account from **{pr2name}** to **{username}**.");
+                                if (!user.Username.Equals(pr2name))
+                                {
+                                    await user.ModifyAsync(x => x.Nickname = pr2name);
+                                }
                             }
                             else
                             {
@@ -868,6 +872,10 @@ namespace FredBotNETCore.Modules.Public
                                 };
                                 await user.AddRolesAsync(role, options);
                                 await user.RemoveRolesAsync(role2, options);
+                                if (!user.Username.Equals(username))
+                                {
+                                    await user.ModifyAsync(x => x.Nickname = username);
+                                }
                             }
                             break;
                         }
@@ -888,10 +896,14 @@ namespace FredBotNETCore.Modules.Public
                     tries = tries + 1;
                 }
                 //}
+                if (pms.Contains("{\"error\":\"Could not find a valid login token. Please log in again.\"}"))
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token of FredTheG.CactusBot has expired. Please mention Stxtics#0001 in Platform Racing Group and tell him this so that he can fix it.");
+                }
             }
             catch (Exception e)
             {
-                await ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                await ExceptionInfo(Context.Client, e.Message, e.StackTrace);
             }
         }
 
@@ -1699,7 +1711,7 @@ namespace FredBotNETCore.Modules.Public
                                 embed.WithFooter(footer);
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                 {
-                                    Name = $"__EXP - {lvl} to {level_ + 1}__"
+                                    Name = $"EXP - {lvl} to {level_ + 1}"
                                 };
                                 embed.WithAuthor(author);
                                 embed.WithCurrentTimestamp();
@@ -1743,7 +1755,7 @@ namespace FredBotNETCore.Modules.Public
                                 embed.WithFooter(footer);
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                 {
-                                    Name = $"__EXP - {level_} to {level_2}__"
+                                    Name = $"EXP - {level_} to {level_2}"
                                 };
                                 embed.WithAuthor(author);
                                 embed.WithCurrentTimestamp();
@@ -3013,6 +3025,540 @@ namespace FredBotNETCore.Modules.Public
         #endregion
 
         #region Moderator
+
+        [Command("judge")]
+        [Alias("ggp")]
+        [Summary("Post a judge result.")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Judge(string username, string cupS, string time1S, string time2S, string time3S, string time4S, string time5S = null)
+        {
+            if ((Context.User as SocketGuildUser).Roles.Any(e => e.Name.ToUpperInvariant() == "GGP Judge".ToUpperInvariant()))
+            {
+                if (string.IsNullOrWhiteSpace(username) || !int.TryParse(cupS, out int cup) || !DateTime.TryParseExact(time1S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt1) 
+                    || !DateTime.TryParseExact(time2S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt2) 
+                    || !DateTime.TryParseExact(time3S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt3) 
+                    || !DateTime.TryParseExact(time4S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt4))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220)
+                    };
+                    embed.Title = "Command: /judge";
+                    embed.Description = "**Description:** Post a judge result.\n**Usage:** /judge [user] [cup] [time1] [time2] [time3] [time4] [optional time5]\n" +
+                        "**Example:** /judge Jiggmin 1 1:02:00 1:07:00 1:25:00 1:27:00";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (UserInGuild(Context.Guild, username) != null)
+                    {
+                        SocketUser user = UserInGuild(Context.Guild, username);
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        {
+                            Name = user.Username + "#" + user.Discriminator,
+                            IconUrl = user.GetAvatarUrl()
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            IconUrl = Context.User.GetAvatarUrl(),
+                            Text = $"Judged by: {Context.User.Username}#{Context.User.Discriminator}"
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = auth,
+                            Footer = footer
+                        };
+                        embed.WithCurrentTimestamp();
+                        TimeSpan total;
+                        SocketTextChannel ggp = Context.Client.GetChannel(351132984134598670) as SocketTextChannel;
+                        if (string.IsNullOrWhiteSpace(time5S))
+                        {
+                            switch (cup)
+                            {
+                                case 1:
+                                    embed.Description = "1. Retro – 5:01:00";
+                                    TimeSpan retro1 = new TimeSpan(0, 0, 1, 2, 0);
+                                    TimeSpan retro2 = new TimeSpan(0, 0, 1, 7, 0);
+                                    TimeSpan retro3 = new TimeSpan(0, 0, 1, 25, 0);
+                                    TimeSpan retro4 = new TimeSpan(0, 0, 1, 27, 0);
+                                    TimeSpan retroCupTime = new TimeSpan(0, 0, 5, 1, 0);
+                                    TimeSpan retroExpertTime = new TimeSpan(0, 0, 4, 49, 0);
+                                    if (TimeSpan.Compare(retro1, dt1.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nStarter Steps by Kinx – " + time1S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nStarter Steps by Kinx – " + time1S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(retro2, dt2.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nShangriLa by Juustokakku – " + time2S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nShangriLa by Juustokakku – " + time2S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(retro3, dt3.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – " + time3S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – " + time3S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(retro4, dt4.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nPerfect Storm by Colind – " + time4S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nPerfect Storm by Colind – " + time4S + " <:fred:264982794311041035>";
+                                    }
+                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                    if (TimeSpan.Compare(retroCupTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                    }
+                                    else if (TimeSpan.Compare(retroCupTime, total) > 0 && TimeSpan.Compare(retroExpertTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                    }
+                                    await ggp.SendMessageAsync("", false, embed.Build());
+                                    break;
+                                case 2:
+                                    embed.Description = "2. Space – 7:22:00";
+                                    TimeSpan space1 = new TimeSpan(0, 0, 1, 20, 0);
+                                    TimeSpan space2 = new TimeSpan(0, 0, 1, 47, 0);
+                                    TimeSpan space3 = new TimeSpan(0, 0, 2, 0, 0);
+                                    TimeSpan space4 = new TimeSpan(0, 0, 2, 15, 0);
+                                    TimeSpan spaceCupTime = new TimeSpan(0, 0, 7, 22, 0);
+                                    TimeSpan spaceExpertTime = new TimeSpan(0, 0, 6, 55, 0);
+                                    if (TimeSpan.Compare(space1, dt1.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – " + time1S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – " + time1S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(space2, dt2.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – " + time2S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – " + time2S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(space3, dt3.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – " + time3S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – " + time3S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(space4, dt4.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – " + time4S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – " + time4S + " <:fred:264982794311041035>";
+                                    }
+                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                    if (TimeSpan.Compare(spaceCupTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                    }
+                                    else if (TimeSpan.Compare(spaceCupTime, total) > 0 && TimeSpan.Compare(spaceExpertTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                    }
+                                    await ggp.SendMessageAsync("", false, embed.Build());
+                                    break;
+                                case 3:
+                                    embed.Description = "3. Speed – 5:10:00";
+                                    TimeSpan speed1 = new TimeSpan(0, 0, 0, 50, 0);
+                                    TimeSpan speed2 = new TimeSpan(0, 0, 1, 0, 0);
+                                    TimeSpan speed3 = new TimeSpan(0, 0, 1, 35, 0);
+                                    TimeSpan speed4 = new TimeSpan(0, 0, 1, 45, 0);
+                                    TimeSpan speedCupTime = new TimeSpan(0, 0, 5, 10, 0);
+                                    TimeSpan speedExpertTime = new TimeSpan(0, 0, 4, 50, 0);
+                                    if (TimeSpan.Compare(speed1, dt1.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nLandscape by Campaigns – " + time1S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nLandscape by Campaigns – " + time1S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(speed2, dt2.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – " + time2S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – " + time2S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(speed3, dt3.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nYx by Evil Crash – " + time3S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nYx by Evil Crash – " + time3S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(speed4, dt4.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nRage! by Good Job Man – " + time4S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nRage! by Good Job Man – " + time4S + " <:fred:264982794311041035>";
+                                    }
+                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                    if (TimeSpan.Compare(speedCupTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                    }
+                                    else if (TimeSpan.Compare(speedCupTime, total) > 0 && TimeSpan.Compare(speedExpertTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                    }
+                                    await ggp.SendMessageAsync("", false, embed.Build());
+                                    break;
+                                case 4:
+                                    embed.Description = "4. Desert – 5:48:00";
+                                    TimeSpan desert1 = new TimeSpan(0, 0, 0, 47, 0);
+                                    TimeSpan desert2 = new TimeSpan(0, 0, 1, 2, 0);
+                                    TimeSpan desert3 = new TimeSpan(0, 0, 1, 27, 0);
+                                    TimeSpan desert4 = new TimeSpan(0, 0, 2, 32, 0);
+                                    TimeSpan desertCupTime = new TimeSpan(0, 0, 5, 48, 0);
+                                    TimeSpan desertExpertTime = new TimeSpan(0, 0, 5, 40, 0);
+                                    if (TimeSpan.Compare(desert1, dt1.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – " + time1S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – " + time1S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(desert2, dt2.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – " + time2S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – " + time2S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(desert3, dt3.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nPit of Despair by Ringstaart – " + time3S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nPit of Despair by Ringstaart – " + time3S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(desert4, dt4.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – " + time4S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – " + time4S + " <:fred:264982794311041035>";
+                                    }
+                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                    if (TimeSpan.Compare(desertCupTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                    }
+                                    else if (TimeSpan.Compare(desertCupTime, total) > 0 && TimeSpan.Compare(desertExpertTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                    }
+                                    await ggp.SendMessageAsync("", false, embed.Build());
+                                    break;
+                                case 5:
+                                    embed.Description = "5. Nature – 7:37:00";
+                                    TimeSpan nature1 = new TimeSpan(0, 0, 1, 30, 0);
+                                    TimeSpan nature2 = new TimeSpan(0, 0, 1, 25, 0);
+                                    TimeSpan nature3 = new TimeSpan(0, 0, 1, 25, 0);
+                                    TimeSpan nature4 = new TimeSpan(0, 0, 3, 17, 0);
+                                    TimeSpan natureCupTime = new TimeSpan(0, 0, 7, 37, 0);
+                                    TimeSpan natureExpertTime = new TimeSpan(0, 0, 7, 10, 0);
+                                    if (TimeSpan.Compare(nature1, dt1.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – " + time1S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – " + time1S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(nature2, dt2.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nLost Woods by Surcosman – " + time2S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nLost Woods by Surcosman – " + time2S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(nature3, dt3.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – " + time3S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – " + time3S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(nature4, dt4.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – " + time4S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – " + time4S + " <:fred:264982794311041035>";
+                                    }
+                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                    if (TimeSpan.Compare(natureCupTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                    }
+                                    else if (TimeSpan.Compare(natureCupTime, total) > 0 && TimeSpan.Compare(natureExpertTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                    }
+                                    await ggp.SendMessageAsync("", false, embed.Build());
+                                    break;
+                                case 6:
+                                    embed.Description = "6. Dark – 7:30:00";
+                                    TimeSpan dark1 = new TimeSpan(0, 0, 1, 40, 0);
+                                    TimeSpan dark2 = new TimeSpan(0, 0, 1, 50, 0);
+                                    TimeSpan dark3 = new TimeSpan(0, 0, 2, 20, 0);
+                                    TimeSpan dark4 = new TimeSpan(0, 0, 1, 40, 0);
+                                    TimeSpan darkCupTime = new TimeSpan(0, 0, 7, 30, 0);
+                                    TimeSpan darkExpertTime = new TimeSpan(0, 0, 7, 10, 0);
+                                    if (TimeSpan.Compare(dark1, dt1.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nDark Manor by Se!tres – " + time1S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nDark Manor by Se!tres – " + time1S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(dark2, dt2.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – " + time2S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – " + time2S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(dark3, dt3.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nExodus by Mr Propre – " + time3S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nExodus by Mr Propre – " + time3S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(dark4, dt4.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – " + time4S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – " + time4S + " <:fred:264982794311041035>";
+                                    }
+                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                    if (TimeSpan.Compare(darkCupTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                    }
+                                    else if (TimeSpan.Compare(darkCupTime, total) > 0 && TimeSpan.Compare(darkExpertTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                    }
+                                    await ggp.SendMessageAsync("", false, embed.Build());
+                                    break;
+                                case 7:
+                                    embed.Description = "7. Quest – 13:05:00";
+                                    TimeSpan quest1 = new TimeSpan(0, 0, 2, 0, 0);
+                                    TimeSpan quest2 = new TimeSpan(0, 0, 1, 35, 0);
+                                    TimeSpan quest3 = new TimeSpan(0, 0, 4, 30, 0);
+                                    TimeSpan quest4 = new TimeSpan(0, 0, 5, 0, 0);
+                                    TimeSpan questCupTime = new TimeSpan(0, 0, 13, 5, 0);
+                                    TimeSpan questExpertTime = new TimeSpan(0, 0, 12, 15, 0);
+                                    if (TimeSpan.Compare(quest1, dt1.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Time Machine by Sanzep – " + time1S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nThe Time Machine by Sanzep – " + time1S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(quest2, dt2.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nSweetland GTT by JGPrix – " + time2S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nSweetland GTT by JGPrix – " + time2S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(quest3, dt3.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nElements by Airock – " + time3S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nElements by Airock – " + time3S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(quest4, dt4.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nZone by What(O o) – " + time4S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nZone by What(O o) – " + time4S + " <:fred:264982794311041035>";
+                                    }
+                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                    if (TimeSpan.Compare(questCupTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                    }
+                                    else if (TimeSpan.Compare(questCupTime, total) > 0 && TimeSpan.Compare(questExpertTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                    }
+                                    await ggp.SendMessageAsync("", false, embed.Build());
+                                    break;
+                                case 8:
+                                    embed.Description = "8. Overworld – 6:10:00";
+                                    TimeSpan overworld1 = new TimeSpan(0, 0, 1, 0, 0);
+                                    TimeSpan overworld2 = new TimeSpan(0, 0, 1, 20, 0);
+                                    TimeSpan overworld3 = new TimeSpan(0, 0, 1, 50, 0);
+                                    TimeSpan overworld4 = new TimeSpan(0, 0, 2, 0, 0);
+                                    TimeSpan overworldCupTime = new TimeSpan(0, 0, 6, 10, 0);
+                                    TimeSpan overworldExpertTime = new TimeSpan(0, 0, 5, 55, 0);
+                                    if (TimeSpan.Compare(overworld1, dt1.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – " + time1S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – " + time1S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(overworld2, dt2.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – " + time2S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – " + time2S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(overworld3, dt3.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – " + time3S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – " + time3S + " <:fred:264982794311041035>";
+                                    }
+                                    if (TimeSpan.Compare(overworld4, dt4.TimeOfDay) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\n~Utherworld~ by TRUC – " + time4S;
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\n~Utherworld~ by TRUC – " + time4S + " <:fred:264982794311041035>";
+                                    }
+                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                    if (TimeSpan.Compare(overworldCupTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                    }
+                                    else if (TimeSpan.Compare(overworldCupTime, total) > 0 && TimeSpan.Compare(overworldExpertTime, total) <= 0)
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                    }
+                                    await ggp.SendMessageAsync("", false, embed.Build());
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            switch (cup)
+                            {
+                                case 1:
+                                    embed.Description = "1. Velocity – 6:24:00 – 6:10:00";
+                                    break;
+                                case 2:
+                                    embed.Description = "2. Night – 6:49:00 – 6:35:00";
+                                    break;
+                                case 3:
+                                    embed.Description = "3. RoundTrip – 7:12:00 – 6:55:00";
+                                    break;
+                                case 4:
+                                    embed.Description = "4. Cosmos – 9:02:00 – 8:40:00";
+                                    break;
+                                case 5:
+                                    embed.Description = "5. Freedom – 8:07:00 – 7:50:00";
+                                    break;
+                                case 6:
+                                    embed.Description = "6. Ancient – 9:19:00 – 9:00:00";
+                                    break;
+                                case 7:
+                                    embed.Description = "7. Exotic – 6:14:00 – 6:00:00";
+                                    break;
+                                case 8:
+                                    embed.Description = "8. PlatformRacing – 13:22:00 – 13:05:00g";
+                                    break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
 
         [Command("blacklistmusic", RunMode = RunMode.Async)]
         [Alias("musicblacklist")]
