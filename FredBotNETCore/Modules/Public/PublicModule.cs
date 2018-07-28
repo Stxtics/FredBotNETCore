@@ -3034,6 +3034,68 @@ namespace FredBotNETCore.Modules.Public
         {
             if ((Context.User as SocketGuildUser).Roles.Any(e => e.Name.ToUpperInvariant() == "GGP Judge".ToUpperInvariant()))
             {
+                bool race1dnf = false, race2dnf = false, race3dnf = false, race4dnf = false, race5dnf = false;
+                bool race1dns = false, race2dns = false, race3dns = false, race4dns = false, race5dns = false;
+                if (time1S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase) || time1S.Equals("DNS"))
+                {
+                    time1S = "0:00:00";
+                    if (time1S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        race1dnf = true;
+                    }
+                    else
+                    {
+                        race1dns = true;
+                    }
+                }
+                if (time2S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase) || time2S.Equals("DNS"))
+                {
+                    time2S = "0:00:00";
+                    if (time2S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        race2dnf = true;
+                    }
+                    else
+                    {
+                        race2dns = true;
+                    }
+                }
+                if (time3S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase) || time3S.Equals("DNS"))
+                {
+                    time3S = "0:00:00";
+                    if (time3S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        race3dnf = true;
+                    }
+                    else
+                    {
+                        race3dns = true;
+                    }
+                }
+                if (time4S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase) || time4S.Equals("DNS"))
+                {
+                    time4S = "0:00:00";
+                    if (time4S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        race4dnf = true;
+                    }
+                    else
+                    {
+                        race4dns = true;
+                    }
+                }
+                if (time5S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase) || time5S.Equals("DNS"))
+                {
+                    time5S = "0:00:00";
+                    if (time5S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        race5dnf = true;
+                    }
+                    else
+                    {
+                        race5dns = true;
+                    }
+                }
                 if (string.IsNullOrWhiteSpace(username) || !int.TryParse(cupS, out int cup) || !DateTime.TryParseExact(time1S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt1) 
                     || !DateTime.TryParseExact(time2S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt2) 
                     || !DateTime.TryParseExact(time3S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt3) 
@@ -3083,7 +3145,15 @@ namespace FredBotNETCore.Modules.Public
                                     TimeSpan retro4 = new TimeSpan(0, 0, 1, 27, 0);
                                     TimeSpan retroCupTime = new TimeSpan(0, 0, 5, 1, 0);
                                     TimeSpan retroExpertTime = new TimeSpan(0, 0, 4, 49, 0);
-                                    if (TimeSpan.Compare(retro1, dt1.TimeOfDay) <= 0)
+                                    if (race1dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nStarter Steps by Kinx – DNF";
+                                    }
+                                    else if (race1dns)
+                                    {
+                                        embed.Description = embed.Description + "\nStarter Steps by Kinx – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(retro1, dt1.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nStarter Steps by Kinx – " + time1S;
                                     }
@@ -3091,7 +3161,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nStarter Steps by Kinx – " + time1S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(retro2, dt2.TimeOfDay) <= 0)
+                                    if (race2dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nShangriLa by Juustokakku – DNF";
+                                    }
+                                    else if (race2dns)
+                                    {
+                                        embed.Description = embed.Description + "\nShangriLa by Juustokakku – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(retro2, dt2.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nShangriLa by Juustokakku – " + time2S;
                                     }
@@ -3099,7 +3177,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nShangriLa by Juustokakku – " + time2S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(retro3, dt3.TimeOfDay) <= 0)
+                                    if (race3dnf)
+                                    {
+                                        embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – DNF";
+                                    }
+                                    else if (race3dns)
+                                    {
+                                        embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(retro3, dt3.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – " + time3S;
                                     }
@@ -3107,7 +3193,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – " + time3S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(retro4, dt4.TimeOfDay) <= 0)
+                                    if (race4dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nPerfect Storm by Colind – DNF";
+                                    }
+                                    else if (race4dns)
+                                    {
+                                        embed.Description = embed.Description + "\nPerfect Storm by Colind – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(retro4, dt4.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nPerfect Storm by Colind – " + time4S;
                                     }
@@ -3138,7 +3232,15 @@ namespace FredBotNETCore.Modules.Public
                                     TimeSpan space4 = new TimeSpan(0, 0, 2, 15, 0);
                                     TimeSpan spaceCupTime = new TimeSpan(0, 0, 7, 22, 0);
                                     TimeSpan spaceExpertTime = new TimeSpan(0, 0, 6, 55, 0);
-                                    if (TimeSpan.Compare(space1, dt1.TimeOfDay) <= 0)
+                                    if (race1dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – DNF";
+                                    }
+                                    else if (race1dns)
+                                    {
+                                        embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(space1, dt1.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – " + time1S;
                                     }
@@ -3146,7 +3248,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – " + time1S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(space2, dt2.TimeOfDay) <= 0)
+                                    if (race2dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – DNF";
+                                    }
+                                    else if (race2dns)
+                                    {
+                                        embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(space2, dt2.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – " + time2S;
                                     }
@@ -3154,7 +3264,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – " + time2S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(space3, dt3.TimeOfDay) <= 0)
+                                    if (race3dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – DNF";
+                                    }
+                                    else if (race3dns)
+                                    {
+                                        embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(space3, dt3.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – " + time3S;
                                     }
@@ -3162,7 +3280,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – " + time3S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(space4, dt4.TimeOfDay) <= 0)
+                                    if (race4dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – DNF";
+                                    }
+                                    else if (race4dns)
+                                    {
+                                        embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(space4, dt4.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – " + time4S;
                                     }
@@ -3193,7 +3319,15 @@ namespace FredBotNETCore.Modules.Public
                                     TimeSpan speed4 = new TimeSpan(0, 0, 1, 45, 0);
                                     TimeSpan speedCupTime = new TimeSpan(0, 0, 5, 10, 0);
                                     TimeSpan speedExpertTime = new TimeSpan(0, 0, 4, 50, 0);
-                                    if (TimeSpan.Compare(speed1, dt1.TimeOfDay) <= 0)
+                                    if (race1dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nLandscape by Campaigns – DNF";
+                                    }
+                                    else if (race1dns)
+                                    {
+                                        embed.Description = embed.Description + "\nLandscape by Campaigns – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(speed1, dt1.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nLandscape by Campaigns – " + time1S;
                                     }
@@ -3201,7 +3335,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nLandscape by Campaigns – " + time1S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(speed2, dt2.TimeOfDay) <= 0)
+                                    if (race2dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – DNF";
+                                    }
+                                    else if (race2dns)
+                                    {
+                                        embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(speed2, dt2.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – " + time2S;
                                     }
@@ -3209,7 +3351,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – " + time2S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(speed3, dt3.TimeOfDay) <= 0)
+                                    if (race3dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nYx by Evil Crash – DNF";
+                                    }
+                                    else if (race3dns)
+                                    {
+                                        embed.Description = embed.Description + "\nYx by Evil Crash – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(speed3, dt3.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nYx by Evil Crash – " + time3S;
                                     }
@@ -3217,7 +3367,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nYx by Evil Crash – " + time3S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(speed4, dt4.TimeOfDay) <= 0)
+                                    if (race4dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nRage! by Good Job Man – DNF";
+                                    }
+                                    else if (race4dns)
+                                    {
+                                        embed.Description = embed.Description + "\nRage! by Good Job Man – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(speed4, dt4.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nRage! by Good Job Man – " + time4S;
                                     }
@@ -3248,7 +3406,15 @@ namespace FredBotNETCore.Modules.Public
                                     TimeSpan desert4 = new TimeSpan(0, 0, 2, 32, 0);
                                     TimeSpan desertCupTime = new TimeSpan(0, 0, 5, 48, 0);
                                     TimeSpan desertExpertTime = new TimeSpan(0, 0, 5, 40, 0);
-                                    if (TimeSpan.Compare(desert1, dt1.TimeOfDay) <= 0)
+                                    if (race1dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – DNF";
+                                    }
+                                    else if (race1dns)
+                                    {
+                                        embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(desert1, dt1.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – " + time1S;
                                     }
@@ -3256,7 +3422,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – " + time1S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(desert2, dt2.TimeOfDay) <= 0)
+                                    if (race2dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – DNF";
+                                    }
+                                    else if (race2dns)
+                                    {
+                                        embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(desert2, dt2.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – " + time2S;
                                     }
@@ -3264,7 +3438,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – " + time2S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(desert3, dt3.TimeOfDay) <= 0)
+                                    if (race3dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nPit of Despair by Ringstaart – DNF";
+                                    }
+                                    else if (race3dns)
+                                    {
+                                        embed.Description = embed.Description + "\nPit of Despair by Ringstaart – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(desert3, dt3.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nPit of Despair by Ringstaart – " + time3S;
                                     }
@@ -3272,7 +3454,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nPit of Despair by Ringstaart – " + time3S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(desert4, dt4.TimeOfDay) <= 0)
+                                    if (race4dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – DNF";
+                                    }
+                                    else if (race4dns)
+                                    {
+                                        embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(desert4, dt4.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – " + time4S;
                                     }
@@ -3303,7 +3493,15 @@ namespace FredBotNETCore.Modules.Public
                                     TimeSpan nature4 = new TimeSpan(0, 0, 3, 17, 0);
                                     TimeSpan natureCupTime = new TimeSpan(0, 0, 7, 37, 0);
                                     TimeSpan natureExpertTime = new TimeSpan(0, 0, 7, 10, 0);
-                                    if (TimeSpan.Compare(nature1, dt1.TimeOfDay) <= 0)
+                                    if (race1dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – DNF";
+                                    }
+                                    else if (race1dns)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(nature1, dt1.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – " + time1S;
                                     }
@@ -3311,7 +3509,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – " + time1S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(nature2, dt2.TimeOfDay) <= 0)
+                                    if (race2dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nLost Woods by Surcosman – DNF";
+                                    }
+                                    else if (race2dns)
+                                    {
+                                        embed.Description = embed.Description + "\nLost Woods by Surcosman – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(nature2, dt2.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nLost Woods by Surcosman – " + time2S;
                                     }
@@ -3319,7 +3525,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nLost Woods by Surcosman – " + time2S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(nature3, dt3.TimeOfDay) <= 0)
+                                    if (race3dnf)
+                                    {
+                                        embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – DNF";
+                                    }
+                                    else if (race3dns)
+                                    {
+                                        embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(nature3, dt3.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – " + time3S;
                                     }
@@ -3327,7 +3541,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – " + time3S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(nature4, dt4.TimeOfDay) <= 0)
+                                    if (race4dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – DNF";
+                                    }
+                                    else if (race4dns)
+                                    {
+                                        embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(nature4, dt4.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – " + time4S;
                                     }
@@ -3358,7 +3580,15 @@ namespace FredBotNETCore.Modules.Public
                                     TimeSpan dark4 = new TimeSpan(0, 0, 1, 40, 0);
                                     TimeSpan darkCupTime = new TimeSpan(0, 0, 7, 30, 0);
                                     TimeSpan darkExpertTime = new TimeSpan(0, 0, 7, 10, 0);
-                                    if (TimeSpan.Compare(dark1, dt1.TimeOfDay) <= 0)
+                                    if (race1dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nDark Manor by Se!tres – DNF";
+                                    }
+                                    else if (race1dns)
+                                    {
+                                        embed.Description = embed.Description + "\nDark Manor by Se!tres – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(dark1, dt1.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nDark Manor by Se!tres – " + time1S;
                                     }
@@ -3366,7 +3596,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nDark Manor by Se!tres – " + time1S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(dark2, dt2.TimeOfDay) <= 0)
+                                    if (race2dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – DNF";
+                                    }
+                                    else if (race2dns)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(dark2, dt2.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – " + time2S;
                                     }
@@ -3374,7 +3612,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – " + time2S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(dark3, dt3.TimeOfDay) <= 0)
+                                    if (race3dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nExodus by Mr Propre – DNF";
+                                    }
+                                    else if (race3dns)
+                                    {
+                                        embed.Description = embed.Description + "\nExodus by Mr Propre – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(dark3, dt3.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nExodus by Mr Propre – " + time3S;
                                     }
@@ -3382,7 +3628,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nExodus by Mr Propre – " + time3S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(dark4, dt4.TimeOfDay) <= 0)
+                                    if (race4dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – DNF";
+                                    }
+                                    else if (race4dns)
+                                    {
+                                        embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(dark4, dt4.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – " + time4S;
                                     }
@@ -3413,7 +3667,15 @@ namespace FredBotNETCore.Modules.Public
                                     TimeSpan quest4 = new TimeSpan(0, 0, 5, 0, 0);
                                     TimeSpan questCupTime = new TimeSpan(0, 0, 13, 5, 0);
                                     TimeSpan questExpertTime = new TimeSpan(0, 0, 12, 15, 0);
-                                    if (TimeSpan.Compare(quest1, dt1.TimeOfDay) <= 0)
+                                    if (race1dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Time Machine by Sanzep – DNF";
+                                    }
+                                    else if (race1dns)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Time Machine by Sanzep – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(quest1, dt1.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nThe Time Machine by Sanzep – " + time1S;
                                     }
@@ -3421,7 +3683,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nThe Time Machine by Sanzep – " + time1S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(quest2, dt2.TimeOfDay) <= 0)
+                                    if (race2dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nSweetland GTT by JGPrix – DNF";
+                                    }
+                                    else if (race2dns)
+                                    {
+                                        embed.Description = embed.Description + "\nSweetland GTT by JGPrix – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(quest2, dt2.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nSweetland GTT by JGPrix – " + time2S;
                                     }
@@ -3429,7 +3699,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nSweetland GTT by JGPrix – " + time2S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(quest3, dt3.TimeOfDay) <= 0)
+                                    if (race3dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nElements by Airock – DNF";
+                                    }
+                                    else if (race3dns)
+                                    {
+                                        embed.Description = embed.Description + "\nElements by Airock – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(quest3, dt3.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nElements by Airock – " + time3S;
                                     }
@@ -3437,7 +3715,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nElements by Airock – " + time3S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(quest4, dt4.TimeOfDay) <= 0)
+                                    if (race4dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nZone by What(O o) – DNF";
+                                    }
+                                    else if (race4dns)
+                                    {
+                                        embed.Description = embed.Description + "\nZone by What(O o) – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(quest4, dt4.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nZone by What(O o) – " + time4S;
                                     }
@@ -3468,7 +3754,15 @@ namespace FredBotNETCore.Modules.Public
                                     TimeSpan overworld4 = new TimeSpan(0, 0, 2, 0, 0);
                                     TimeSpan overworldCupTime = new TimeSpan(0, 0, 6, 10, 0);
                                     TimeSpan overworldExpertTime = new TimeSpan(0, 0, 5, 55, 0);
-                                    if (TimeSpan.Compare(overworld1, dt1.TimeOfDay) <= 0)
+                                    if (race1dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – DNF";
+                                    }
+                                    else if (race1dns)
+                                    {
+                                        embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(overworld1, dt1.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – " + time1S;
                                     }
@@ -3476,7 +3770,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – " + time1S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(overworld2, dt2.TimeOfDay) <= 0)
+                                    if (race2dnf)
+                                    {
+                                        embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – DNF";
+                                    }
+                                    else if (race2dns)
+                                    {
+                                        embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(overworld2, dt2.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – " + time2S;
                                     }
@@ -3484,7 +3786,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – " + time2S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(overworld3, dt3.TimeOfDay) <= 0)
+                                    if (race3dnf)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – DNF";
+                                    }
+                                    else if (race3dns)
+                                    {
+                                        embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(overworld3, dt3.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – " + time3S;
                                     }
@@ -3492,7 +3802,15 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – " + time3S + " <:fred:264982794311041035>";
                                     }
-                                    if (TimeSpan.Compare(overworld4, dt4.TimeOfDay) <= 0)
+                                    if (race4dnf)
+                                    {
+                                        embed.Description = embed.Description + "\n~Utherworld~ by TRUC – DNF";
+                                    }
+                                    else if (race4dns)
+                                    {
+                                        embed.Description = embed.Description + "\n~Utherworld~ by TRUC – DNS";
+                                    }
+                                    else if (TimeSpan.Compare(overworld4, dt4.TimeOfDay) <= 0)
                                     {
                                         embed.Description = embed.Description + "\n~Utherworld~ by TRUC – " + time4S;
                                     }
@@ -3516,6 +3834,17 @@ namespace FredBotNETCore.Modules.Public
                                     await ggp.SendMessageAsync("", false, embed.Build());
                                     break;
                             }
+                        }
+                        else if(!DateTime.TryParseExact(time5S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt5))
+                        {
+                            EmbedBuilder embed2 = new EmbedBuilder()
+                            {
+                                Color = new Color(220, 220, 220)
+                            };
+                            embed2.Title = "Command: /judge";
+                            embed2.Description = "**Description:** Post a judge result.\n**Usage:** /judge [user] [cup] [time1] [time2] [time3] [time4] [optional time5]\n" +
+                                "**Example:** /judge Jiggmin 1 1:02:00 1:07:00 1:25:00 1:27:00";
+                            await Context.Channel.SendMessageAsync("", false, embed2.Build());
                         }
                         else
                         {
