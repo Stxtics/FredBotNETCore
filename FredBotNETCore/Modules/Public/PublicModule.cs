@@ -37,6 +37,18 @@ namespace FredBotNETCore.Modules.Public
         public static Random rand = new Random();
         private static string GetHeapSize() => Math.Round(GC.GetTotalMemory(false) / (1024.0 * 1024.0), 2).ToString();
 
+        private static bool _internalPurging = false;
+        public static bool Purging
+        {
+            get
+            {
+                return _internalPurging;
+            }
+            set
+            {
+                _internalPurging = value;
+            }
+        }
         public static async Task ExceptionInfo(DiscordSocketClient client, string message, string stacktrace)
         {
             IUser user = client.GetUser(181853112045142016);
@@ -6185,7 +6197,7 @@ namespace FredBotNETCore.Modules.Public
             {
                 return;
             }
-            if (string.IsNullOrWhiteSpace(amount) || !double.TryParse(amount, out double num2))
+            if (string.IsNullOrWhiteSpace(amount) || !int.TryParse(amount, out int delete))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
@@ -6197,23 +6209,26 @@ namespace FredBotNETCore.Modules.Public
                 return;
             }
             ITextChannel channel = Context.Channel as ITextChannel, log = Context.Guild.GetTextChannel(327575359765610496);
-            int delete = Convert.ToInt32(amount);
             if (username == null)
             {
                 var items = Context.Channel.GetMessagesAsync(delete).Flatten();
                 if (delete == 1)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message in {channel.Mention} .");
+                    Purging = true;
                     await (Context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
                     await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
                     $"purged **{amount}** message in {channel.Mention}.");
+                    Purging = false;
                 }
                 else
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} messages in {channel.Mention} .");
+                    Purging = true;
                     await (Context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
                     await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
                     $"purged **{amount}** messages in {channel.Mention}.");
+                    Purging = false;
                 }
                 return;
             }
@@ -6227,16 +6242,20 @@ namespace FredBotNETCore.Modules.Public
                     if (delete == 1)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
+                        Purging = true;
                         await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
                         await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
                         $"purged **{amount}** message in {channel.Mention} from **{user.Username}#{user.Discriminator}**.");
+                        Purging = false;
                     }
                     else
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} messages from {user.Mention} in {channel.Mention} .");
+                        Purging = true;
                         await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
                         await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
                         $"purged **{amount}** messages in {channel.Mention} from **{user.Username}#{user.Discriminator}**.");
+                        Purging = false;
                     }
                 }
                 else

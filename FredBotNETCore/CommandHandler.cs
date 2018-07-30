@@ -515,6 +515,10 @@ namespace FredBotNETCore
 
         public async Task AnnounceMessageDeleted(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
         {
+            if (PublicModule.Purging)
+            {
+                return;
+            }
             IMessage message2 = await message.GetOrDownloadAsync();
             SocketTextChannel channel2 = channel as SocketTextChannel;
             SocketTextChannel log = channel2.Guild.GetTextChannel(327575359765610496);
