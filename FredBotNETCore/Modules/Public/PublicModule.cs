@@ -770,7 +770,7 @@ namespace FredBotNETCore.Modules.Public
             {
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} check your DMs to verify your PR2 Account. ");
                 await channel.SendMessageAsync($"Hello {Context.User.Mention} , to verify your PR2 account please send a PM to `FredTheG.CactusBot` on PR2 " +
-                    $"saying only `{channel.Id}`.\nThen once you have sent the PM type `/verifycomplete <PR2 account name>` without <>. PR2 account name = name of " +
+                    $"saying only `{channel.Id}`.\nThen once you have sent the PM type `/verifycomplete <PR2 account name>` without <> in this channel. PR2 account name = name of " +
                     $"account you sent the PM from.");
             }
         }
@@ -908,7 +908,7 @@ namespace FredBotNETCore.Modules.Public
                     tries = tries + 1;
                 }
                 //}
-                if (pms.Contains("{\"error\":\"Could not find a valid login token. Please log in again.\"}"))
+                if (responseString.Equals("{\"error\":\"Could not find a valid login token. Please log in again.\"}"))
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token of FredTheG.CactusBot has expired. Please mention Stxtics#0001 in Platform Racing Group and tell him this so that he can fix it.");
                 }
