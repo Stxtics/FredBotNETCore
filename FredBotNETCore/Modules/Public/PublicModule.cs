@@ -13,6 +13,7 @@ using System.IO;
 using Newtonsoft.Json;
 using static FredBotNETCore.WeatherDataCurrent;
 using Newtonsoft.Json.Linq;
+using System.Net;
 
 namespace FredBotNETCore.Modules.Public
 {
@@ -889,17 +890,18 @@ namespace FredBotNETCore.Modules.Public
                                     await user.ModifyAsync(x => x.Nickname = username);
                                 }
                             }
+                            WebClient wc = new WebClient();
+                            wc.Headers.Add("Referer", "https://pr2hub.com/");
                             pr2token = new StreamReader(path: Path.Combine(downloadPath, "PR2Token.txt"));
-                            values = new Dictionary<string, string>
+                            var reqparm = new System.Collections.Specialized.NameValueCollection
                             {
                                 { "message", $"Hey {username}! Thank you for verifying your PR2 Account with Fred the G. Cactus on the Discord Server. You verified your PR2 Account with the Discord Account {Context.User.Username}#{Context.User.Discriminator} ({Context.User.Id}). If you did not do this you should change your password and your email on your account as well to make sure it is secure." },
                                 { "to_name", username },
                                 { "token", pr2token.ReadLine() }
                             };
                             pr2token.Close();
-                            content = new FormUrlEncodedContent(values);
-                            response = await web.PostAsync("https://pr2hub.com/message_send.php?", content);
-                            responseString = await response.Content.ReadAsStringAsync();
+                            byte[] responsebytes = wc.UploadValues("https://pr2hub.com/message_send.php", "POST", reqparm);
+                            responseString = Encoding.UTF8.GetString(responsebytes);
                             while (responseString.Contains("Error: You've sent 4 messages in the past 60 seconds. Please wait a bit before sending another message.") || responseString.Contains("Error: Slow down a bit, yo."))
                             {
                                 await Task.Delay(10000);
