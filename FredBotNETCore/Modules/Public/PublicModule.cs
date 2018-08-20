@@ -867,9 +867,9 @@ namespace FredBotNETCore.Modules.Public
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully changed your verified account from {pr2name} to {username}.");
                                 SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
                                 await channel.SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {Context.User.Mention} changed their verified account from **{pr2name}** to **{username}**.");
-                                if (!user.Username.Equals(pr2name))
+                                if (!user.Username.Equals(username))
                                 {
-                                    await user.ModifyAsync(x => x.Nickname = pr2name);
+                                    await user.ModifyAsync(x => x.Nickname = username);
                                 }
                             }
                             else
