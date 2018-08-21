@@ -406,6 +406,7 @@ namespace FredBotNETCore.Modules.Public
                 Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
             };
             string help = "**Manager**\n" +
+                "/resetpr2name - Used to reset a users PR2 Name." +
                 "/clearwarn - Clear warnings for a user.\n" +
                 "/addmod - Add a server mod or role.\n" +
                 "/delmod - Delete a server mod or role.\n" +
@@ -863,6 +864,12 @@ namespace FredBotNETCore.Modules.Public
                                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} that is already your verified account.");
                                     return;
                                 }
+                                ulong id = Database.GetDiscordID(username);
+                                if (id != 0)
+                                {
+                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{username}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
+                                    return;
+                                }
                                 Database.VerifyUser(user, username);
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully changed your verified account from {pr2name} to {username}.");
                                 SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
@@ -874,6 +881,12 @@ namespace FredBotNETCore.Modules.Public
                             }
                             else
                             {
+                                ulong id = Database.GetDiscordID(username);
+                                if (id != 0)
+                                {
+                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{username}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
+                                    return;
+                                }
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully verified your PR2 Account.");
                                 SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
                                 await channel.SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Verified {Context.User.Mention} who is **{username}** on PR2.");
@@ -3057,7 +3070,7 @@ namespace FredBotNETCore.Modules.Public
 
         #region Moderator
 
-        [Command("judge")]
+        [Command("judge", RunMode = RunMode.Async)]
         [Alias("ggp")]
         [Summary("Post a judge result.")]
         [RequireContext(ContextType.Guild)]
@@ -5966,6 +5979,18 @@ namespace FredBotNETCore.Modules.Public
             {
                 username = Context.User.Username;
             }
+            if (ulong.TryParse(username, out ulong userid))
+            {
+                try
+                {
+                    username = Context.Guild.GetUser(userid).Username;
+                }
+                catch(Exception)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{userid}**.");
+                    return;
+                }
+            }
             if (UserInGuild(Context.Guild, username) != null)
             {
                 IUser iUser = UserInGuild(Context.Guild, username);
@@ -6720,6 +6745,71 @@ namespace FredBotNETCore.Modules.Public
         #endregion
 
         #region Manager
+
+        [Command("resetpr2name", RunMode = RunMode.Async)]
+        [Alias("resetverifiedname")]
+        [Summary("Resets verified name.")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireContext(ContextType.Guild)]
+        public async Task ResetPR2Name(string username)
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220)
+                    };
+                    embed.Title = "Command: /resetpr2name";
+                    embed.Description = "**Description:** Reset a users PR2 Name.\n**Usage:** /resetpr2name [user]\n**Example:** /resetpr2name Jiggmin";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else if (ulong.TryParse(username, out ulong id))
+                {
+                    SocketGuildUser user = null;
+                    try
+                    {
+                        user = Context.Guild.GetUser(id);
+                    }
+                    catch(Exception)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID: **{id}** is not in the Discord Server. Please check that the ID you used is correct and if it is then contact **Stxtics#0001**.");
+                    }
+                    if (user != null)
+                    {
+                        Database.VerifyUser(user, "Not verified");
+                        RequestOptions options = new RequestOptions()
+                        {
+                            AuditLogReason = $"PR2 Name reset by: {Context.User.Username}#{Context.User.Id}"
+                        };
+                        await user.RemoveRoleAsync(Context.Guild.GetRole(255513962798514177), options);
+                        await user.AddRoleAsync(Context.Guild.GetRole(253265134393229312), options);
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully reset **{user.Username}#{user.Discriminator}'s** PR2 Name.");
+                    }
+                }
+                else if (UserInGuild(Context.Guild, username) != null)
+                {
+                    SocketGuildUser user = UserInGuild(Context.Guild, username) as SocketGuildUser;
+                    Database.VerifyUser(user, "Not verified");
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"PR2 Name reset by: {Context.User.Username}#{Context.User.Id}"
+                    };
+                    await user.RemoveRoleAsync(Context.Guild.GetRole(255513962798514177), options);
+                    await user.AddRoleAsync(Context.Guild.GetRole(253265134393229312), options);
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully reset **{user.Username}#{user.Discriminator}'s** PR2 Name.");
+                }
+                else
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
 
         [Command("addrole", RunMode = RunMode.Async)]
         [Alias("+role","createrole")]

@@ -80,7 +80,7 @@ namespace FredBotNETCore
         {
             var database = new Database("FredBotDatabase");
 
-            var str = string.Format("INSERT INTO fredbottable (user_id, username, pr2_name, balance ) VALUES ('{0}', '{1}', 'Not verified', '{2}')", user.Id, user.Username, 10);
+            var str = string.Format("INSERT INTO fredbottable (user_id, username, pr2_name, balance, last_used ) VALUES ('{0}', '{1}', 'Not verified', '{2}', '5/7/18')", user.Id, user.Username, 10);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -125,6 +125,22 @@ namespace FredBotNETCore
             database.CloseConnection();
 
             return result;
+        }
+
+        public static ulong GetDiscordID(string pr2name)
+        {
+            ulong id = 0;
+            var database = new Database("FredBotDatabase");
+
+            var str = string.Format("SELECT * FROM fredbottable WHERE pr2_name = '{0}'", pr2name);
+            var tableName = database.FireCommand(str);
+
+            while (tableName.Read())
+            {
+                id = (ulong)tableName["user_id"];
+            }
+            database.CloseConnection();
+            return id;
         }
 
         public static void VerifyUser(IUser user, string pr2name)
