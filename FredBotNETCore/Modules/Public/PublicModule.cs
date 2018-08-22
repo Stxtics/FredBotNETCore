@@ -3966,7 +3966,9 @@ namespace FredBotNETCore.Modules.Public
                         else
                         {
                             File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
-                            await Context.Channel.SendMessageAsync($"Blacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** blacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
                         }
                     }
                     else
@@ -4010,7 +4012,9 @@ namespace FredBotNETCore.Modules.Public
                         {
                             currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
                             File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
-                            await Context.Channel.SendMessageAsync($"Removed blacklisted music user **{user.Username}#{user.Discriminator}**.");
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** unblacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully removed blacklisted music command user **{user.Username}#{user.Discriminator}**.");
                         }
                         else
                         {
@@ -4118,7 +4122,9 @@ namespace FredBotNETCore.Modules.Public
                                 AuditLogReason = $"Blacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
                             };
                             await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny), options);
-                            await Context.Channel.SendMessageAsync($"Blacklisted **{user.Username}#{user.Discriminator}** from suggestions.");
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** blacklisted **{user.Username}#{user.Discriminator}** from the **suggestions** channel.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted **{user.Username}#{user.Discriminator}** from suggestions.");
                         }
                     }
                     else
@@ -4168,7 +4174,9 @@ namespace FredBotNETCore.Modules.Public
                                 AuditLogReason = $"Unblacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
                             };
                             await suggestions.RemovePermissionOverwriteAsync(user, options);
-                            await Context.Channel.SendMessageAsync($"Removed blacklisted suggestions user **{user.Username}#{user.Discriminator}**.");
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** unblacklisted **{user.Username}#{user.Discriminator}** from the **suggestions** channel.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully removed blacklisted suggestions user **{user.Username}#{user.Discriminator}**.");
                         }
                         else
                         {
