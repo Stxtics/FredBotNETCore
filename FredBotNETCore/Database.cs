@@ -137,7 +137,7 @@ namespace FredBotNETCore
 
             while (tableName.Read())
             {
-                id = (ulong)tableName["user_id"];
+                id = ulong.Parse(tableName["user_id"].ToString());
             }
             database.CloseConnection();
             return id;
