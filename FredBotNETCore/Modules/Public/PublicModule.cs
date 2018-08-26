@@ -3179,6 +3179,7 @@ namespace FredBotNETCore.Modules.Public
                         SocketTextChannel ggp = Context.Client.GetChannel(351132984134598670) as SocketTextChannel;
                         if (string.IsNullOrWhiteSpace(time5S))
                         {
+                            await Context.Message.DeleteAsync();
                             switch (cup)
                             {
                                 case 1:
@@ -3892,6 +3893,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         else
                         {
+                            await Context.Message.DeleteAsync();
                             switch (cup)
                             {
                                 case 1:
@@ -4789,6 +4791,7 @@ namespace FredBotNETCore.Modules.Public
                         y.Value = Context.User.Mention;
                         y.IsInline = true;
                     });
+                    await Context.Message.DeleteAsync();
                     if (reason == null)
                     {
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unban", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
@@ -4892,6 +4895,7 @@ namespace FredBotNETCore.Modules.Public
                         y.Value = Context.User.Mention;
                         y.IsInline = true;
                     });
+                    await Context.Message.DeleteAsync();
                     if (reason == null)
                     {
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
@@ -4990,6 +4994,7 @@ namespace FredBotNETCore.Modules.Public
                         y.Value = Context.User.Mention;
                         y.IsInline = true;
                     });
+                    await Context.Message.DeleteAsync();
                     if (reason == null)
                     {
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
@@ -5094,6 +5099,7 @@ namespace FredBotNETCore.Modules.Public
                         y.Value = reason;
                         y.IsInline = true;
                     });
+                    await Context.Message.DeleteAsync();
                     Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Softban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                     await banlog.SendMessageAsync("", false, embed.Build());
                     await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was softbanned.");
@@ -5347,7 +5353,9 @@ namespace FredBotNETCore.Modules.Public
                 embed.WithCurrentTimestamp();
                 await msgToEdit.ModifyAsync(x => x.Embed = embed.Build());
                 Database.UpdateReason(caseN, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                await Context.Message.DeleteAsync();
                 await Context.Channel.SendMessageAsync($"Updated case {caseN}.");
+                await Context.Guild.GetTextChannel(327575359765610496).SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** updated case **{caseN}**.");
             }
         }
 
@@ -5425,6 +5433,7 @@ namespace FredBotNETCore.Modules.Public
                             y.Value = reason;
                             y.IsInline = true;
                         });
+                        await Context.Message.DeleteAsync();
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Warn", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                         await banlog.SendMessageAsync("", false, embed.Build());
                         await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was warned.");
@@ -5697,12 +5706,14 @@ namespace FredBotNETCore.Modules.Public
                     SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                     if (type.Equals("temp", StringComparison.InvariantCultureIgnoreCase) || type.Equals("temporary", StringComparison.InvariantCultureIgnoreCase))
                     {
+                        await Context.Message.DeleteAsync();
                         await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a temporary moderator! " +
                         $"May they reign in hours of peace and prosperity! " +
                         $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
                     }
                     else if (type.Equals("trial", StringComparison.InvariantCultureIgnoreCase))
                     {
+                        await Context.Message.DeleteAsync();
                         await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a trial moderator! " +
                         $"May they reign in days of peace and prosperity! " +
                         $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
@@ -5715,6 +5726,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else if (type.Equals("perm", StringComparison.InvariantCultureIgnoreCase) || type.Equals("permanent", StringComparison.InvariantCultureIgnoreCase))
                     {
+                        await Context.Message.DeleteAsync();
                         await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a permanent moderator! " +
                         $"May they reign in 1,000 years of peace and prosperity! " +
                         $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
@@ -5775,6 +5787,7 @@ namespace FredBotNETCore.Modules.Public
                     AuditLogReason = $"Untemp Modding User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
                 };
                 await user.RemoveRolesAsync(role, options);
+                await Context.Message.DeleteAsync();
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} has removed temp mod from {user.Mention}");
             }
             else
@@ -5862,6 +5875,7 @@ namespace FredBotNETCore.Modules.Public
                         });
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                     }
+                    await Context.Message.DeleteAsync();
                     ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
                     await banlog.SendMessageAsync("", false, embed.Build());
                     await user.RemoveRolesAsync(role, options);
@@ -6263,6 +6277,7 @@ namespace FredBotNETCore.Modules.Public
             ITextChannel channel = Context.Channel as ITextChannel, log = Context.Guild.GetTextChannel(327575359765610496);
             if (username == null)
             {
+                await Context.Message.DeleteAsync();
                 var items = Context.Channel.GetMessagesAsync(delete).Flatten();
                 if (delete == 1)
                 {
@@ -6288,6 +6303,7 @@ namespace FredBotNETCore.Modules.Public
             {
                 if (UserInGuild(Context.Guild, username) != null)
                 {
+                    await Context.Message.DeleteAsync();
                     IUser iUser = UserInGuild(Context.Guild, username);
                     SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
                     var usermessages = (Context.Channel.GetMessagesAsync().Flatten()).Where(x => x.Author == user).Take(delete);
@@ -6393,6 +6409,7 @@ namespace FredBotNETCore.Modules.Public
                             y.Value = reason;
                             y.IsInline = true;
                         });
+                        await Context.Message.DeleteAsync();
                         RequestOptions options = new RequestOptions()
                         {
                             AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
@@ -6490,6 +6507,7 @@ namespace FredBotNETCore.Modules.Public
                             y.Value = reason;
                             y.IsInline = true;
                         });
+                        await Context.Message.DeleteAsync();
                         RequestOptions options = new RequestOptions()
                         {
                             AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
@@ -6611,6 +6629,7 @@ namespace FredBotNETCore.Modules.Public
                         y.Value = reason;
                         y.IsInline = true;
                     });
+                    await Context.Message.DeleteAsync();
                     await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was muted.");
                     await banlog.SendMessageAsync("", false, embed.Build());
                     Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
@@ -6723,6 +6742,7 @@ namespace FredBotNETCore.Modules.Public
                     AuditLogReason = $"Temp Modding User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
                 };
                 await user.AddRolesAsync(role, options);
+                await Context.Message.DeleteAsync();
                 if (time.Equals("1"))
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for {time} minute. " +
@@ -6786,6 +6806,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     if (user != null)
                     {
+                        await Context.Message.DeleteAsync();
                         Database.VerifyUser(user, "Not verified");
                         RequestOptions options = new RequestOptions()
                         {
@@ -6798,6 +6819,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else if (UserInGuild(Context.Guild, username) != null)
                 {
+                    await Context.Message.DeleteAsync();
                     SocketGuildUser user = UserInGuild(Context.Guild, username) as SocketGuildUser;
                     Database.VerifyUser(user, "Not verified");
                     RequestOptions options = new RequestOptions()
