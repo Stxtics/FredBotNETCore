@@ -8,7 +8,6 @@ using System;
 using FredBotNETCore.Modules.Public;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 namespace FredBotNETCore
 {
@@ -273,41 +272,6 @@ namespace FredBotNETCore
                 }
                 await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
             };
-            await GameLoop();
-        }
-
-        public async Task GameLoop()
-        {
-            while (true)
-            {
-                await Task.Delay(new Random().Next(300000, 600000));
-                var process = Process.GetCurrentProcess();
-                var time = DateTime.Now - process.StartTime;
-                var sb = new StringBuilder();
-                if (time.Days > 0)
-                {
-                    sb.Append($"{time.Days}d ");  /*Pulls the Uptime in Days*/
-                }
-                if (time.Hours > 0)
-                {
-                    sb.Append($"{time.Hours}h ");  /*Pulls the Uptime in Hours*/
-                }
-                if (time.Minutes > 0)
-                {
-                    sb.Append($"{time.Minutes}m ");  /*Pulls the Uptime in Minutes*/
-                }
-                sb.Append($"{time.Seconds}s ");  /*Pulls the Uptime in Seconds*/
-                await _client.SetGameAsync($"/help for {sb.ToString()}", null, type: ActivityType.Playing);
-                await Task.Delay(new Random().Next(300000, 600000));
-                await _client.SetGameAsync($"/help in {_client.Guilds.Count} guilds", null, type: ActivityType.Watching);
-                await Task.Delay(new Random().Next(300000, 600000));
-                int users = 0;
-                foreach (SocketGuild guild in _client.Guilds)
-                {
-                    users = users + guild.MemberCount;
-                }
-                await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
-            }
         }
 
         #region Log
