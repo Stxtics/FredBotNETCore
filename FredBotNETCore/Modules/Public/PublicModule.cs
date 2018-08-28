@@ -141,7 +141,7 @@ namespace FredBotNETCore.Modules.Public
             {
                 if (gUser.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    user = CommandHandler._client.GetUser(gUser.Id) as SocketUser;
+                    user = gUser;
                     break;
                 }
             }
@@ -174,7 +174,7 @@ namespace FredBotNETCore.Modules.Public
         public static SocketGuildChannel ChannelInGuild(SocketUserMessage message, SocketGuild guild, string channelName)
         {
             SocketGuildChannel channel = null;
-            if (message.MentionedRoles.Count > 0)
+            if (message.MentionedChannels.Count > 0)
             {
                 channel = message.MentionedChannels.First();
                 return channel;
