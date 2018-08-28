@@ -117,144 +117,78 @@ namespace FredBotNETCore.Modules.Public
             return tChannel;
         }
 
-        public static SocketUser UserInGuild(SocketGuild guild, string username)
+        public static SocketUser UserInGuild(SocketUserMessage message, SocketGuild guild, string username)
         {
             SocketUser user = null;
-            ulong userId = 0;
-            if (username.ElementAt(0).Equals('<') && username.ElementAt(username.Length - 1).Equals('>'))
+            if (message.MentionedUsers.Count > 0)
             {
-                if (username.Contains("<@"))
+                int argPos = 0;
+                if (message.HasStringPrefix("/", ref argPos))
                 {
-                    if (!username.Contains("<@&"))
-                    {
-                        if (username.Contains("<@!"))
-                        {
-                            if (!ulong.TryParse(username.Substring(3, username.Length - 4), out ulong id))
-                            {
-                                userId = 0;
-                            }
-                            else
-                            {
-                                userId = id;
-                            }
-                        }
-                        else
-                        {
-                            if (!ulong.TryParse(username.Substring(2, username.Length - 3), out ulong id))
-                            {
-                                userId = 0;
-                            }
-                            else
-                            {
-                                userId = id;
-                            }
-                        }
-                    }
+                    user = message.MentionedUsers.First();
                 }
-            }
-            if (userId != 0)
-            {
-                foreach (SocketGuildUser gUser in guild.Users)
+                else if (message.HasMentionPrefix(guild.CurrentUser, ref argPos) && message.MentionedUsers.Count > 1)
                 {
-                    if (gUser.Id == userId)
-                    {
-                        user = CommandHandler._client.GetUser(gUser.Id) as SocketUser;
-                        break;
-                    }
+                    user = message.MentionedUsers.ElementAt(1);
                 }
+                return user;
             }
-            else
+            if (ulong.TryParse(username, out ulong userid))
             {
-                foreach (SocketGuildUser gUser in guild.Users)
+                username = guild.GetUser(userid).Username;
+            }
+            foreach (SocketGuildUser gUser in guild.Users)
+            {
+                if (gUser.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    if (gUser.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        user = CommandHandler._client.GetUser(gUser.Id) as SocketUser;
-                        break;
-                    }
+                    user = CommandHandler._client.GetUser(gUser.Id) as SocketUser;
+                    break;
                 }
             }
             return user;
         }
 
-        public static IRole RoleInGuild(IGuild guild, string roleName)
+        public static SocketRole RoleInGuild(SocketUserMessage message, SocketGuild guild, string roleName)
         {
-            IRole role = null;
-            ulong roleId = 0;
-            if (roleName.ElementAt(0).Equals('<') && roleName.ElementAt(roleName.Length - 1).Equals('>'))
+            SocketRole role = null;
+            if (message.MentionedRoles.Count > 0)
             {
-                if (roleName.Contains("<@&"))
-                {
-                    if (!ulong.TryParse(roleName.Substring(3, roleName.Length - 4), out ulong id))
-                    {
-                        roleId = 0;
-                    }
-                    else
-                    {
-                        roleId = Convert.ToUInt64(id);
-                    }
-                }
+                role = message.MentionedRoles.First();
+                return role;
             }
-            if (roleId != 0)
+            if (ulong.TryParse(roleName, out ulong roleId))
             {
-                foreach (IRole gRole in guild.Roles)
-                {
-                    if (gRole.Id == roleId)
-                    {
-                        role = guild.GetRole(gRole.Id);
-                        break;
-                    }
-                }
+                roleName = guild.GetRole(roleId).Name;
             }
-            else
+            foreach (SocketRole gRole in guild.Roles)
             {
-                foreach (IRole gRole in guild.Roles)
+                if (gRole.Name.Equals(roleName, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    if (gRole.Name.Equals(roleName, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        role = guild.GetRole(gRole.Id);
-                        break;
-                    }
+                    role = guild.GetRole(gRole.Id);
+                    break;
                 }
             }
             return role;
         }
 
-        public static async Task<IChannel> ChannelInGuildAsync(IGuild guild, string channelName)
+        public static SocketGuildChannel ChannelInGuild(SocketUserMessage message, SocketGuild guild, string channelName)
         {
-            IChannel channel = null;
-            ulong channelId = 0;
-            if (channelName.ElementAt(0).Equals('<') && channelName.ElementAt(channelName.Length - 1).Equals('>') && channelName.Contains("<#"))
+            SocketGuildChannel channel = null;
+            if (message.MentionedRoles.Count > 0)
             {
-                if (!ulong.TryParse(channelName.Substring(2, channelName.Length - 3), out ulong id))
-                {
-                    channelId = 0;
-                }
-                else
-                {
-                    channelId = id;
-                }
+                channel = message.MentionedChannels.First();
+                return channel;
             }
-            if (channelId != 0)
+            if (ulong.TryParse(channelName, out ulong channelId))
             {
-                foreach (IChannel gChannel in await guild.GetChannelsAsync())
-                {
-                    if (gChannel.Id == channelId)
-                    {
-                        channel = await guild.GetChannelAsync(gChannel.Id);
-                        break;
-                    }
-                }
+                channelName = guild.GetChannel(channelId).Name;
             }
-            else
+            foreach (SocketGuildChannel gChannel in guild.Channels)
             {
-                foreach (IChannel gChannel in await guild.GetChannelsAsync())
+                if (gChannel.Name.Equals(channelName, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    if (gChannel.Name.Equals(channelName, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        channel = await guild.GetChannelAsync(gChannel.Id);
-                        break;
-                    }
+                    channel = guild.GetChannel(gChannel.Id);
+                    break;
                 }
             }
             return channel;
@@ -281,15 +215,22 @@ namespace FredBotNETCore.Modules.Public
         [RequireOwner]
         public async Task SetBalance(string username = null, int bal = 0)
         {
-            if (UserInGuild(Context.Guild, username) != null)
+            try
             {
-                SocketUser user = UserInGuild(Context.Guild, username);
-                Database.SetBalance(user, bal);
-                await Context.Channel.SendMessageAsync($"Successfully set **{user.Username}#{user.Discriminator}'s** balance to **${bal}**.");
+                if (UserInGuild(Context.Message, Context.Guild, username) != null)
+                {
+                    SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                    Database.SetBalance(user, bal);
+                    await Context.Channel.SendMessageAsync($"Successfully set **{user.Username}#{user.Discriminator}'s** balance to **${bal}**.");
+                }
+                else
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username}` does not exist or could not be found.");
+                }
             }
-            else
+            catch(Exception)
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username}` does not exist or could not be found.");
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
         }
 
@@ -406,7 +347,7 @@ namespace FredBotNETCore.Modules.Public
                 Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
             };
             string help = "**Manager**\n" +
-                "/resetpr2name - Used to reset a users PR2 Name." +
+                "/resetpr2name - Used to reset a users PR2 Name.\n" +
                 "/clearwarn - Clear warnings for a user.\n" +
                 "/addmod - Add a server mod or role.\n" +
                 "/delmod - Delete a server mod or role.\n" +
@@ -535,15 +476,27 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (UserInGuild(Context.Guild, username) != null)
+                    try
                     {
-                        SocketUser user = UserInGuild(Context.Guild, username);
-                        int bal = Database.GetBalance(user);
-                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}'s** balance is **${bal.ToString("N0")}**.");
+                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
+                        {
+                            SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                            result = Database.CheckExistingUser(user);
+                            if (result.Count() <= 0)
+                            {
+                                Database.EnterUser(user);
+                            }
+                            int bal = Database.GetBalance(user);
+                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}'s** balance is **${bal.ToString("N0")}**.");
+                        }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username}` does not exist or could not be found.");
+                        }
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -1177,27 +1130,23 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (pr2name.Contains("<@"))
+                    if (Context.Message.MentionedUsers.Count > 0)
                     {
-                        var server = CommandHandler._client.GetGuild(249657315576381450);
-                        ulong id = 0;
-                        try
+                        SocketUser user = null;
+                        int argPos = 0;
+                        if (Context.Message.HasStringPrefix("/", ref argPos))
                         {
-                            if (pr2name[2].Equals('!'))
-                            {
-                                id = Convert.ToUInt64(pr2name.Substring(3, pr2name.Length - 4));
-                            }
-                            else
-                            {
-                                id = Convert.ToUInt64(pr2name.Substring(2, pr2name.Length - 3));
-                            }
+                            user = Context.Message.MentionedUsers.First();
                         }
-                        catch (Exception)
+                        else if (Context.Message.HasMentionPrefix(Context.Client.CurrentUser, ref argPos) && Context.Message.MentionedUsers.Count > 1)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you must only mention the user to view their PR2 account.");
+                            user = Context.Message.MentionedUsers.ElementAt(1);
+                        }
+                        if (user == null)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user does not exist or could not be found.");
                             return;
                         }
-                        IUser user = server.GetUser(id);
                         var result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
@@ -1542,27 +1491,23 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (guildname.Contains("<@"))
+                    if (Context.Message.MentionedUsers.Count > 0)
                     {
-                        var server = CommandHandler._client.GetGuild(249657315576381450);
-                        ulong id = 0;
-                        try
+                        SocketUser user = null;
+                        int argPos = 0;
+                        if (Context.Message.HasStringPrefix("/", ref argPos))
                         {
-                            if (guildname[2].Equals('!'))
-                            {
-                                id = Convert.ToUInt64(guildname.Substring(3, guildname.Length - 4));
-                            }
-                            else
-                            {
-                                id = Convert.ToUInt64(guildname.Substring(2, guildname.Length - 3));
-                            }
+                            user = Context.Message.MentionedUsers.First();
                         }
-                        catch (Exception)
+                        else if (Context.Message.HasMentionPrefix(Context.Client.CurrentUser, ref argPos) && Context.Message.MentionedUsers.Count > 1)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you must only mention the user to view their PR2 accounts guild.");
+                            user = Context.Message.MentionedUsers.ElementAt(1);
+                        }
+                        if (user == null)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user does not exist or could not be found.");
                             return;
                         }
-                        IUser user = server.GetUser(id);
                         var result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
@@ -1856,81 +1801,96 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (RoleInGuild(Context.Guild, roleName) != null)
+                    try
                     {
-                        IRole role = RoleInGuild(Context.Guild, roleName);
-                        string joinableRoles = File.ReadAllText(path: Path.Combine(downloadPath, "JoinableRoles.txt"));
-                        if (joinableRoles.Contains(role.Id.ToString()))
+                        if (RoleInGuild(Context.Message, Context.Guild, roleName) != null)
                         {
-                            if (user.Roles.Any(e => e.Name.ToUpperInvariant() == roleName.ToUpperInvariant()))
+                            SocketRole role = RoleInGuild(Context.Message, Context.Guild, roleName);
+                            string joinableRoles = File.ReadAllText(path: Path.Combine(downloadPath, "JoinableRoles.txt"));
+                            if (joinableRoles.Contains(role.Id.ToString()))
                             {
-                                EmbedBuilder embed = new EmbedBuilder()
+                                if (user.Roles.Any(e => e.Name.ToUpperInvariant() == roleName.ToUpperInvariant()))
                                 {
-                                    Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
-                                };
-                                RequestOptions options = new RequestOptions()
-                                {
-                                    AuditLogReason = "Removing Joinable Role"
-                                };
-                                await user.RemoveRoleAsync(role, options);
+                                    EmbedBuilder embed = new EmbedBuilder()
+                                    {
+                                        Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
+                                    };
+                                    RequestOptions options = new RequestOptions()
+                                    {
+                                        AuditLogReason = "Removing Joinable Role"
+                                    };
+                                    await user.RemoveRoleAsync(role, options);
 
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    IconUrl = Context.User.GetAvatarUrl(),
-                                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
-                                };
-                                embed.WithFooter(footer);
-                                embed.Title = $"__{role.Name} Remove__";
-                                embed.WithCurrentTimestamp();
-                                if (Context.Channel is IDMChannel)
-                                {
-                                    embed.Description = $"**You have been removed from the {role.Name} role.**";
+                                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                    {
+                                        IconUrl = Context.User.GetAvatarUrl(),
+                                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                                    };
+                                    embed.WithFooter(footer);
+                                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                    {
+                                        Name = $"{role.Name} Remove"
+                                    };
+                                    embed.WithAuthor(author);
+                                    embed.WithCurrentTimestamp();
+                                    if (Context.Channel is IDMChannel)
+                                    {
+                                        embed.Description = $"**You have been removed from the {role.Name} role.**";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = $"**{Context.User.Mention} has been removed from the {role.Name} role({role.Mention}).**";
+                                    }
+                                    await Context.Channel.SendMessageAsync("", false, embed.Build());
                                 }
                                 else
                                 {
-                                    embed.Description = $"**{Context.User.Mention} has been removed from the {role.Name} role({role.Mention}).**";
+                                    EmbedBuilder embed = new EmbedBuilder()
+                                    {
+                                        Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
+                                    };
+                                    RequestOptions options = new RequestOptions()
+                                    {
+                                        AuditLogReason = "Adding Joinable Role"
+                                    };
+                                    await user.AddRoleAsync(role, options);
+
+                                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                    {
+                                        IconUrl = Context.User.GetAvatarUrl(),
+                                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                                    };
+                                    embed.WithFooter(footer);
+                                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                    {
+                                        Name = $"{role.Name} Add"
+                                    };
+                                    embed.WithAuthor(author);
+                                    embed.WithCurrentTimestamp();
+                                    if (Context.Channel is IDMChannel)
+                                    {
+                                        embed.Description = $"**You have been added to the {role.Name} role.**";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = $"**{Context.User.Mention} has been added to the {role.Name} role({role.Mention}).**";
+                                    }
+                                    await Context.Channel.SendMessageAsync("", false, embed.Build());
                                 }
-                                await Context.Channel.SendMessageAsync("", false, embed.Build());
                             }
                             else
                             {
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
-                                };
-                                RequestOptions options = new RequestOptions()
-                                {
-                                    AuditLogReason = "Adding Joinable Role"
-                                };
-                                await user.AddRoleAsync(role, options);
-
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    IconUrl = Context.User.GetAvatarUrl(),
-                                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
-                                };
-                                embed.WithFooter(footer);
-                                embed.Title = $"__{role.Name} Add__";
-                                embed.WithCurrentTimestamp();
-                                if (Context.Channel is IDMChannel)
-                                {
-                                    embed.Description = $"**You have been added to the {role.Name} role.**";
-                                }
-                                else
-                                {
-                                    embed.Description = $"**{Context.User.Mention} has been added to the {role.Name} role({role.Mention}).**";
-                                }
-                                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is not a joinable role.");
                             }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is not a joinable role.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
                         }
                     }
-                    else
+                    catch(Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role with ID: `{roleName}` does not exist or could not be found.");
                     }
                 }
             }
@@ -2065,7 +2025,11 @@ namespace FredBotNETCore.Modules.Public
                     Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
                 };
                 embed.WithFooter(footer);
-                embed.Title = $"__PR2 Top 10 Guilds__";
+                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                {
+                    Name = $"PR2 Top 10 Guilds"
+                };
+                embed.WithAuthor(author);
                 embed.WithCurrentTimestamp();
 
                 await Context.Channel.SendMessageAsync("", false, embed.Build());
@@ -2095,27 +2059,23 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (fahuser.Contains("<@") && fahuser.Contains(">"))
+                    if (Context.Message.MentionedUsers.Count > 0)
                     {
-                        var server = CommandHandler._client.GetGuild(249657315576381450);
-                        ulong id = 0;
-                        try
+                        SocketUser user = null;
+                        int argPos = 0;
+                        if (Context.Message.HasStringPrefix("/", ref argPos))
                         {
-                            if (fahuser[2].Equals('!'))
-                            {
-                                id = Convert.ToUInt64(fahuser.Substring(3, fahuser.Length - 4));
-                            }
-                            else
-                            {
-                                id = Convert.ToUInt64(fahuser.Substring(2, fahuser.Length - 3));
-                            }
+                            user = Context.Message.MentionedUsers.First();
                         }
-                        catch (Exception)
+                        else if (Context.Message.HasMentionPrefix(Context.Client.CurrentUser, ref argPos) && Context.Message.MentionedUsers.Count > 1)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you must only mention the user to view their F@H stats.");
+                            user = Context.Message.MentionedUsers.ElementAt(1);
+                        }
+                        if (user == null)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user does not exist or could not be found.");
                             return;
                         }
-                        IUser user = server.GetUser(id);
                         var result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
@@ -2167,6 +2127,11 @@ namespace FredBotNETCore.Modules.Public
                             stats = jobject;
                             break;
                         }
+                    }
+                    if (stats.Count == 0)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser}` does not exist or could not be found.");
+                        return;
                     }
                     embed.AddField(y =>
                     {
@@ -2388,27 +2353,23 @@ namespace FredBotNETCore.Modules.Public
                 else
                 {
                     HttpClient web = new HttpClient();
-                    if (server.Contains("<@"))
+                    if (Context.Message.MentionedUsers.Count > 0)
                     {
-                        var guild = CommandHandler._client.GetGuild(249657315576381450);
-                        ulong id = 0;
-                        try
+                        SocketUser user = null;
+                        int argPos = 0;
+                        if (Context.Message.HasStringPrefix("/", ref argPos))
                         {
-                            if (server[2].Equals('!'))
-                            {
-                                id = Convert.ToUInt64(server.Substring(3, server.Length - 4));
-                            }
-                            else
-                            {
-                                id = Convert.ToUInt64(server.Substring(2, server.Length - 3));
-                            }
+                            user = Context.Message.MentionedUsers.First();
                         }
-                        catch (Exception)
+                        else if (Context.Message.HasMentionPrefix(Context.Client.CurrentUser, ref argPos) && Context.Message.MentionedUsers.Count > 1)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you must only mention the user to view the stats of the server they are on.");
+                            user = Context.Message.MentionedUsers.ElementAt(1);
+                        }
+                        if (user == null)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user does not exist or could not be found.");
                             return;
                         }
-                        IUser user = guild.GetUser(id);
                         var result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
@@ -2528,27 +2489,23 @@ namespace FredBotNETCore.Modules.Public
                 else
                 {
                     HttpClient web = new HttpClient();
-                    if (guildname.Contains("<@"))
+                    if (Context.Message.MentionedUsers.Count > 0)
                     {
-                        var server = CommandHandler._client.GetGuild(249657315576381450);
-                        ulong id = 0;
-                        try
+                        SocketUser user = null;
+                        int argPos = 0;
+                        if (Context.Message.HasStringPrefix("/", ref argPos))
                         {
-                            if (guildname[2].Equals('!'))
-                            {
-                                id = Convert.ToUInt64(guildname.Substring(3, guildname.Length - 4));
-                            }
-                            else
-                            {
-                                id = Convert.ToUInt64(guildname.Substring(2, guildname.Length - 3));
-                            }
+                            user = Context.Message.MentionedUsers.First();
                         }
-                        catch (Exception)
+                        else if (Context.Message.HasMentionPrefix(Context.Client.CurrentUser, ref argPos) && Context.Message.MentionedUsers.Count > 1)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you must only mention the user to view their PR2 accounts guild members.");
+                            user = Context.Message.MentionedUsers.ElementAt(1);
+                        }
+                        if (user == null)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user does not exist or could not be found.");
                             return;
                         }
-                        IUser user = server.GetUser(id);
                         var result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
@@ -3156,776 +3113,783 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (UserInGuild(Context.Guild, username) != null)
+                    try
                     {
-                        SocketUser user = UserInGuild(Context.Guild, username);
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
                         {
-                            Name = user.Username + "#" + user.Discriminator,
-                            IconUrl = user.GetAvatarUrl()
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            IconUrl = Context.User.GetAvatarUrl(),
-                            Text = $"Judged by: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Author = auth,
-                            Footer = footer
-                        };
-                        embed.WithCurrentTimestamp();
-                        TimeSpan total;
-                        SocketTextChannel ggp = Context.Client.GetChannel(351132984134598670) as SocketTextChannel;
-                        if (string.IsNullOrWhiteSpace(time5S))
-                        {
-                            await Context.Message.DeleteAsync();
-                            switch (cup)
+                            SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                             {
-                                case 1:
-                                    embed.Description = "1. Retro – 5:01:00";
-                                    TimeSpan retro1 = new TimeSpan(0, 0, 1, 2, 0);
-                                    TimeSpan retro2 = new TimeSpan(0, 0, 1, 7, 0);
-                                    TimeSpan retro3 = new TimeSpan(0, 0, 1, 25, 0);
-                                    TimeSpan retro4 = new TimeSpan(0, 0, 1, 27, 0);
-                                    TimeSpan retroCupTime = new TimeSpan(0, 0, 5, 1, 0);
-                                    TimeSpan retroExpertTime = new TimeSpan(0, 0, 4, 49, 0);
-                                    if (race1dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nStarter Steps by Kinx – DNF";
-                                    }
-                                    else if (race1dns)
-                                    {
-                                        embed.Description = embed.Description + "\nStarter Steps by Kinx – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(retro1, dt1.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nStarter Steps by Kinx – " + time1S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nStarter Steps by Kinx – " + time1S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race2dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nShangriLa by Juustokakku – DNF";
-                                    }
-                                    else if (race2dns)
-                                    {
-                                        embed.Description = embed.Description + "\nShangriLa by Juustokakku – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(retro2, dt2.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nShangriLa by Juustokakku – " + time2S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nShangriLa by Juustokakku – " + time2S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race3dnf)
-                                    {
-                                        embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – DNF";
-                                    }
-                                    else if (race3dns)
-                                    {
-                                        embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(retro3, dt3.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – " + time3S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – " + time3S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race4dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nPerfect Storm by Colind – DNF";
-                                    }
-                                    else if (race4dns)
-                                    {
-                                        embed.Description = embed.Description + "\nPerfect Storm by Colind – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(retro4, dt4.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nPerfect Storm by Colind – " + time4S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nPerfect Storm by Colind – " + time4S + " <:fred:264982794311041035>";
-                                    }
-                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                    if (TimeSpan.Compare(retroCupTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                    }
-                                    else if (TimeSpan.Compare(retroCupTime, total) > 0 && TimeSpan.Compare(retroExpertTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                    }
-                                    await ggp.SendMessageAsync("", false, embed.Build());
-                                    break;
-                                case 2:
-                                    embed.Description = "2. Space – 7:22:00";
-                                    TimeSpan space1 = new TimeSpan(0, 0, 1, 20, 0);
-                                    TimeSpan space2 = new TimeSpan(0, 0, 1, 47, 0);
-                                    TimeSpan space3 = new TimeSpan(0, 0, 2, 0, 0);
-                                    TimeSpan space4 = new TimeSpan(0, 0, 2, 15, 0);
-                                    TimeSpan spaceCupTime = new TimeSpan(0, 0, 7, 22, 0);
-                                    TimeSpan spaceExpertTime = new TimeSpan(0, 0, 6, 55, 0);
-                                    if (race1dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – DNF";
-                                    }
-                                    else if (race1dns)
-                                    {
-                                        embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(space1, dt1.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – " + time1S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – " + time1S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race2dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – DNF";
-                                    }
-                                    else if (race2dns)
-                                    {
-                                        embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(space2, dt2.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – " + time2S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – " + time2S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race3dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – DNF";
-                                    }
-                                    else if (race3dns)
-                                    {
-                                        embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(space3, dt3.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – " + time3S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – " + time3S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race4dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – DNF";
-                                    }
-                                    else if (race4dns)
-                                    {
-                                        embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(space4, dt4.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – " + time4S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – " + time4S + " <:fred:264982794311041035>";
-                                    }
-                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                    if (TimeSpan.Compare(spaceCupTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                    }
-                                    else if (TimeSpan.Compare(spaceCupTime, total) > 0 && TimeSpan.Compare(spaceExpertTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                    }
-                                    await ggp.SendMessageAsync("", false, embed.Build());
-                                    break;
-                                case 3:
-                                    embed.Description = "3. Speed – 5:10:00";
-                                    TimeSpan speed1 = new TimeSpan(0, 0, 0, 50, 0);
-                                    TimeSpan speed2 = new TimeSpan(0, 0, 1, 0, 0);
-                                    TimeSpan speed3 = new TimeSpan(0, 0, 1, 35, 0);
-                                    TimeSpan speed4 = new TimeSpan(0, 0, 1, 45, 0);
-                                    TimeSpan speedCupTime = new TimeSpan(0, 0, 5, 10, 0);
-                                    TimeSpan speedExpertTime = new TimeSpan(0, 0, 4, 50, 0);
-                                    if (race1dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nLandscape by Campaigns – DNF";
-                                    }
-                                    else if (race1dns)
-                                    {
-                                        embed.Description = embed.Description + "\nLandscape by Campaigns – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(speed1, dt1.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nLandscape by Campaigns – " + time1S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nLandscape by Campaigns – " + time1S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race2dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – DNF";
-                                    }
-                                    else if (race2dns)
-                                    {
-                                        embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(speed2, dt2.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – " + time2S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – " + time2S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race3dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nYx by Evil Crash – DNF";
-                                    }
-                                    else if (race3dns)
-                                    {
-                                        embed.Description = embed.Description + "\nYx by Evil Crash – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(speed3, dt3.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nYx by Evil Crash – " + time3S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nYx by Evil Crash – " + time3S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race4dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nRage! by Good Job Man – DNF";
-                                    }
-                                    else if (race4dns)
-                                    {
-                                        embed.Description = embed.Description + "\nRage! by Good Job Man – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(speed4, dt4.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nRage! by Good Job Man – " + time4S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nRage! by Good Job Man – " + time4S + " <:fred:264982794311041035>";
-                                    }
-                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                    if (TimeSpan.Compare(speedCupTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                    }
-                                    else if (TimeSpan.Compare(speedCupTime, total) > 0 && TimeSpan.Compare(speedExpertTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                    }
-                                    await ggp.SendMessageAsync("", false, embed.Build());
-                                    break;
-                                case 4:
-                                    embed.Description = "4. Desert – 5:48:00";
-                                    TimeSpan desert1 = new TimeSpan(0, 0, 0, 47, 0);
-                                    TimeSpan desert2 = new TimeSpan(0, 0, 1, 2, 0);
-                                    TimeSpan desert3 = new TimeSpan(0, 0, 1, 27, 0);
-                                    TimeSpan desert4 = new TimeSpan(0, 0, 2, 32, 0);
-                                    TimeSpan desertCupTime = new TimeSpan(0, 0, 5, 48, 0);
-                                    TimeSpan desertExpertTime = new TimeSpan(0, 0, 5, 40, 0);
-                                    if (race1dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – DNF";
-                                    }
-                                    else if (race1dns)
-                                    {
-                                        embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(desert1, dt1.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – " + time1S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – " + time1S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race2dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – DNF";
-                                    }
-                                    else if (race2dns)
-                                    {
-                                        embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(desert2, dt2.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – " + time2S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – " + time2S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race3dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nPit of Despair by Ringstaart – DNF";
-                                    }
-                                    else if (race3dns)
-                                    {
-                                        embed.Description = embed.Description + "\nPit of Despair by Ringstaart – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(desert3, dt3.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nPit of Despair by Ringstaart – " + time3S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nPit of Despair by Ringstaart – " + time3S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race4dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – DNF";
-                                    }
-                                    else if (race4dns)
-                                    {
-                                        embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(desert4, dt4.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – " + time4S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – " + time4S + " <:fred:264982794311041035>";
-                                    }
-                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                    if (TimeSpan.Compare(desertCupTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                    }
-                                    else if (TimeSpan.Compare(desertCupTime, total) > 0 && TimeSpan.Compare(desertExpertTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                    }
-                                    await ggp.SendMessageAsync("", false, embed.Build());
-                                    break;
-                                case 5:
-                                    embed.Description = "5. Nature – 7:37:00";
-                                    TimeSpan nature1 = new TimeSpan(0, 0, 1, 30, 0);
-                                    TimeSpan nature2 = new TimeSpan(0, 0, 1, 25, 0);
-                                    TimeSpan nature3 = new TimeSpan(0, 0, 1, 25, 0);
-                                    TimeSpan nature4 = new TimeSpan(0, 0, 3, 17, 0);
-                                    TimeSpan natureCupTime = new TimeSpan(0, 0, 7, 37, 0);
-                                    TimeSpan natureExpertTime = new TimeSpan(0, 0, 7, 10, 0);
-                                    if (race1dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – DNF";
-                                    }
-                                    else if (race1dns)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(nature1, dt1.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – " + time1S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – " + time1S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race2dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nLost Woods by Surcosman – DNF";
-                                    }
-                                    else if (race2dns)
-                                    {
-                                        embed.Description = embed.Description + "\nLost Woods by Surcosman – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(nature2, dt2.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nLost Woods by Surcosman – " + time2S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nLost Woods by Surcosman – " + time2S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race3dnf)
-                                    {
-                                        embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – DNF";
-                                    }
-                                    else if (race3dns)
-                                    {
-                                        embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(nature3, dt3.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – " + time3S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – " + time3S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race4dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – DNF";
-                                    }
-                                    else if (race4dns)
-                                    {
-                                        embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(nature4, dt4.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – " + time4S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – " + time4S + " <:fred:264982794311041035>";
-                                    }
-                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                    if (TimeSpan.Compare(natureCupTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                    }
-                                    else if (TimeSpan.Compare(natureCupTime, total) > 0 && TimeSpan.Compare(natureExpertTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                    }
-                                    await ggp.SendMessageAsync("", false, embed.Build());
-                                    break;
-                                case 6:
-                                    embed.Description = "6. Dark – 7:30:00";
-                                    TimeSpan dark1 = new TimeSpan(0, 0, 1, 40, 0);
-                                    TimeSpan dark2 = new TimeSpan(0, 0, 1, 50, 0);
-                                    TimeSpan dark3 = new TimeSpan(0, 0, 2, 20, 0);
-                                    TimeSpan dark4 = new TimeSpan(0, 0, 1, 40, 0);
-                                    TimeSpan darkCupTime = new TimeSpan(0, 0, 7, 30, 0);
-                                    TimeSpan darkExpertTime = new TimeSpan(0, 0, 7, 10, 0);
-                                    if (race1dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nDark Manor by Se!tres – DNF";
-                                    }
-                                    else if (race1dns)
-                                    {
-                                        embed.Description = embed.Description + "\nDark Manor by Se!tres – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(dark1, dt1.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nDark Manor by Se!tres – " + time1S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nDark Manor by Se!tres – " + time1S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race2dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – DNF";
-                                    }
-                                    else if (race2dns)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(dark2, dt2.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – " + time2S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – " + time2S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race3dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nExodus by Mr Propre – DNF";
-                                    }
-                                    else if (race3dns)
-                                    {
-                                        embed.Description = embed.Description + "\nExodus by Mr Propre – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(dark3, dt3.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nExodus by Mr Propre – " + time3S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nExodus by Mr Propre – " + time3S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race4dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – DNF";
-                                    }
-                                    else if (race4dns)
-                                    {
-                                        embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(dark4, dt4.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – " + time4S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – " + time4S + " <:fred:264982794311041035>";
-                                    }
-                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                    if (TimeSpan.Compare(darkCupTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                    }
-                                    else if (TimeSpan.Compare(darkCupTime, total) > 0 && TimeSpan.Compare(darkExpertTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                    }
-                                    await ggp.SendMessageAsync("", false, embed.Build());
-                                    break;
-                                case 7:
-                                    embed.Description = "7. Quest – 13:05:00";
-                                    TimeSpan quest1 = new TimeSpan(0, 0, 2, 0, 0);
-                                    TimeSpan quest2 = new TimeSpan(0, 0, 1, 35, 0);
-                                    TimeSpan quest3 = new TimeSpan(0, 0, 4, 30, 0);
-                                    TimeSpan quest4 = new TimeSpan(0, 0, 5, 0, 0);
-                                    TimeSpan questCupTime = new TimeSpan(0, 0, 13, 5, 0);
-                                    TimeSpan questExpertTime = new TimeSpan(0, 0, 12, 15, 0);
-                                    if (race1dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Time Machine by Sanzep – DNF";
-                                    }
-                                    else if (race1dns)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Time Machine by Sanzep – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(quest1, dt1.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Time Machine by Sanzep – " + time1S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nThe Time Machine by Sanzep – " + time1S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race2dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nSweetland GTT by JGPrix – DNF";
-                                    }
-                                    else if (race2dns)
-                                    {
-                                        embed.Description = embed.Description + "\nSweetland GTT by JGPrix – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(quest2, dt2.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nSweetland GTT by JGPrix – " + time2S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nSweetland GTT by JGPrix – " + time2S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race3dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nElements by Airock – DNF";
-                                    }
-                                    else if (race3dns)
-                                    {
-                                        embed.Description = embed.Description + "\nElements by Airock – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(quest3, dt3.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nElements by Airock – " + time3S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nElements by Airock – " + time3S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race4dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nZone by What(O o) – DNF";
-                                    }
-                                    else if (race4dns)
-                                    {
-                                        embed.Description = embed.Description + "\nZone by What(O o) – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(quest4, dt4.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nZone by What(O o) – " + time4S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nZone by What(O o) – " + time4S + " <:fred:264982794311041035>";
-                                    }
-                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                    if (TimeSpan.Compare(questCupTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                    }
-                                    else if (TimeSpan.Compare(questCupTime, total) > 0 && TimeSpan.Compare(questExpertTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                    }
-                                    await ggp.SendMessageAsync("", false, embed.Build());
-                                    break;
-                                case 8:
-                                    embed.Description = "8. Overworld – 6:10:00";
-                                    TimeSpan overworld1 = new TimeSpan(0, 0, 1, 0, 0);
-                                    TimeSpan overworld2 = new TimeSpan(0, 0, 1, 20, 0);
-                                    TimeSpan overworld3 = new TimeSpan(0, 0, 1, 50, 0);
-                                    TimeSpan overworld4 = new TimeSpan(0, 0, 2, 0, 0);
-                                    TimeSpan overworldCupTime = new TimeSpan(0, 0, 6, 10, 0);
-                                    TimeSpan overworldExpertTime = new TimeSpan(0, 0, 5, 55, 0);
-                                    if (race1dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – DNF";
-                                    }
-                                    else if (race1dns)
-                                    {
-                                        embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(overworld1, dt1.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – " + time1S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – " + time1S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race2dnf)
-                                    {
-                                        embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – DNF";
-                                    }
-                                    else if (race2dns)
-                                    {
-                                        embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(overworld2, dt2.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – " + time2S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – " + time2S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race3dnf)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – DNF";
-                                    }
-                                    else if (race3dns)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(overworld3, dt3.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – " + time3S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – " + time3S + " <:fred:264982794311041035>";
-                                    }
-                                    if (race4dnf)
-                                    {
-                                        embed.Description = embed.Description + "\n~Utherworld~ by TRUC – DNF";
-                                    }
-                                    else if (race4dns)
-                                    {
-                                        embed.Description = embed.Description + "\n~Utherworld~ by TRUC – DNS";
-                                    }
-                                    else if (TimeSpan.Compare(overworld4, dt4.TimeOfDay) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\n~Utherworld~ by TRUC – " + time4S;
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\n~Utherworld~ by TRUC – " + time4S + " <:fred:264982794311041035>";
-                                    }
-                                    total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                    if (TimeSpan.Compare(overworldCupTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                    }
-                                    else if (TimeSpan.Compare(overworldCupTime, total) > 0 && TimeSpan.Compare(overworldExpertTime, total) <= 0)
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                    }
-                                    else
-                                    {
-                                        embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                    }
-                                    await ggp.SendMessageAsync("", false, embed.Build());
-                                    break;
-                            }
-                        }
-                        else if(!DateTime.TryParseExact(time5S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt5))
-                        {
-                            EmbedBuilder embed2 = new EmbedBuilder()
-                            {
-                                Color = new Color(220, 220, 220)
+                                Name = user.Username + "#" + user.Discriminator,
+                                IconUrl = user.GetAvatarUrl()
                             };
-                            embed2.Title = "Command: /judge";
-                            embed2.Description = "**Description:** Post a judge result.\n**Usage:** /judge [user] [cup] [time1] [time2] [time3] [time4] [optional time5]\n" +
-                                "**Example:** /judge Jiggmin 1 1:02:00 1:07:00 1:25:00 1:27:00";
-                            await Context.Channel.SendMessageAsync("", false, embed2.Build());
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = Context.User.GetAvatarUrl(),
+                                Text = $"Judged by: {Context.User.Username}#{Context.User.Discriminator}"
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = auth,
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            TimeSpan total;
+                            SocketTextChannel ggp = Context.Client.GetChannel(351132984134598670) as SocketTextChannel;
+                            if (string.IsNullOrWhiteSpace(time5S))
+                            {
+                                await Context.Message.DeleteAsync();
+                                switch (cup)
+                                {
+                                    case 1:
+                                        embed.Description = "1. Retro – 5:01:00";
+                                        TimeSpan retro1 = new TimeSpan(0, 0, 1, 2, 0);
+                                        TimeSpan retro2 = new TimeSpan(0, 0, 1, 7, 0);
+                                        TimeSpan retro3 = new TimeSpan(0, 0, 1, 25, 0);
+                                        TimeSpan retro4 = new TimeSpan(0, 0, 1, 27, 0);
+                                        TimeSpan retroCupTime = new TimeSpan(0, 0, 5, 1, 0);
+                                        TimeSpan retroExpertTime = new TimeSpan(0, 0, 4, 49, 0);
+                                        if (race1dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nStarter Steps by Kinx – DNF";
+                                        }
+                                        else if (race1dns)
+                                        {
+                                            embed.Description = embed.Description + "\nStarter Steps by Kinx – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(retro1, dt1.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nStarter Steps by Kinx – " + time1S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nStarter Steps by Kinx – " + time1S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race2dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nShangriLa by Juustokakku – DNF";
+                                        }
+                                        else if (race2dns)
+                                        {
+                                            embed.Description = embed.Description + "\nShangriLa by Juustokakku – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(retro2, dt2.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nShangriLa by Juustokakku – " + time2S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nShangriLa by Juustokakku – " + time2S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race3dnf)
+                                        {
+                                            embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – DNF";
+                                        }
+                                        else if (race3dns)
+                                        {
+                                            embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(retro3, dt3.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – " + time3S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – " + time3S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race4dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nPerfect Storm by Colind – DNF";
+                                        }
+                                        else if (race4dns)
+                                        {
+                                            embed.Description = embed.Description + "\nPerfect Storm by Colind – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(retro4, dt4.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nPerfect Storm by Colind – " + time4S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nPerfect Storm by Colind – " + time4S + " <:fred:264982794311041035>";
+                                        }
+                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                        if (TimeSpan.Compare(retroCupTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                        }
+                                        else if (TimeSpan.Compare(retroCupTime, total) > 0 && TimeSpan.Compare(retroExpertTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                        }
+                                        await ggp.SendMessageAsync("", false, embed.Build());
+                                        break;
+                                    case 2:
+                                        embed.Description = "2. Space – 7:22:00";
+                                        TimeSpan space1 = new TimeSpan(0, 0, 1, 20, 0);
+                                        TimeSpan space2 = new TimeSpan(0, 0, 1, 47, 0);
+                                        TimeSpan space3 = new TimeSpan(0, 0, 2, 0, 0);
+                                        TimeSpan space4 = new TimeSpan(0, 0, 2, 15, 0);
+                                        TimeSpan spaceCupTime = new TimeSpan(0, 0, 7, 22, 0);
+                                        TimeSpan spaceExpertTime = new TimeSpan(0, 0, 6, 55, 0);
+                                        if (race1dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – DNF";
+                                        }
+                                        else if (race1dns)
+                                        {
+                                            embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(space1, dt1.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – " + time1S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – " + time1S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race2dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – DNF";
+                                        }
+                                        else if (race2dns)
+                                        {
+                                            embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(space2, dt2.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – " + time2S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – " + time2S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race3dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – DNF";
+                                        }
+                                        else if (race3dns)
+                                        {
+                                            embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(space3, dt3.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – " + time3S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – " + time3S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race4dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – DNF";
+                                        }
+                                        else if (race4dns)
+                                        {
+                                            embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(space4, dt4.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – " + time4S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – " + time4S + " <:fred:264982794311041035>";
+                                        }
+                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                        if (TimeSpan.Compare(spaceCupTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                        }
+                                        else if (TimeSpan.Compare(spaceCupTime, total) > 0 && TimeSpan.Compare(spaceExpertTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                        }
+                                        await ggp.SendMessageAsync("", false, embed.Build());
+                                        break;
+                                    case 3:
+                                        embed.Description = "3. Speed – 5:10:00";
+                                        TimeSpan speed1 = new TimeSpan(0, 0, 0, 50, 0);
+                                        TimeSpan speed2 = new TimeSpan(0, 0, 1, 0, 0);
+                                        TimeSpan speed3 = new TimeSpan(0, 0, 1, 35, 0);
+                                        TimeSpan speed4 = new TimeSpan(0, 0, 1, 45, 0);
+                                        TimeSpan speedCupTime = new TimeSpan(0, 0, 5, 10, 0);
+                                        TimeSpan speedExpertTime = new TimeSpan(0, 0, 4, 50, 0);
+                                        if (race1dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nLandscape by Campaigns – DNF";
+                                        }
+                                        else if (race1dns)
+                                        {
+                                            embed.Description = embed.Description + "\nLandscape by Campaigns – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(speed1, dt1.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nLandscape by Campaigns – " + time1S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nLandscape by Campaigns – " + time1S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race2dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – DNF";
+                                        }
+                                        else if (race2dns)
+                                        {
+                                            embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(speed2, dt2.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – " + time2S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – " + time2S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race3dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nYx by Evil Crash – DNF";
+                                        }
+                                        else if (race3dns)
+                                        {
+                                            embed.Description = embed.Description + "\nYx by Evil Crash – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(speed3, dt3.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nYx by Evil Crash – " + time3S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nYx by Evil Crash – " + time3S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race4dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nRage! by Good Job Man – DNF";
+                                        }
+                                        else if (race4dns)
+                                        {
+                                            embed.Description = embed.Description + "\nRage! by Good Job Man – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(speed4, dt4.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nRage! by Good Job Man – " + time4S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nRage! by Good Job Man – " + time4S + " <:fred:264982794311041035>";
+                                        }
+                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                        if (TimeSpan.Compare(speedCupTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                        }
+                                        else if (TimeSpan.Compare(speedCupTime, total) > 0 && TimeSpan.Compare(speedExpertTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                        }
+                                        await ggp.SendMessageAsync("", false, embed.Build());
+                                        break;
+                                    case 4:
+                                        embed.Description = "4. Desert – 5:48:00";
+                                        TimeSpan desert1 = new TimeSpan(0, 0, 0, 47, 0);
+                                        TimeSpan desert2 = new TimeSpan(0, 0, 1, 2, 0);
+                                        TimeSpan desert3 = new TimeSpan(0, 0, 1, 27, 0);
+                                        TimeSpan desert4 = new TimeSpan(0, 0, 2, 32, 0);
+                                        TimeSpan desertCupTime = new TimeSpan(0, 0, 5, 48, 0);
+                                        TimeSpan desertExpertTime = new TimeSpan(0, 0, 5, 40, 0);
+                                        if (race1dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – DNF";
+                                        }
+                                        else if (race1dns)
+                                        {
+                                            embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(desert1, dt1.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – " + time1S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – " + time1S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race2dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – DNF";
+                                        }
+                                        else if (race2dns)
+                                        {
+                                            embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(desert2, dt2.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – " + time2S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – " + time2S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race3dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nPit of Despair by Ringstaart – DNF";
+                                        }
+                                        else if (race3dns)
+                                        {
+                                            embed.Description = embed.Description + "\nPit of Despair by Ringstaart – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(desert3, dt3.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nPit of Despair by Ringstaart – " + time3S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nPit of Despair by Ringstaart – " + time3S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race4dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – DNF";
+                                        }
+                                        else if (race4dns)
+                                        {
+                                            embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(desert4, dt4.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – " + time4S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – " + time4S + " <:fred:264982794311041035>";
+                                        }
+                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                        if (TimeSpan.Compare(desertCupTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                        }
+                                        else if (TimeSpan.Compare(desertCupTime, total) > 0 && TimeSpan.Compare(desertExpertTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                        }
+                                        await ggp.SendMessageAsync("", false, embed.Build());
+                                        break;
+                                    case 5:
+                                        embed.Description = "5. Nature – 7:37:00";
+                                        TimeSpan nature1 = new TimeSpan(0, 0, 1, 30, 0);
+                                        TimeSpan nature2 = new TimeSpan(0, 0, 1, 25, 0);
+                                        TimeSpan nature3 = new TimeSpan(0, 0, 1, 25, 0);
+                                        TimeSpan nature4 = new TimeSpan(0, 0, 3, 17, 0);
+                                        TimeSpan natureCupTime = new TimeSpan(0, 0, 7, 37, 0);
+                                        TimeSpan natureExpertTime = new TimeSpan(0, 0, 7, 10, 0);
+                                        if (race1dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – DNF";
+                                        }
+                                        else if (race1dns)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(nature1, dt1.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – " + time1S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – " + time1S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race2dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nLost Woods by Surcosman – DNF";
+                                        }
+                                        else if (race2dns)
+                                        {
+                                            embed.Description = embed.Description + "\nLost Woods by Surcosman – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(nature2, dt2.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nLost Woods by Surcosman – " + time2S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nLost Woods by Surcosman – " + time2S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race3dnf)
+                                        {
+                                            embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – DNF";
+                                        }
+                                        else if (race3dns)
+                                        {
+                                            embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(nature3, dt3.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – " + time3S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – " + time3S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race4dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – DNF";
+                                        }
+                                        else if (race4dns)
+                                        {
+                                            embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(nature4, dt4.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – " + time4S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – " + time4S + " <:fred:264982794311041035>";
+                                        }
+                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                        if (TimeSpan.Compare(natureCupTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                        }
+                                        else if (TimeSpan.Compare(natureCupTime, total) > 0 && TimeSpan.Compare(natureExpertTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                        }
+                                        await ggp.SendMessageAsync("", false, embed.Build());
+                                        break;
+                                    case 6:
+                                        embed.Description = "6. Dark – 7:30:00";
+                                        TimeSpan dark1 = new TimeSpan(0, 0, 1, 40, 0);
+                                        TimeSpan dark2 = new TimeSpan(0, 0, 1, 50, 0);
+                                        TimeSpan dark3 = new TimeSpan(0, 0, 2, 20, 0);
+                                        TimeSpan dark4 = new TimeSpan(0, 0, 1, 40, 0);
+                                        TimeSpan darkCupTime = new TimeSpan(0, 0, 7, 30, 0);
+                                        TimeSpan darkExpertTime = new TimeSpan(0, 0, 7, 10, 0);
+                                        if (race1dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nDark Manor by Se!tres – DNF";
+                                        }
+                                        else if (race1dns)
+                                        {
+                                            embed.Description = embed.Description + "\nDark Manor by Se!tres – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(dark1, dt1.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nDark Manor by Se!tres – " + time1S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nDark Manor by Se!tres – " + time1S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race2dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – DNF";
+                                        }
+                                        else if (race2dns)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(dark2, dt2.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – " + time2S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – " + time2S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race3dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nExodus by Mr Propre – DNF";
+                                        }
+                                        else if (race3dns)
+                                        {
+                                            embed.Description = embed.Description + "\nExodus by Mr Propre – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(dark3, dt3.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nExodus by Mr Propre – " + time3S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nExodus by Mr Propre – " + time3S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race4dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – DNF";
+                                        }
+                                        else if (race4dns)
+                                        {
+                                            embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(dark4, dt4.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – " + time4S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – " + time4S + " <:fred:264982794311041035>";
+                                        }
+                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                        if (TimeSpan.Compare(darkCupTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                        }
+                                        else if (TimeSpan.Compare(darkCupTime, total) > 0 && TimeSpan.Compare(darkExpertTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                        }
+                                        await ggp.SendMessageAsync("", false, embed.Build());
+                                        break;
+                                    case 7:
+                                        embed.Description = "7. Quest – 13:05:00";
+                                        TimeSpan quest1 = new TimeSpan(0, 0, 2, 0, 0);
+                                        TimeSpan quest2 = new TimeSpan(0, 0, 1, 35, 0);
+                                        TimeSpan quest3 = new TimeSpan(0, 0, 4, 30, 0);
+                                        TimeSpan quest4 = new TimeSpan(0, 0, 5, 0, 0);
+                                        TimeSpan questCupTime = new TimeSpan(0, 0, 13, 5, 0);
+                                        TimeSpan questExpertTime = new TimeSpan(0, 0, 12, 15, 0);
+                                        if (race1dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Time Machine by Sanzep – DNF";
+                                        }
+                                        else if (race1dns)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Time Machine by Sanzep – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(quest1, dt1.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Time Machine by Sanzep – " + time1S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nThe Time Machine by Sanzep – " + time1S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race2dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nSweetland GTT by JGPrix – DNF";
+                                        }
+                                        else if (race2dns)
+                                        {
+                                            embed.Description = embed.Description + "\nSweetland GTT by JGPrix – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(quest2, dt2.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nSweetland GTT by JGPrix – " + time2S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nSweetland GTT by JGPrix – " + time2S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race3dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nElements by Airock – DNF";
+                                        }
+                                        else if (race3dns)
+                                        {
+                                            embed.Description = embed.Description + "\nElements by Airock – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(quest3, dt3.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nElements by Airock – " + time3S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nElements by Airock – " + time3S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race4dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nZone by What(O o) – DNF";
+                                        }
+                                        else if (race4dns)
+                                        {
+                                            embed.Description = embed.Description + "\nZone by What(O o) – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(quest4, dt4.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nZone by What(O o) – " + time4S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nZone by What(O o) – " + time4S + " <:fred:264982794311041035>";
+                                        }
+                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                        if (TimeSpan.Compare(questCupTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                        }
+                                        else if (TimeSpan.Compare(questCupTime, total) > 0 && TimeSpan.Compare(questExpertTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                        }
+                                        await ggp.SendMessageAsync("", false, embed.Build());
+                                        break;
+                                    case 8:
+                                        embed.Description = "8. Overworld – 6:10:00";
+                                        TimeSpan overworld1 = new TimeSpan(0, 0, 1, 0, 0);
+                                        TimeSpan overworld2 = new TimeSpan(0, 0, 1, 20, 0);
+                                        TimeSpan overworld3 = new TimeSpan(0, 0, 1, 50, 0);
+                                        TimeSpan overworld4 = new TimeSpan(0, 0, 2, 0, 0);
+                                        TimeSpan overworldCupTime = new TimeSpan(0, 0, 6, 10, 0);
+                                        TimeSpan overworldExpertTime = new TimeSpan(0, 0, 5, 55, 0);
+                                        if (race1dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – DNF";
+                                        }
+                                        else if (race1dns)
+                                        {
+                                            embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(overworld1, dt1.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – " + time1S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – " + time1S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race2dnf)
+                                        {
+                                            embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – DNF";
+                                        }
+                                        else if (race2dns)
+                                        {
+                                            embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(overworld2, dt2.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – " + time2S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – " + time2S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race3dnf)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – DNF";
+                                        }
+                                        else if (race3dns)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(overworld3, dt3.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – " + time3S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – " + time3S + " <:fred:264982794311041035>";
+                                        }
+                                        if (race4dnf)
+                                        {
+                                            embed.Description = embed.Description + "\n~Utherworld~ by TRUC – DNF";
+                                        }
+                                        else if (race4dns)
+                                        {
+                                            embed.Description = embed.Description + "\n~Utherworld~ by TRUC – DNS";
+                                        }
+                                        else if (TimeSpan.Compare(overworld4, dt4.TimeOfDay) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\n~Utherworld~ by TRUC – " + time4S;
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\n~Utherworld~ by TRUC – " + time4S + " <:fred:264982794311041035>";
+                                        }
+                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
+                                        if (TimeSpan.Compare(overworldCupTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
+                                        }
+                                        else if (TimeSpan.Compare(overworldCupTime, total) > 0 && TimeSpan.Compare(overworldExpertTime, total) <= 0)
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
+                                        }
+                                        else
+                                        {
+                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
+                                        }
+                                        await ggp.SendMessageAsync("", false, embed.Build());
+                                        break;
+                                }
+                            }
+                            else if (!DateTime.TryParseExact(time5S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt5))
+                            {
+                                EmbedBuilder embed2 = new EmbedBuilder()
+                                {
+                                    Color = new Color(220, 220, 220)
+                                };
+                                embed2.Title = "Command: /judge";
+                                embed2.Description = "**Description:** Post a judge result.\n**Usage:** /judge [user] [cup] [time1] [time2] [time3] [time4] [optional time5]\n" +
+                                    "**Example:** /judge Jiggmin 1 1:02:00 1:07:00 1:25:00 1:27:00";
+                                await Context.Channel.SendMessageAsync("", false, embed2.Build());
+                            }
+                            else
+                            {
+                                await Context.Message.DeleteAsync();
+                                switch (cup)
+                                {
+                                    case 1:
+                                        embed.Description = "1. Velocity – 6:24:00 – 6:10:00";
+                                        break;
+                                    case 2:
+                                        embed.Description = "2. Night – 6:49:00 – 6:35:00";
+                                        break;
+                                    case 3:
+                                        embed.Description = "3. RoundTrip – 7:12:00 – 6:55:00";
+                                        break;
+                                    case 4:
+                                        embed.Description = "4. Cosmos – 9:02:00 – 8:40:00";
+                                        break;
+                                    case 5:
+                                        embed.Description = "5. Freedom – 8:07:00 – 7:50:00";
+                                        break;
+                                    case 6:
+                                        embed.Description = "6. Ancient – 9:19:00 – 9:00:00";
+                                        break;
+                                    case 7:
+                                        embed.Description = "7. Exotic – 6:14:00 – 6:00:00";
+                                        break;
+                                    case 8:
+                                        embed.Description = "8. PlatformRacing – 13:22:00 – 13:05:00g";
+                                        break;
+                                }
+                            }
                         }
                         else
                         {
-                            await Context.Message.DeleteAsync();
-                            switch (cup)
-                            {
-                                case 1:
-                                    embed.Description = "1. Velocity – 6:24:00 – 6:10:00";
-                                    break;
-                                case 2:
-                                    embed.Description = "2. Night – 6:49:00 – 6:35:00";
-                                    break;
-                                case 3:
-                                    embed.Description = "3. RoundTrip – 7:12:00 – 6:55:00";
-                                    break;
-                                case 4:
-                                    embed.Description = "4. Cosmos – 9:02:00 – 8:40:00";
-                                    break;
-                                case 5:
-                                    embed.Description = "5. Freedom – 8:07:00 – 7:50:00";
-                                    break;
-                                case 6:
-                                    embed.Description = "6. Ancient – 9:19:00 – 9:00:00";
-                                    break;
-                                case 7:
-                                    embed.Description = "7. Exotic – 6:14:00 – 6:00:00";
-                                    break;
-                                case 8:
-                                    embed.Description = "8. PlatformRacing – 13:22:00 – 13:05:00g";
-                                    break;
-                            }
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -3956,26 +3920,33 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (UserInGuild(Context.Guild, username) != null)
+                    try
                     {
-                        IUser user = UserInGuild(Context.Guild, username);
-                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt"));
-                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
                         {
-                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is already blacklisted from using music commands.");
+                            SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                            string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt"));
+                            if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                            {
+                                File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is already blacklisted from using music commands.");
+                            }
+                            else
+                            {
+                                File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
+                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** blacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                            }
                         }
                         else
                         {
-                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                            await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** blacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -4006,26 +3977,33 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (UserInGuild(Context.Guild, username) != null)
+                    try
                     {
-                        IUser user = UserInGuild(Context.Guild, username);
-                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt"));
-                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
                         {
-                            currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
-                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                            await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** unblacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully removed blacklisted music command user **{user.Username}#{user.Discriminator}**.");
+                            SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                            string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt"));
+                            if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                            {
+                                currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
+                                File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
+                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** unblacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully removed blacklisted music command user **{user.Username}#{user.Discriminator}**.");
+                            }
+                            else
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is not blacklisted from using music commands.");
+                            }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is not blacklisted from using music commands.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -4106,32 +4084,39 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (UserInGuild(Context.Guild, username) != null)
+                    try
                     {
-                        IUser user = UserInGuild(Context.Guild, username);
-                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedSuggestions.txt"));
-                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
                         {
-                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is already blacklisted from suggestions.");
+                            SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                            string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedSuggestions.txt"));
+                            if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                            {
+                                File.WriteAllText(Path.Combine(downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is already blacklisted from suggestions.");
+                            }
+                            else
+                            {
+                                File.WriteAllText(Path.Combine(downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
+                                SocketTextChannel suggestions = Context.Guild.GetTextChannel(249684395454234624);
+                                RequestOptions options = new RequestOptions()
+                                {
+                                    AuditLogReason = $"Blacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                                };
+                                await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny), options);
+                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** blacklisted **{user.Username}#{user.Discriminator}** from the **suggestions** channel.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted **{user.Username}#{user.Discriminator}** from suggestions.");
+                            }
                         }
                         else
                         {
-                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
-                            SocketTextChannel suggestions = Context.Guild.GetTextChannel(249684395454234624);
-                            RequestOptions options = new RequestOptions()
-                            {
-                                AuditLogReason = $"Blacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                            };
-                            await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny), options);
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                            await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** blacklisted **{user.Username}#{user.Discriminator}** from the **suggestions** channel.");
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted **{user.Username}#{user.Discriminator}** from suggestions.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -4162,32 +4147,39 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (UserInGuild(Context.Guild, username) != null)
+                    try
                     {
-                        IUser user = UserInGuild(Context.Guild, username);
-                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedSuggestions.txt"));
-                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
                         {
-                            currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
-                            File.WriteAllText(Path.Combine(downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
-                            SocketTextChannel suggestions = Context.Guild.GetTextChannel(249684395454234624);
-                            RequestOptions options = new RequestOptions()
+                            IUser user = UserInGuild(Context.Message, Context.Guild, username);
+                            string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedSuggestions.txt"));
+                            if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                             {
-                                AuditLogReason = $"Unblacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                            };
-                            await suggestions.RemovePermissionOverwriteAsync(user, options);
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                            await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** unblacklisted **{user.Username}#{user.Discriminator}** from the **suggestions** channel.");
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully removed blacklisted suggestions user **{user.Username}#{user.Discriminator}**.");
+                                currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
+                                File.WriteAllText(Path.Combine(downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
+                                SocketTextChannel suggestions = Context.Guild.GetTextChannel(249684395454234624);
+                                RequestOptions options = new RequestOptions()
+                                {
+                                    AuditLogReason = $"Unblacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                                };
+                                await suggestions.RemovePermissionOverwriteAsync(user, options);
+                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** unblacklisted **{user.Username}#{user.Discriminator}** from the **suggestions** channel.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully removed blacklisted suggestions user **{user.Username}#{user.Discriminator}**.");
+                            }
+                            else
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is not blacklisted from suggestions.");
+                            }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{user.Username}` is not blacklisted from suggestions.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -4268,143 +4260,150 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (await ChannelInGuildAsync(Context.Guild, channelName) != null)
+                    try
                     {
-                        IGuildChannel channel = await ChannelInGuildAsync(Context.Guild, channelName) as IGuildChannel;
-                        string type = "Text";
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        if (ChannelInGuild(Context.Message, Context.Guild, channelName) != null)
                         {
-                            Text = "Channel Created"
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
-                            Footer = footer,
-                            Timestamp = channel.CreatedAt.Date
-                        };
-                        embed.AddField(y =>
-                        {
-                            y.Name = "ID";
-                            y.Value = channel.Id;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Name";
-                            y.Value = channel.Name;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Position";
-                            y.Value = channel.Position;
-                            y.IsInline = true;
-                        });
-                        if (channel is IVoiceChannel vChannel)
-                        {
-                            type = "Voice";
+                            SocketGuildChannel channel = ChannelInGuild(Context.Message, Context.Guild, channelName);
+                            string type = "Text";
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = "Channel Created"
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
+                                Footer = footer,
+                                Timestamp = channel.CreatedAt.Date
+                            };
                             embed.AddField(y =>
                             {
-                                y.Name = "Type";
-                                y.Value = type;
+                                y.Name = "ID";
+                                y.Value = channel.Id;
                                 y.IsInline = true;
                             });
                             embed.AddField(y =>
                             {
-                                y.Name = "Bitrate";
-                                y.Value = vChannel.Bitrate;
+                                y.Name = "Name";
+                                y.Value = channel.Name;
                                 y.IsInline = true;
                             });
-                            if (vChannel.CategoryId != null)
+                            embed.AddField(y =>
                             {
+                                y.Name = "Position";
+                                y.Value = channel.Position;
+                                y.IsInline = true;
+                            });
+                            if (channel is IVoiceChannel vChannel)
+                            {
+                                type = "Voice";
                                 embed.AddField(y =>
                                 {
-                                    y.Name = "Category ID";
-                                    y.Value = vChannel.CategoryId;
+                                    y.Name = "Type";
+                                    y.Value = type;
                                     y.IsInline = true;
                                 });
-                                embed.AddField(async y =>
+                                embed.AddField(y =>
                                 {
-                                    y.Name = "Category Name";
-                                    y.Value = (await vChannel.GetCategoryAsync()).Name;
+                                    y.Name = "Bitrate";
+                                    y.Value = vChannel.Bitrate;
+                                    y.IsInline = true;
+                                });
+                                if (vChannel.CategoryId != null)
+                                {
+                                    embed.AddField(y =>
+                                    {
+                                        y.Name = "Category ID";
+                                        y.Value = vChannel.CategoryId;
+                                        y.IsInline = true;
+                                    });
+                                    embed.AddField(async y =>
+                                    {
+                                        y.Name = "Category Name";
+                                        y.Value = (await vChannel.GetCategoryAsync()).Name;
+                                        y.IsInline = true;
+                                    });
+                                }
+                                if (vChannel.UserLimit != null)
+                                {
+                                    embed.AddField(y =>
+                                    {
+                                        y.Name = "User Limit";
+                                        y.Value = vChannel.UserLimit;
+                                        y.IsInline = true;
+                                    });
+                                }
+                                else
+                                {
+                                    embed.AddField(y =>
+                                    {
+                                        y.Name = "User Limit";
+                                        y.Value = "Unlimited";
+                                        y.IsInline = true;
+                                    });
+                                }
+                            }
+                            else if (channel is ICategoryChannel cChannel)
+                            {
+                                type = "Category";
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Type";
+                                    y.Value = type;
                                     y.IsInline = true;
                                 });
                             }
-                            if (vChannel.UserLimit != null)
+                            else if (channel is ITextChannel tChannel)
                             {
                                 embed.AddField(y =>
                                 {
-                                    y.Name = "User Limit";
-                                    y.Value = vChannel.UserLimit;
+                                    y.Name = "Type";
+                                    y.Value = type;
                                     y.IsInline = true;
                                 });
-                            }
-                            else
-                            {
                                 embed.AddField(y =>
                                 {
-                                    y.Name = "User Limit";
-                                    y.Value = "Unlimited";
+                                    y.Name = "Mention";
+                                    y.Value = $"`{tChannel.Mention.ToString()}`";
+                                    y.IsInline = true;
+                                });
+                                if (tChannel.CategoryId != null)
+                                {
+                                    embed.AddField(y =>
+                                    {
+                                        y.Name = "Category ID";
+                                        y.Value = tChannel.CategoryId;
+                                        y.IsInline = true;
+                                    });
+                                    embed.AddField(async y =>
+                                    {
+                                        y.Name = "Category Name";
+                                        y.Value = (await tChannel.GetCategoryAsync()).Name;
+                                        y.IsInline = true;
+                                    });
+                                }
+                                string nsfw = "No";
+                                if (tChannel.IsNsfw)
+                                {
+                                    nsfw = "Yes";
+                                }
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "NSFW";
+                                    y.Value = nsfw;
                                     y.IsInline = true;
                                 });
                             }
+                            await Context.Channel.SendMessageAsync("", false, embed.Build());
                         }
-                        else if (channel is ICategoryChannel cChannel)
+                        else
                         {
-                            type = "Category";
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Type";
-                                y.Value = type;
-                                y.IsInline = true;
-                            });
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find channel `{channelName}`.");
                         }
-                        else if (channel is ITextChannel tChannel)
-                        {
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Type";
-                                y.Value = type;
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Mention";
-                                y.Value = $"`{tChannel.Mention.ToString()}`";
-                                y.IsInline = true;
-                            });
-                            if (tChannel.CategoryId != null)
-                            {
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Category ID";
-                                    y.Value = tChannel.CategoryId;
-                                    y.IsInline = true;
-                                });
-                                embed.AddField(async y =>
-                                {
-                                    y.Name = "Category Name";
-                                    y.Value = (await tChannel.GetCategoryAsync()).Name;
-                                    y.IsInline = true;
-                                });
-                            }
-                            string nsfw = "No";
-                            if (tChannel.IsNsfw)
-                            {
-                                nsfw = "Yes";
-                            }
-                            embed.AddField(y =>
-                            {
-                                y.Name = "NSFW";
-                                y.Value = nsfw;
-                                y.IsInline = true;
-                            });
-                        }
-                        await Context.Channel.SendMessageAsync("", false, embed.Build());
                     }
-                    else
+                    catch(Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find channel `{channelName}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel with ID: `{channelName}` does not exist or could not be found.");
                     }
                 }
             }
@@ -4469,104 +4468,111 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (RoleInGuild(Context.Guild, roleName) != null)
+                try
                 {
-                    IRole role = RoleInGuild(Context.Guild, roleName);
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    if (RoleInGuild(Context.Message, Context.Guild, roleName) != null)
                     {
-                        Text = "Role Created"
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = role.Color,
-                        ThumbnailUrl = "https://dummyimage.com/80x80/" + HexConverter(role.Color) + "/" + HexConverter(role.Color),
-                        Footer = footer,
-                        Timestamp = role.CreatedAt.Date
-                    };
-                    embed.AddField(y =>
-                    {
-                        y.Name = "ID";
-                        y.Value = role.Id;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Name";
-                        y.Value = role.Name;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Color";
-                        y.Value = "`#" + HexConverter(role.Color) + "`";
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Mention";
-                        y.Value = $"`{role.Mention.ToString()}`";
-                        y.IsInline = true;
-                    });
-                    int roleMembers = 0;
-                    foreach (IGuildUser user in Context.Guild.Users)
-                    {
-                        var roles = user.RoleIds;
-                        foreach (ulong id in roles)
+                        SocketRole role = RoleInGuild(Context.Message, Context.Guild, roleName);
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            if (id == role.Id)
+                            Text = "Role Created"
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = role.Color,
+                            ThumbnailUrl = "https://dummyimage.com/80x80/" + HexConverter(role.Color) + "/" + HexConverter(role.Color),
+                            Footer = footer,
+                            Timestamp = role.CreatedAt.Date
+                        };
+                        embed.AddField(y =>
+                        {
+                            y.Name = "ID";
+                            y.Value = role.Id;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Name";
+                            y.Value = role.Name;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Color";
+                            y.Value = "`#" + HexConverter(role.Color) + "`";
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Mention";
+                            y.Value = $"`{role.Mention.ToString()}`";
+                            y.IsInline = true;
+                        });
+                        int roleMembers = 0;
+                        foreach (IGuildUser user in Context.Guild.Users)
+                        {
+                            var roles = user.RoleIds;
+                            foreach (ulong id in roles)
                             {
-                                roleMembers = roleMembers + 1;
-                                break;
+                                if (id == role.Id)
+                                {
+                                    roleMembers = roleMembers + 1;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Members";
-                        y.Value = roleMembers;
-                        y.IsInline = true;
-                    });
-                    string hoisted = "";
-                    if (role.IsHoisted)
-                    {
-                        hoisted = "Yes";
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Members";
+                            y.Value = roleMembers;
+                            y.IsInline = true;
+                        });
+                        string hoisted = "";
+                        if (role.IsHoisted)
+                        {
+                            hoisted = "Yes";
+                        }
+                        else
+                        {
+                            hoisted = "No";
+                        }
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Hoisted";
+                            y.Value = hoisted;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Position";
+                            y.Value = role.Position;
+                            y.IsInline = true;
+                        });
+                        string mentionable = "";
+                        if (role.IsMentionable)
+                        {
+                            mentionable = "Yes";
+                        }
+                        else
+                        {
+                            mentionable = "No";
+                        }
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Mentionable";
+                            y.Value = mentionable;
+                            y.IsInline = true;
+                        });
+                        await Context.Channel.SendMessageAsync("", false, embed.Build());
                     }
                     else
                     {
-                        hoisted = "No";
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role `{roleName}`.");
                     }
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Hoisted";
-                        y.Value = hoisted;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Position";
-                        y.Value = role.Position;
-                        y.IsInline = true;
-                    });
-                    string mentionable = "";
-                    if (role.IsMentionable)
-                    {
-                        mentionable = "Yes";
-                    }
-                    else
-                    {
-                        mentionable = "No";
-                    }
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Mentionable";
-                        y.Value = mentionable;
-                        y.IsInline = true;
-                    });
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
-                else
+                catch(Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role `{roleName}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
             }
         }
@@ -4662,22 +4668,29 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (UserInGuild(Context.Guild, username) != null)
+                try
                 {
-                    IUser user = UserInGuild(Context.Guild, username);
-                    auth.Name = $"Warnings - {user.Username}#{user.Discriminator}";
-                    auth.IconUrl = user.GetAvatarUrl();
-                    warnings = Database.Warnings(user);
-                    if (warnings.Count <= 0)
+                    if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user has no warnings.");
+                        SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                        auth.Name = $"Warnings - {user.Username}#{user.Discriminator}";
+                        auth.IconUrl = user.GetAvatarUrl();
+                        warnings = Database.Warnings(user);
+                        if (warnings.Count <= 0)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user has no warnings.");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         return;
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
-                    return;
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
             EmbedBuilder embed = new EmbedBuilder()
@@ -4853,75 +4866,82 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (UserInGuild(Context.Guild, username) != null)
+                try
                 {
-                    IUser user = UserInGuild(Context.Guild, username);
-                    if (CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                    if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                        return;
-                    }
-                    if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= ((Context.Client as DiscordSocketClient).GetUser(383927022583545859) as SocketGuildUser).Roles.ElementAt(1).Position)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
-                        return;
-                    }
-                    ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                    {
-                        Name = $"Case {Database.CaseCount() + 1} | Undeafen | {user.Username}#{user.Discriminator}",
-                        IconUrl = user.GetAvatarUrl(),
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 0, 0),
-                        Author = auth
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        Text = ($"ID: {user.Id}")
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    embed.AddField(y =>
-                    {
-                        y.Name = "User";
-                        y.Value = user.Mention;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Moderator";
-                        y.Value = Context.User.Mention;
-                        y.IsInline = true;
-                    });
-                    await Context.Message.DeleteAsync();
-                    if (reason == null)
-                    {
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was undeafened.");
-                        await user.SendMessageAsync($"You have been undeafened on {Context.Guild.Name} by {Context.User.Mention}");
-                        await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
+                        SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                        if (CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            return;
+                        }
+                        if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= ((Context.Client as DiscordSocketClient).GetUser(383927022583545859) as SocketGuildUser).Roles.ElementAt(1).Position)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            return;
+                        }
+                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        {
+                            Name = $"Case {Database.CaseCount() + 1} | Undeafen | {user.Username}#{user.Discriminator}",
+                            IconUrl = user.GetAvatarUrl(),
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(220, 0, 0),
+                            Author = auth
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = ($"ID: {user.Id}")
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.AddField(y =>
+                        {
+                            y.Name = "User";
+                            y.Value = user.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Moderator";
+                            y.Value = Context.User.Mention;
+                            y.IsInline = true;
+                        });
+                        await Context.Message.DeleteAsync();
+                        if (reason == null)
+                        {
+                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            await banlog.SendMessageAsync("", false, embed.Build());
+                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was undeafened.");
+                            await user.SendMessageAsync($"You have been undeafened on {Context.Guild.Name} by {Context.User.Mention}");
+                            await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
+                        }
+                        else
+                        {
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = reason;
+                                y.IsInline = true;
+                            });
+                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            await banlog.SendMessageAsync("", false, embed.Build());
+                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was undeafened.");
+                            await user.SendMessageAsync($"You have been undeafened on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
+                            await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
+                        }
                     }
                     else
                     {
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = reason;
-                            y.IsInline = true;
-                        });
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was undeafened.");
-                        await user.SendMessageAsync($"You have been undeafened on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
-                        await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -4951,76 +4971,82 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (UserInGuild(Context.Guild, username) != null)
+                try
                 {
-                    IUser iUser = UserInGuild(Context.Guild, username);
-                    SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                    if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                    if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                        return;
-                    }
-                    if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
-                        return;
-                    }
-                    ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                    {
-                        Name = $"Case {Database.CaseCount() + 1} | Deafen | {user.Username}#{user.Discriminator}",
-                        IconUrl = user.GetAvatarUrl(),
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 0, 0),
-                        Author = auth
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        Text = ($"ID: {user.Id}")
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    embed.AddField(y =>
-                    {
-                        y.Name = "User";
-                        y.Value = user.Mention;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Moderator";
-                        y.Value = Context.User.Mention;
-                        y.IsInline = true;
-                    });
-                    await Context.Message.DeleteAsync();
-                    if (reason == null)
-                    {
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was deafened.");
-                        await user.SendMessageAsync($"You have been deafened on {Context.Guild.Name} by {Context.User.Mention}");
-                        await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = true);
+                        SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            return;
+                        }
+                        if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            return;
+                        }
+                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        {
+                            Name = $"Case {Database.CaseCount() + 1} | Deafen | {user.Username}#{user.Discriminator}",
+                            IconUrl = user.GetAvatarUrl(),
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(220, 0, 0),
+                            Author = auth
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = ($"ID: {user.Id}")
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.AddField(y =>
+                        {
+                            y.Name = "User";
+                            y.Value = user.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Moderator";
+                            y.Value = Context.User.Mention;
+                            y.IsInline = true;
+                        });
+                        await Context.Message.DeleteAsync();
+                        if (reason == null)
+                        {
+                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            await banlog.SendMessageAsync("", false, embed.Build());
+                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was deafened.");
+                            await user.SendMessageAsync($"You have been deafened on {Context.Guild.Name} by {Context.User.Mention}");
+                            await user.ModifyAsync(x => x.Deaf = true);
+                        }
+                        else
+                        {
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = reason;
+                                y.IsInline = true;
+                            });
+                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            await banlog.SendMessageAsync("", false, embed.Build());
+                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was deafened.");
+                            await user.SendMessageAsync($"You have been deafened on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
+                            await user.ModifyAsync(x => x.Deaf = true);
+                        }
                     }
                     else
                     {
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = reason;
-                            y.IsInline = true;
-                        });
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was deafened.");
-                        await user.SendMessageAsync($"You have been deafened on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
-                        await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = true);
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -5050,70 +5076,76 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (UserInGuild(Context.Guild, username) != null)
+                try
                 {
-                    IUser iUser = UserInGuild(Context.Guild, username);
-                    SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                    if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                    if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                        return;
+                        SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            return;
+                        }
+                        if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            return;
+                        }
+                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        {
+                            Name = $"Case {Database.CaseCount() + 1} | Softban | {user.Username}#{user.Discriminator}",
+                            IconUrl = user.GetAvatarUrl(),
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(220, 220, 220),
+                            Author = auth
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = ($"ID: {user.Id}")
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.AddField(y =>
+                        {
+                            y.Name = "User";
+                            y.Value = user.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Moderator";
+                            y.Value = Context.User.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = true;
+                        });
+                        await Context.Message.DeleteAsync();
+                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Softban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was softbanned.");
+                        await user.SendMessageAsync($"You have been softbanned on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
+                        await Context.Guild.AddBanAsync(user, 7, $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}");
+                        RequestOptions options = new RequestOptions()
+                        {
+                            AuditLogReason = $"Softban | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                        };
+                        await Context.Guild.RemoveBanAsync(user, options);
                     }
-                    if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                    else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
-                        return;
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
-                    ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                    {
-                        Name = $"Case {Database.CaseCount() + 1} | Softban | {user.Username}#{user.Discriminator}",
-                        IconUrl = user.GetAvatarUrl(),
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 220, 220),
-                        Author = auth
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        Text = ($"ID: {user.Id}")
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    embed.AddField(y =>
-                    {
-                        y.Name = "User";
-                        y.Value = user.Mention;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Moderator";
-                        y.Value = Context.User.Mention;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Reason";
-                        y.Value = reason;
-                        y.IsInline = true;
-                    });
-                    await Context.Message.DeleteAsync();
-                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Softban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                    await banlog.SendMessageAsync("", false, embed.Build());
-                    await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was softbanned.");
-                    await user.SendMessageAsync($"You have been softbanned on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
-                    await Context.Guild.AddBanAsync(iUser, 7, $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}");
-                    RequestOptions options = new RequestOptions()
-                    {
-                        AuditLogReason = $"Softban | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                    };
-                    await Context.Guild.RemoveBanAsync(iUser, options);
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -5200,66 +5232,73 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (UserInGuild(Context.Guild, username) != null)
+                    try
                     {
-                        IUser user = UserInGuild(Context.Guild, username);
-                        List<string> modlogs = Database.Modlogs(user);
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
                         {
-                            Name = $"Mod Logs - {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl()
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(220, 220, 220),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            IconUrl = Context.User.GetAvatarUrl(),
-                            Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        if (modlogs.Count <= 0)
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user has no priors.");
-                            return;
-                        }
-                        string temp = "";
-                        bool first = true, sent = false;
-                        foreach (string modlog in modlogs)
-                        {
-                            temp = temp + modlog + "\n";
-                            if (temp.Length > 2000)
+                            SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                            List<string> modlogs = Database.Modlogs(user);
+                            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                             {
-                                if (first)
-                                {
-                                    await Context.Channel.SendMessageAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
-                                    first = false;
-                                    sent = true;
-                                }
-                                else
-                                {
-                                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                                }
-                                temp = "";
-                                embed.Description = "";
+                                Name = $"Mod Logs - {user.Username}#{user.Discriminator}",
+                                IconUrl = user.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(220, 220, 220),
+                                Author = auth
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = Context.User.GetAvatarUrl(),
+                                Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                            };
+                            embed.WithFooter(footer);
+                            embed.WithCurrentTimestamp();
+                            if (modlogs.Count <= 0)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user has no priors.");
+                                return;
                             }
-                            embed.Description = embed.Description + modlog + "\n";
-                        }
-                        if (!sent)
-                        {
-                            await Context.Channel.SendMessageAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
+                            string temp = "";
+                            bool first = true, sent = false;
+                            foreach (string modlog in modlogs)
+                            {
+                                temp = temp + modlog + "\n";
+                                if (temp.Length > 2000)
+                                {
+                                    if (first)
+                                    {
+                                        await Context.Channel.SendMessageAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
+                                        first = false;
+                                        sent = true;
+                                    }
+                                    else
+                                    {
+                                        await Context.Channel.SendMessageAsync("", false, embed.Build());
+                                    }
+                                    temp = "";
+                                    embed.Description = "";
+                                }
+                                embed.Description = embed.Description + modlog + "\n";
+                            }
+                            if (!sent)
+                            {
+                                await Context.Channel.SendMessageAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
+                            }
+                            else
+                            {
+                                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                            }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync("", false, embed.Build());
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -5384,64 +5423,70 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (UserInGuild(Context.Guild, username) != null)
+                    try
                     {
-                        IUser iUser = UserInGuild(Context.Guild, username);
-                        SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                        if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                            return;
+                            SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                            if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                                return;
+                            }
+                            if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                                return;
+                            }
+                            ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                            {
+                                Name = $"Case {Database.CaseCount() + 1} | Warn | {user.Username}#{user.Discriminator}",
+                                IconUrl = user.GetAvatarUrl(),
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(220, 220, 220),
+                                Author = auth
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = ($"ID: {user.Id}")
+                            };
+                            embed.WithFooter(footer);
+                            embed.WithCurrentTimestamp();
+                            embed.AddField(y =>
+                            {
+                                y.Name = "User";
+                                y.Value = user.Mention;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Moderator";
+                                y.Value = Context.User.Mention;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = reason;
+                                y.IsInline = true;
+                            });
+                            await Context.Message.DeleteAsync();
+                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Warn", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            await banlog.SendMessageAsync("", false, embed.Build());
+                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was warned.");
+                            await user.SendMessageAsync($"You have been warned on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
                         }
-                        if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
-                            return;
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
-                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Case {Database.CaseCount() + 1} | Warn | {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl(),
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(220, 220, 220),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = ($"ID: {user.Id}")
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        embed.AddField(y =>
-                        {
-                            y.Name = "User";
-                            y.Value = user.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Moderator";
-                            y.Value = Context.User.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = reason;
-                            y.IsInline = true;
-                        });
-                        await Context.Message.DeleteAsync();
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Warn", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was warned.");
-                        await user.SendMessageAsync($"You have been warned on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -5700,51 +5745,57 @@ namespace FredBotNETCore.Modules.Public
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                     return;
                 }
-                if (UserInGuild(Context.Guild, username) != null)
+                try
                 {
-                    IUser iUser = UserInGuild(Context.Guild, username);
-                    SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                    if (type.Equals("temp", StringComparison.InvariantCultureIgnoreCase) || type.Equals("temporary", StringComparison.InvariantCultureIgnoreCase))
+                    if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Message.DeleteAsync();
-                        await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a temporary moderator! " +
-                        $"May they reign in hours of peace and prosperity! " +
-                        $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
-                    }
-                    else if (type.Equals("trial", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        await Context.Message.DeleteAsync();
-                        await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a trial moderator! " +
-                        $"May they reign in days of peace and prosperity! " +
-                        $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
-                        IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "PR2 Staff Member".ToUpper());
-                        RequestOptions options = new RequestOptions()
+                        SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        if (type.Equals("temp", StringComparison.InvariantCultureIgnoreCase) || type.Equals("temporary", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            AuditLogReason = $"New PR2 Staff Member | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        await user.AddRolesAsync(role, options);
-                    }
-                    else if (type.Equals("perm", StringComparison.InvariantCultureIgnoreCase) || type.Equals("permanent", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        await Context.Message.DeleteAsync();
-                        await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a permanent moderator! " +
-                        $"May they reign in 1,000 years of peace and prosperity! " +
-                        $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
-                        IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "PR2 Staff Member".ToUpper());
-                        RequestOptions options = new RequestOptions()
+                            await Context.Message.DeleteAsync();
+                            await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a temporary moderator! " +
+                            $"May they reign in hours of peace and prosperity! " +
+                            $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
+                        }
+                        else if (type.Equals("trial", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            AuditLogReason = $"New PR2 Staff Member | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        await user.AddRolesAsync(role, options);
+                            await Context.Message.DeleteAsync();
+                            await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a trial moderator! " +
+                            $"May they reign in days of peace and prosperity! " +
+                            $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
+                            IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "PR2 Staff Member".ToUpper());
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = $"New PR2 Staff Member | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                            };
+                            await user.AddRolesAsync(role, options);
+                        }
+                        else if (type.Equals("perm", StringComparison.InvariantCultureIgnoreCase) || type.Equals("permanent", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            await Context.Message.DeleteAsync();
+                            await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a permanent moderator! " +
+                            $"May they reign in 1,000 years of peace and prosperity! " +
+                            $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
+                            IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "PR2 Staff Member".ToUpper());
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = $"New PR2 Staff Member | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                            };
+                            await user.AddRolesAsync(role, options);
+                        }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the promotion type `{type}` was not recognised.");
+                        }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the promotion type `{type}` was not recognised.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -5772,27 +5823,33 @@ namespace FredBotNETCore.Modules.Public
                 await Context.Channel.SendMessageAsync("", false, embed.Build());
                 return;
             }
-            if (UserInGuild(Context.Guild, username) != null)
+            try
             {
-                IUser iUser = UserInGuild(Context.Guild, username);
-                SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                if (!user.Roles.Any(e => e.Name == "Temp Mod"))
+                if (UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user is not a temp mod.");
-                    return;
+                    SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                    if (!user.Roles.Any(e => e.Name == "Temp Mod"))
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user is not a temp mod.");
+                        return;
+                    }
+                    IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"Untemp Modding User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                    };
+                    await user.RemoveRolesAsync(role, options);
+                    await Context.Message.DeleteAsync();
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} has removed temp mod from {user.Mention}");
                 }
-                IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
-                RequestOptions options = new RequestOptions()
+                else
                 {
-                    AuditLogReason = $"Untemp Modding User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                };
-                await user.RemoveRolesAsync(role, options);
-                await Context.Message.DeleteAsync();
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} has removed temp mod from {user.Mention}");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                }
             }
-            else
+            catch (Exception)
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
         }
 
@@ -5820,70 +5877,76 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (UserInGuild(Context.Guild, username) != null)
+                try
                 {
-                    IUser iUser = UserInGuild(Context.Guild, username);
-                    SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                    if (!user.Roles.Any(e => e.Name == "Muted"))
+                    if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user is not muted.");
-                        return;
-                    }
-                    IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
-                    RequestOptions options = new RequestOptions();
-                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                    {
-                        Name = $"Case {Database.CaseCount() + 1} | Unmute | {user.Username}#{user.Discriminator}",
-                        IconUrl = user.GetAvatarUrl(),
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(0, 255, 0),
-                        Author = auth
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        Text = ($"ID: {user.Id}")
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    embed.AddField(y =>
-                    {
-                        y.Name = "User";
-                        y.Value = user.Mention;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Moderator";
-                        y.Value = Context.User.Mention;
-                        y.IsInline = true;
-                    });
-                    if (reason == null)
-                    {
-                        options.AuditLogReason = $"Unmuting User | Mod: {Context.User.Username}#{Context.User.Discriminator}";
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", Context.User.Username + "#" + Context.User.Discriminator, "No Reason - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        if (!user.Roles.Any(e => e.Name == "Muted"))
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user is not muted.");
+                            return;
+                        }
+                        IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
+                        RequestOptions options = new RequestOptions();
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        {
+                            Name = $"Case {Database.CaseCount() + 1} | Unmute | {user.Username}#{user.Discriminator}",
+                            IconUrl = user.GetAvatarUrl(),
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(0, 255, 0),
+                            Author = auth
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = ($"ID: {user.Id}")
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.AddField(y =>
+                        {
+                            y.Name = "User";
+                            y.Value = user.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Moderator";
+                            y.Value = Context.User.Mention;
+                            y.IsInline = true;
+                        });
+                        if (reason == null)
+                        {
+                            options.AuditLogReason = $"Unmuting User | Mod: {Context.User.Username}#{Context.User.Discriminator}";
+                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", Context.User.Username + "#" + Context.User.Discriminator, "No Reason - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        }
+                        else
+                        {
+                            options.AuditLogReason = $"Unmuting User | Mod: {Context.User.Username}#{Context.User.Discriminator} | Reason: {reason}";
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = reason;
+                                y.IsInline = true;
+                            });
+                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        }
+                        await Context.Message.DeleteAsync();
+                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await user.RemoveRolesAsync(role, options);
+                        await Context.Channel.SendMessageAsync($"Unmuted {user.Username}#{user.Discriminator}");
                     }
                     else
                     {
-                        options.AuditLogReason = $"Unmuting User | Mod: {Context.User.Username}#{Context.User.Discriminator} | Reason: {reason}";
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = reason;
-                            y.IsInline = true;
-                        });
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
-                    await Context.Message.DeleteAsync();
-                    ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                    await banlog.SendMessageAsync("", false, embed.Build());
-                    await user.RemoveRolesAsync(role, options);
-                    await Context.Channel.SendMessageAsync($"Unmuted {user.Username}#{user.Discriminator}");
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -6001,150 +6064,144 @@ namespace FredBotNETCore.Modules.Public
             {
                 username = Context.User.Username;
             }
-            if (ulong.TryParse(username, out ulong userid))
+            try
             {
-                try
+                if (UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    username = Context.Guild.GetUser(userid).Username;
-                }
-                catch(Exception)
-                {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{userid}**.");
-                    return;
-                }
-            }
-            if (UserInGuild(Context.Guild, username) != null)
-            {
-                IUser iUser = UserInGuild(Context.Guild, username);
-                SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                IApplication application = await Context.Client.GetApplicationInfoAsync(); // Gets The Client's info
-                string createdMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.CreatedAt.Month);
-                string createdDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.CreatedAt.DayOfWeek);
-                string date = $"{createdDay}, {createdMonth} {user.CreatedAt.Day}, {user.CreatedAt.Year} {user.CreatedAt.DateTime.ToString("h:mm tt")}"; // Shows the date the account was made
-                EmbedAuthorBuilder auth = new EmbedAuthorBuilder() // Shows the Name of the user
-                {
-                    Name = user.Username + "#" + user.Discriminator,
-                    IconUrl = user.GetAvatarUrl(),
-                };
-                EmbedBuilder embed = new EmbedBuilder()
+                    SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                    IApplication application = await Context.Client.GetApplicationInfoAsync(); // Gets The Client's info
+                    string createdMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.CreatedAt.Month);
+                    string createdDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.CreatedAt.DayOfWeek);
+                    string date = $"{createdDay}, {createdMonth} {user.CreatedAt.Day}, {user.CreatedAt.Year} {user.CreatedAt.DateTime.ToString("h:mm tt")}"; // Shows the date the account was made
+                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder() // Shows the Name of the user
+                    {
+                        Name = user.Username + "#" + user.Discriminator,
+                        IconUrl = user.GetAvatarUrl(),
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
 
-                {
-                    Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
-                    Author = auth
-                };
-                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                {
-                    IconUrl = Context.User.GetAvatarUrl(),
-                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
-                };
-                SocketGuildUser us = user as SocketGuildUser;
-                String A = us.Discriminator; //Pulls the Discriminator
-                ulong id = us.Id; //Gets the user's Id
-                String S = date; //Pulls the Date the User's accound was created
-                UserStatus status = us.Status; //Pulls The Status of the user
-                string game = "";
-                if (us.Activity == null)
-                {
-                    game = "None";
+                    {
+                        Color = new Color(rand.Next(256), rand.Next(256), rand.Next(256)),
+                        Author = auth
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        IconUrl = Context.User.GetAvatarUrl(),
+                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                    };
+                    SocketGuildUser us = user as SocketGuildUser;
+                    String A = us.Discriminator; //Pulls the Discriminator
+                    ulong id = us.Id; //Gets the user's Id
+                    String S = date; //Pulls the Date the User's accound was created
+                    UserStatus status = us.Status; //Pulls The Status of the user
+                    string game = "";
+                    if (us.Activity == null)
+                    {
+                        game = "None";
+                    }
+                    else
+                    {
+                        game = us.Activity.Name;
+                    }
+                    string nickname = us.Nickname;
+                    var roles = us.Roles;
+                    string roleList = "";
+                    var guild = Context.Guild as SocketGuild;
+                    var guildusers = guild.Users;
+                    var guildusers2 = guildusers.OrderBy(x => x.JoinedAt);
+                    int position = 0;
+                    string joinedMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.JoinedAt.Value.Month);
+                    string joinedDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.JoinedAt.Value.DayOfWeek);
+                    string joined = $"{joinedDay}, {joinedMonth} {user.JoinedAt.Value.Day}, {user.JoinedAt.Value.Year} {user.JoinedAt.Value.LocalDateTime.ToString("h:mm tt")}";
+                    string pr2name = Database.GetPR2Name(user);
+                    if (pr2name == null || pr2name.Length <= 0)
+                    {
+                        pr2name = "N/A";
+                    }
+                    foreach (SocketGuildUser member in guildusers2)
+                    {
+                        if (member.Id == user.Id)
+                        {
+                            position = guildusers2.ToList().IndexOf(member) + 1;
+                        }
+                    }
+                    foreach (SocketRole role in roles)
+                    {
+                        roleList = roleList + role + ", ";
+                    }
+                    roleList = roleList.Substring(11).TrimEnd(new char[] { ' ', ',', ',' });
+                    if (nickname == null)
+                    {
+                        nickname = "None";
+                    }
+                    embed.AddField(y =>
+                    {
+                        y.Name = "ID";
+                        y.Value = id;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Nickname";
+                        y.Value = nickname;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Status";
+                        y.Value = status;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Game";
+                        y.Value = game;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Joined";
+                        y.Value = joined;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Join Position";
+                        y.Value = position;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Registered";
+                        y.Value = date;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "PR2 Name";
+                        y.Value = pr2name;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = $"Roles [{roles.Count - 1}]";
+                        y.Value = roleList;
+                        y.IsInline = false;
+                    });
+                    embed.ThumbnailUrl = user.GetAvatarUrl();
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
                 {
-                    game = us.Activity.Name;
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                 }
-                string nickname = us.Nickname;
-                var roles = us.Roles;
-                string roleList = "";
-                var guild = Context.Guild as SocketGuild;
-                var guildusers = guild.Users;
-                var guildusers2 = guildusers.OrderBy(x => x.JoinedAt);
-                int position = 0;
-                string joinedMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.JoinedAt.Value.Month);
-                string joinedDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.JoinedAt.Value.DayOfWeek);
-                string joined = $"{joinedDay}, {joinedMonth} {user.JoinedAt.Value.Day}, {user.JoinedAt.Value.Year} {user.JoinedAt.Value.LocalDateTime.ToString("h:mm tt")}";
-                string pr2name = Database.GetPR2Name(user);
-                if (pr2name == null || pr2name.Length <= 0)
-                {
-                    pr2name = "N/A";
-                }
-                foreach (SocketGuildUser member in guildusers2)
-                {
-                    if (member.Id == user.Id)
-                    {
-                        position = guildusers2.ToList().IndexOf(member) + 1;
-                    }
-                }
-                foreach (SocketRole role in roles)
-                {
-                    roleList = roleList + role + ", ";
-                }
-                roleList = roleList.Substring(11).TrimEnd(new char[] { ' ', ',', ',' });
-                if (nickname == null)
-                {
-                    nickname = "None";
-                }
-                embed.AddField(y =>
-                {
-                    y.Name = "ID";
-                    y.Value = id;
-                    y.IsInline = true;
-                });
-                embed.AddField(y =>
-                {
-                    y.Name = "Nickname";
-                    y.Value = nickname;
-                    y.IsInline = true;
-                });
-                embed.AddField(y =>
-                {
-                    y.Name = "Status";
-                    y.Value = status;
-                    y.IsInline = true;
-                });
-                embed.AddField(y =>
-                {
-                    y.Name = "Game";
-                    y.Value = game;
-                    y.IsInline = true;
-                });
-                embed.AddField(y =>
-                {
-                    y.Name = "Joined";
-                    y.Value = joined;
-                    y.IsInline = true;
-                });
-                embed.AddField(y =>
-                {
-                    y.Name = "Join Position";
-                    y.Value = position;
-                    y.IsInline = true;
-                });
-                embed.AddField(y =>
-                {
-                    y.Name = "Registered";
-                    y.Value = date;
-                    y.IsInline = true;
-                });
-                embed.AddField(y =>
-                {
-                    y.Name = "PR2 Name";
-                    y.Value = pr2name;
-                    y.IsInline = true;
-                });
-                embed.AddField(y =>
-                {
-                    y.Name = $"Roles [{roles.Count - 1}]";
-                    y.Value = roleList;
-                    y.IsInline = false;
-                });
-                embed.ThumbnailUrl = user.GetAvatarUrl();
-                embed.WithFooter(footer);
-                embed.WithCurrentTimestamp();
-
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
             }
-            else
+            catch (Exception)
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
         }
 
@@ -6301,34 +6358,40 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (UserInGuild(Context.Guild, username) != null)
+                try
                 {
-                    await Context.Message.DeleteAsync();
-                    IUser iUser = UserInGuild(Context.Guild, username);
-                    SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                    var usermessages = (Context.Channel.GetMessagesAsync().Flatten()).Where(x => x.Author == user).Take(delete);
-                    if (delete == 1)
+                    if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
-                        Purging = true;
-                        await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
-                        await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
-                        $"purged **{amount}** message in {channel.Mention} from **{user.Username}#{user.Discriminator}**.");
-                        Purging = false;
+                        SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        await Context.Message.DeleteAsync();
+                        var usermessages = (Context.Channel.GetMessagesAsync().Flatten()).Where(x => x.Author == user).Take(delete);
+                        if (delete == 1)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
+                            Purging = true;
+                            await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
+                            await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
+                            $"purged **{amount}** message in {channel.Mention} from **{user.Username}#{user.Discriminator}**.");
+                            Purging = false;
+                        }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} messages from {user.Mention} in {channel.Mention} .");
+                            Purging = true;
+                            await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
+                            await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
+                            $"purged **{amount}** messages in {channel.Mention} from **{user.Username}#{user.Discriminator}**.");
+                            Purging = false;
+                        }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} messages from {user.Mention} in {channel.Mention} .");
-                        Purging = true;
-                        await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
-                        await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
-                        $"purged **{amount}** messages in {channel.Mention} from **{user.Username}#{user.Discriminator}**.");
-                        Purging = false;
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -6360,69 +6423,75 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (UserInGuild(Context.Guild, username) != null)
+                    try
                     {
-                        IUser iUser = UserInGuild(Context.Guild, username);
-                        SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                        if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                            return;
+                            SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                            if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                                return;
+                            }
+                            if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                                return;
+                            }
+                            ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                            {
+                                Name = $"Case {Database.CaseCount() + 1} | Kick | {user.Username}#{user.Discriminator}",
+                                IconUrl = user.GetAvatarUrl(),
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(255, 0, 0),
+                                Author = auth
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = ($"ID: {user.Id}")
+                            };
+                            embed.WithFooter(footer);
+                            embed.WithCurrentTimestamp();
+                            embed.AddField(y =>
+                            {
+                                y.Name = "User";
+                                y.Value = user.Mention;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Moderator";
+                                y.Value = Context.User.Mention;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = reason;
+                                y.IsInline = true;
+                            });
+                            await Context.Message.DeleteAsync();
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                            };
+                            await user.SendMessageAsync($"You have been kicked from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
+                            await user.KickAsync(null, options);
+                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Kick", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was kicked.");
+                            await banlog.SendMessageAsync("", false, embed.Build());
                         }
-                        if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
-                            return;
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
-                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Case {Database.CaseCount() + 1} | Kick | {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl(),
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(255, 0, 0),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = ($"ID: {user.Id}")
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        embed.AddField(y =>
-                        {
-                            y.Name = "User";
-                            y.Value = user.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Moderator";
-                            y.Value = Context.User.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = reason;
-                            y.IsInline = true;
-                        });
-                        await Context.Message.DeleteAsync();
-                        RequestOptions options = new RequestOptions()
-                        {
-                            AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        await user.SendMessageAsync($"You have been kicked from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
-                        await user.KickAsync(null, options);
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Kick", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was kicked.");
-                        await banlog.SendMessageAsync("", false, embed.Build());
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -6458,69 +6527,75 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (UserInGuild(Context.Guild, username) != null)
+                    try
                     {
-                        IUser iUser = UserInGuild(Context.Guild, username);
-                        SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                        if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                            return;
+                            SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                            if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                                return;
+                            }
+                            if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                                return;
+                            }
+                            ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                            {
+                                Name = $"Case {Database.CaseCount() + 1} | Ban | {user.Username}#{user.Discriminator}",
+                                IconUrl = user.GetAvatarUrl(),
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(220, 220, 220),
+                                Author = auth
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = ($"ID: {user.Id}")
+                            };
+                            embed.WithFooter(footer);
+                            embed.WithCurrentTimestamp();
+                            embed.AddField(y =>
+                            {
+                                y.Name = "User";
+                                y.Value = user.Mention;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Moderator";
+                                y.Value = Context.User.Mention;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = reason;
+                                y.IsInline = true;
+                            });
+                            await Context.Message.DeleteAsync();
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                            };
+                            await user.SendMessageAsync($"You have been banned from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
+                            await Context.Guild.AddBanAsync(user, 1, null, options);
+                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Ban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was banned.");
+                            await banlog.SendMessageAsync("", false, embed.Build());
                         }
-                        if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
-                            return;
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
-                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Case {Database.CaseCount() + 1} | Ban | {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl(),
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(220, 220, 220),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = ($"ID: {user.Id}")
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        embed.AddField(y =>
-                        {
-                            y.Name = "User";
-                            y.Value = user.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Moderator";
-                            y.Value = Context.User.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = reason;
-                            y.IsInline = true;
-                        });
-                        await Context.Message.DeleteAsync();
-                        RequestOptions options = new RequestOptions()
-                        {
-                            AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        await user.SendMessageAsync($"You have been banned from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
-                        await Context.Guild.AddBanAsync(user, 1, null, options);
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Ban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was banned.");
-                        await banlog.SendMessageAsync("", false, embed.Build());
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -6555,148 +6630,154 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (UserInGuild(Context.Guild, username) != null)
+                try
                 {
-                    IUser iUser = UserInGuild(Context.Guild, username);
-                    SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                    if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                    if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                        return;
-                    }
-                    if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
-                        return;
-                    }
-                    double minutes = Math.Round(Convert.ToDouble(time), 0);
-                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                    {
-                        Name = $"Case {Database.CaseCount() + 1} | Mute | {user.Username}#{user.Discriminator}",
-                        IconUrl = user.GetAvatarUrl(),
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(255, 0, 0),
-                        Author = auth
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        Text = ($"ID: {user.Id}")
-                    };
-                    ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                    IEnumerable<IRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
-                    RequestOptions options = new RequestOptions()
-                    {
-                        AuditLogReason = $"Muting User | Reason: {reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                    };
-                    await user.AddRolesAsync(role, options);
-                    embed.WithCurrentTimestamp();
-                    embed.WithFooter(footer);
-                    embed.AddField(y =>
-                    {
-                        y.Name = "User";
-                        y.Value = user.Mention;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Moderator";
-                        y.Value = Context.User.Mention;
-                        y.IsInline = true;
-                    });
-                    if (minutes == 1)
-                    {
+                        SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        if (CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            return;
+                        }
+                        if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            return;
+                        }
+                        double minutes = Math.Round(Convert.ToDouble(time), 0);
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        {
+                            Name = $"Case {Database.CaseCount() + 1} | Mute | {user.Username}#{user.Discriminator}",
+                            IconUrl = user.GetAvatarUrl(),
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(255, 0, 0),
+                            Author = auth
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = ($"ID: {user.Id}")
+                        };
+                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        IEnumerable<IRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
+                        RequestOptions options = new RequestOptions()
+                        {
+                            AuditLogReason = $"Muting User | Reason: {reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                        };
+                        await user.AddRolesAsync(role, options);
+                        embed.WithCurrentTimestamp();
+                        embed.WithFooter(footer);
                         embed.AddField(y =>
                         {
-                            y.Name = "Length";
-                            y.Value = $"{minutes} minute";
+                            y.Name = "User";
+                            y.Value = user.Mention;
                             y.IsInline = true;
                         });
-                    }
-                    else
-                    {
                         embed.AddField(y =>
                         {
-                            y.Name = "Length";
-                            y.Value = $"{minutes} minutes";
+                            y.Name = "Moderator";
+                            y.Value = Context.User.Mention;
                             y.IsInline = true;
                         });
-                    }
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Reason";
-                        y.Value = reason;
-                        y.IsInline = true;
-                    });
-                    await Context.Message.DeleteAsync();
-                    await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was muted.");
-                    await banlog.SendMessageAsync("", false, embed.Build());
-                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                    if (minutes == 1)
-                    {
-                        await user.SendMessageAsync($"You have been muted in {Context.Guild.Name} by {Context.User.Mention} for {reason} and for a length of {minutes} minute.");
-                    }
-                    else
-                    {
-                        await user.SendMessageAsync($"You have been muted in {Context.Guild.Name} by {Context.User.Mention} for {reason} and for a length of {minutes} minutes.");
-                    }
-                    int mutetime = Convert.ToInt32(minutes) * 60000;
-                    Task task = Task.Run(async () =>
-                    {
-                        await Task.Delay(mutetime);
-                        SocketGuildUser usr = user as SocketGuildUser;
-                        if (usr.Roles.Any(e => e.Name.ToUpperInvariant() == "Muted".ToUpperInvariant()))
+                        if (minutes == 1)
                         {
-                            options.AuditLogReason = "Unmuting User | Reason: Mute expired";
-                            await user.RemoveRolesAsync(role, options);
-                            EmbedAuthorBuilder auth2 = new EmbedAuthorBuilder()
+                            embed.AddField(y =>
                             {
-                                Name = $"Case {Database.CaseCount() + 1} | Unmute | {user.Username}#{user.Discriminator}",
-                                IconUrl = user.GetAvatarUrl(),
-                            };
-                            EmbedBuilder embed2 = new EmbedBuilder()
-                            {
-                                Color = new Color(0, 255, 0),
-                                Author = auth2
-                            };
-                            EmbedFooterBuilder footer2 = new EmbedFooterBuilder()
-                            {
-                                Text = ($"ID: {user.Id}")
-                            };
-                            embed2.WithCurrentTimestamp();
-                            embed2.WithFooter(footer2);
-                            embed2.AddField(y =>
-                            {
-                                y.Name = "User";
-                                y.Value = user.Mention;
+                                y.Name = "Length";
+                                y.Value = $"{minutes} minute";
                                 y.IsInline = true;
                             });
-                            embed2.AddField(y =>
-                            {
-                                y.Name = "Moderator";
-                                y.Value = "<@383927022583545859>";
-                                y.IsInline = true;
-                            });
-                            embed2.AddField(y =>
-                            {
-                                y.Name = "Reason";
-                                y.Value = "Auto";
-                                y.IsInline = true;
-                            });
-                            await banlog.SendMessageAsync("", false, embed2.Build());
-                            await user.SendMessageAsync($"You are now unmuted.");
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: "Fred the G. Cactus#1000", reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                         }
                         else
                         {
-                            return;
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Length";
+                                y.Value = $"{minutes} minutes";
+                                y.IsInline = true;
+                            });
                         }
-                    });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = true;
+                        });
+                        await Context.Message.DeleteAsync();
+                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was muted.");
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        if (minutes == 1)
+                        {
+                            await user.SendMessageAsync($"You have been muted in {Context.Guild.Name} by {Context.User.Mention} for {reason} and for a length of {minutes} minute.");
+                        }
+                        else
+                        {
+                            await user.SendMessageAsync($"You have been muted in {Context.Guild.Name} by {Context.User.Mention} for {reason} and for a length of {minutes} minutes.");
+                        }
+                        int mutetime = Convert.ToInt32(minutes) * 60000;
+                        Task task = Task.Run(async () =>
+                        {
+                            await Task.Delay(mutetime);
+                            SocketGuildUser usr = user as SocketGuildUser;
+                            if (usr.Roles.Any(e => e.Name.ToUpperInvariant() == "Muted".ToUpperInvariant()))
+                            {
+                                options.AuditLogReason = "Unmuting User | Reason: Mute expired";
+                                await user.RemoveRolesAsync(role, options);
+                                EmbedAuthorBuilder auth2 = new EmbedAuthorBuilder()
+                                {
+                                    Name = $"Case {Database.CaseCount() + 1} | Unmute | {user.Username}#{user.Discriminator}",
+                                    IconUrl = user.GetAvatarUrl(),
+                                };
+                                EmbedBuilder embed2 = new EmbedBuilder()
+                                {
+                                    Color = new Color(0, 255, 0),
+                                    Author = auth2
+                                };
+                                EmbedFooterBuilder footer2 = new EmbedFooterBuilder()
+                                {
+                                    Text = ($"ID: {user.Id}")
+                                };
+                                embed2.WithCurrentTimestamp();
+                                embed2.WithFooter(footer2);
+                                embed2.AddField(y =>
+                                {
+                                    y.Name = "User";
+                                    y.Value = user.Mention;
+                                    y.IsInline = true;
+                                });
+                                embed2.AddField(y =>
+                                {
+                                    y.Name = "Moderator";
+                                    y.Value = "<@383927022583545859>";
+                                    y.IsInline = true;
+                                });
+                                embed2.AddField(y =>
+                                {
+                                    y.Name = "Reason";
+                                    y.Value = "Auto";
+                                    y.IsInline = true;
+                                });
+                                await banlog.SendMessageAsync("", false, embed2.Build());
+                                await user.SendMessageAsync($"You are now unmuted.");
+                                Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: "Fred the G. Cactus#1000", reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            }
+                            else
+                            {
+                                return;
+                            }
+                        });
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -6729,44 +6810,50 @@ namespace FredBotNETCore.Modules.Public
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you cannot temp mod yourself.");
                 return;
             }
-            if (UserInGuild(Context.Guild, username) != null)
+            try
             {
-                IUser iUser = UserInGuild(Context.Guild, username);
-                SocketGuildUser user = Context.Guild.GetUser(iUser.Id);
-                double minutes = Math.Round(Convert.ToDouble(time), 0);
-                ITextChannel roles = user.Guild.GetChannel(260272249976782848) as ITextChannel;
+                if (UserInGuild(Context.Message, Context.Guild, username) != null)
+                {
+                    SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                    double minutes = Math.Round(Convert.ToDouble(time), 0);
+                    ITextChannel roles = user.Guild.GetChannel(260272249976782848) as ITextChannel;
 
-                IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
-                RequestOptions options = new RequestOptions()
-                {
-                    AuditLogReason = $"Temp Modding User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                };
-                await user.AddRolesAsync(role, options);
-                await Context.Message.DeleteAsync();
-                if (time.Equals("1"))
-                {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for {time} minute. " +
-                                $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}");
+                    IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"Temp Modding User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                    };
+                    await user.AddRolesAsync(role, options);
+                    await Context.Message.DeleteAsync();
+                    if (time.Equals("1"))
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for {time} minute. " +
+                                    $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}");
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for {time} minutes. " +
+                                    $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}");
+                    }
+                    int temptime = Convert.ToInt32(minutes) * 60000;
+                    Task task = Task.Run(async () =>
+                    {
+                        await Task.Delay(temptime);
+                        if (user.Roles.Any(e => e.Name.ToUpperInvariant() == "Temp Mod".ToUpperInvariant()))
+                        {
+                            options.AuditLogReason = "Untemp Modding User | Reason: Temp Time Over";
+                            await user.RemoveRolesAsync(role, options);
+                        }
+                    });
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for {time} minutes. " +
-                                $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                 }
-                int temptime = Convert.ToInt32(minutes) * 60000;
-                Task task = Task.Run(async () =>
-                {
-                    await Task.Delay(temptime);
-                    if (user.Roles.Any(e => e.Name.ToUpperInvariant() == "Temp Mod".ToUpperInvariant()))
-                    {
-                        options.AuditLogReason = "Untemp Modding User | Reason: Temp Time Over";
-                        await user.RemoveRolesAsync(role, options);
-                    }
-                });
             }
-            else
+            catch (Exception)
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
         }
 
@@ -6783,29 +6870,21 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Context.Guild.Id == 249657315576381450)
             {
-                if (string.IsNullOrWhiteSpace(username))
+                try
                 {
-                    EmbedBuilder embed = new EmbedBuilder()
+                    if (string.IsNullOrWhiteSpace(username))
                     {
-                        Color = new Color(220, 220, 220)
-                    };
-                    embed.Title = "Command: /resetpr2name";
-                    embed.Description = "**Description:** Reset a users PR2 Name.\n**Usage:** /resetpr2name [user]\n**Example:** /resetpr2name Jiggmin";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else if (ulong.TryParse(username, out ulong id))
-                {
-                    SocketGuildUser user = null;
-                    try
-                    {
-                        user = Context.Guild.GetUser(id);
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(220, 220, 220)
+                        };
+                        embed.Title = "Command: /resetpr2name";
+                        embed.Description = "**Description:** Reset a users PR2 Name.\n**Usage:** /resetpr2name [user]\n**Example:** /resetpr2name Jiggmin";
+                        await Context.Channel.SendMessageAsync("", false, embed.Build());
                     }
-                    catch(Exception)
+                    else if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID: **{id}** is not in the Discord Server. Please check that the ID you used is correct and if it is then contact **Stxtics#0001**.");
-                    }
-                    if (user != null)
-                    {
+                        SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
                         await Context.Message.DeleteAsync();
                         Database.VerifyUser(user, "Not verified");
                         RequestOptions options = new RequestOptions()
@@ -6816,23 +6895,14 @@ namespace FredBotNETCore.Modules.Public
                         await user.AddRoleAsync(Context.Guild.GetRole(253265134393229312), options);
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully reset **{user.Username}#{user.Discriminator}'s** PR2 Name.");
                     }
-                }
-                else if (UserInGuild(Context.Guild, username) != null)
-                {
-                    await Context.Message.DeleteAsync();
-                    SocketGuildUser user = UserInGuild(Context.Guild, username) as SocketGuildUser;
-                    Database.VerifyUser(user, "Not verified");
-                    RequestOptions options = new RequestOptions()
+                    else
                     {
-                        AuditLogReason = $"PR2 Name reset by: {Context.User.Username}#{Context.User.Id}"
-                    };
-                    await user.RemoveRoleAsync(Context.Guild.GetRole(255513962798514177), options);
-                    await user.AddRoleAsync(Context.Guild.GetRole(253265134393229312), options);
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully reset **{user.Username}#{user.Discriminator}'s** PR2 Name.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID: **{username}** is not in the Discord Server. Please check that the ID you used is correct and if it is then contact **Stxtics#0001**.");
                 }
             }
             else
@@ -6930,30 +7000,37 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (UserInGuild(Context.Guild, username) != null)
+                try
                 {
-                    IUser user = UserInGuild(Context.Guild, username);
-                    int warnCount = Convert.ToInt32(Database.WarnCount(user));
-                    if (warnCount == 0)
+                    if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** has no warnings.");
-                    }
-                    else
-                    {
-                        Database.ClearWarn(user);
-                        if (warnCount == 1)
+                        SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                        int warnCount = Convert.ToInt32(Database.WarnCount(user));
+                        if (warnCount == 0)
                         {
-                            await Context.Channel.SendMessageAsync($"Cleared **{warnCount}** warning for **{user.Username}#{user.Discriminator}**.");
+                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** has no warnings.");
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"Cleared **{warnCount}** warnings for **{user.Username}#{user.Discriminator}**.");
+                            Database.ClearWarn(user);
+                            if (warnCount == 1)
+                            {
+                                await Context.Channel.SendMessageAsync($"Cleared **{warnCount}** warning for **{user.Username}#{user.Discriminator}**.");
+                            }
+                            else
+                            {
+                                await Context.Channel.SendMessageAsync($"Cleared **{warnCount}** warnings for **{user.Username}#{user.Discriminator}**.");
+                            }
                         }
                     }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{username}**.");
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{username}**.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -6978,19 +7055,26 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (RoleInGuild(Context.Guild, roleName) != null)
+                try
                 {
-                    IRole role = RoleInGuild(Context.Guild, roleName);
-                    RequestOptions options = new RequestOptions()
+                    if (RoleInGuild(Context.Message, Context.Guild, roleName) != null)
                     {
-                        AuditLogReason = $"Deleted by: {Context.User.Username}#{Context.User.Discriminator}"
-                    };
-                    await role.DeleteAsync(options);
-                    await Context.Channel.SendMessageAsync($"Deleted role **{roleName}**");
+                        SocketRole role = RoleInGuild(Context.Message, Context.Guild, roleName);
+                        RequestOptions options = new RequestOptions()
+                        {
+                            AuditLogReason = $"Deleted by: {Context.User.Username}#{Context.User.Discriminator}"
+                        };
+                        await role.DeleteAsync(options);
+                        await Context.Channel.SendMessageAsync($"Deleted role **{roleName}**");
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
+                    }
                 }
-                else
+                catch(Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
             }
         }
@@ -7015,27 +7099,34 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (RoleInGuild(Context.Guild, roleName) != null)
+                try
                 {
-                    IRole role = RoleInGuild(Context.Guild, roleName);
-                    RequestOptions options = new RequestOptions()
+                    if (RoleInGuild(Context.Message, Context.Guild, roleName) != null)
                     {
-                        AuditLogReason = $"Toggled Mentionable by {Context.User.Username}#{Context.User.Discriminator}"
-                    };
-                    if (role.IsMentionable)
-                    {
-                        await role.ModifyAsync(x => x.Mentionable = false, options);
-                        await Context.Channel.SendMessageAsync($"The role **{role.Name}** is no longer mentionable");
+                        SocketRole role = RoleInGuild(Context.Message, Context.Guild, roleName);
+                        RequestOptions options = new RequestOptions()
+                        {
+                            AuditLogReason = $"Toggled Mentionable by {Context.User.Username}#{Context.User.Discriminator}"
+                        };
+                        if (role.IsMentionable)
+                        {
+                            await role.ModifyAsync(x => x.Mentionable = false, options);
+                            await Context.Channel.SendMessageAsync($"The role **{role.Name}** is no longer mentionable");
+                        }
+                        else
+                        {
+                            await role.ModifyAsync(x => x.Mentionable = true, options);
+                            await Context.Channel.SendMessageAsync($"The role **{role.Name}** is now mentionable");
+                        }
                     }
                     else
                     {
-                        await role.ModifyAsync(x => x.Mentionable = true, options);
-                        await Context.Channel.SendMessageAsync($"The role **{role.Name}** is now mentionable");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
             }
         }
@@ -7060,27 +7151,33 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (UserInGuild(Context.Guild, username) != null)
+                try
                 {
-                    IUser user = UserInGuild(Context.Guild, username);
-                    SocketGuildUser gUser = Context.Guild.GetUser(user.Id);
-                    if (nickname.Length > 32)
+                    if (UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} a users nickname cannot be longer than 32 characters.");
+                        SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        if (nickname.Length > 32)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} a users nickname cannot be longer than 32 characters.");
+                        }
+                        else
+                        {
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = $"Changed by: {Context.User.Username}#{Context.User.Discriminator}"
+                            };
+                            await user.ModifyAsync(x => x.Nickname = nickname, options);
+                            await Context.Channel.SendMessageAsync($"Successfully set the nickname of **{user.Username}#{user.Discriminator}** to **{nickname}**.");
+                        }
                     }
                     else
                     {
-                        RequestOptions options = new RequestOptions()
-                        {
-                            AuditLogReason = $"Changed by: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        await gUser.ModifyAsync(x => x.Nickname = nickname, options);
-                        await Context.Channel.SendMessageAsync($"Successfully set the nickname of **{gUser.Username}#{gUser.Discriminator}** to **{nickname}**.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{username}**.");
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{username}**.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -7145,23 +7242,30 @@ namespace FredBotNETCore.Modules.Public
                 {
                     string[] split = roleNameAndColor.Split("#");
                     string roleName = split[0];
-                    if (RoleInGuild(Context.Guild, roleName) != null)
+                    try
                     {
-                        IRole role = RoleInGuild(Context.Guild, roleName);
-                        try
+                        if (RoleInGuild(Context.Message, Context.Guild, roleName) != null)
                         {
-                            System.Drawing.Color color = System.Drawing.Color.FromArgb(int.Parse(split[1].Replace("#", ""), NumberStyles.AllowHexSpecifier));
-                            await role.ModifyAsync(x => x.Color = new Color(color.R, color.G, color.B));
-                            await Context.Channel.SendMessageAsync($"Successfully changed the color of **{role.Name}** to **#{split[1]}**.");
+                            SocketRole role = RoleInGuild(Context.Message, Context.Guild, roleName);
+                            try
+                            {
+                                System.Drawing.Color color = System.Drawing.Color.FromArgb(int.Parse(split[1].Replace("#", ""), NumberStyles.AllowHexSpecifier));
+                                await role.ModifyAsync(x => x.Color = new Color(color.R, color.G, color.B));
+                                await Context.Channel.SendMessageAsync($"Successfully changed the color of **{role.Name}** to **#{split[1]}**.");
+                            }
+                            catch (FormatException)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the hex color **#{split[1]}** is not a valid hex color.");
+                            }
                         }
-                        catch(FormatException)
+                        else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the hex color **#{split[1]}** is not a valid hex color.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
                         }
                     }
-                    else
+                    catch (Exception)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                     }
                 }
                 else
@@ -7194,24 +7298,31 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (RoleInGuild(Context.Guild, roleName) != null)
+                try
                 {
-                    IRole role = RoleInGuild(Context.Guild, roleName);
-                    string currentJoinableRoles = File.ReadAllText(path: Path.Combine(downloadPath, "JoinableRoles.txt"));
-                    if (currentJoinableRoles.Contains(role.Id.ToString()))
+                    if (RoleInGuild(Context.Message, Context.Guild, roleName) != null)
                     {
-                        File.WriteAllText(Path.Combine(downloadPath, "JoinableRoles.txt"), currentJoinableRoles);
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is already a joinable role.");
+                        SocketRole role = RoleInGuild(Context.Message, Context.Guild, roleName);
+                        string currentJoinableRoles = File.ReadAllText(path: Path.Combine(downloadPath, "JoinableRoles.txt"));
+                        if (currentJoinableRoles.Contains(role.Id.ToString()))
+                        {
+                            File.WriteAllText(Path.Combine(downloadPath, "JoinableRoles.txt"), currentJoinableRoles);
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is already a joinable role.");
+                        }
+                        else
+                        {
+                            File.WriteAllText(Path.Combine(downloadPath, "JoinableRoles.txt"), currentJoinableRoles + role.Id.ToString() + "\n");
+                            await Context.Channel.SendMessageAsync($"Added joinable role **{role.Name}**.");
+                        }
                     }
                     else
                     {
-                        File.WriteAllText(Path.Combine(downloadPath, "JoinableRoles.txt"), currentJoinableRoles + role.Id.ToString() + "\n");
-                        await Context.Channel.SendMessageAsync($"Added joinable role **{role.Name}**.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
             }
         }
@@ -7239,24 +7350,31 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (RoleInGuild(Context.Guild, roleName) != null)
+                try
                 {
-                    IRole role = RoleInGuild(Context.Guild, roleName);
-                    string joinableRoles = File.ReadAllText(path: Path.Combine(downloadPath, "JoinableRoles.txt"));
-                    if (joinableRoles.Contains(role.Id.ToString()))
+                    if (RoleInGuild(Context.Message, Context.Guild, roleName) != null)
                     {
-                        joinableRoles = joinableRoles.Replace(role.Id.ToString() + "\n", string.Empty);
-                        File.WriteAllText(Path.Combine(downloadPath, "JoinableRoles.txt"), joinableRoles);
-                        await Context.Channel.SendMessageAsync($"Removed joinable role **{role.Name}**.");
+                        SocketRole role = RoleInGuild(Context.Message, Context.Guild, roleName);
+                        string joinableRoles = File.ReadAllText(path: Path.Combine(downloadPath, "JoinableRoles.txt"));
+                        if (joinableRoles.Contains(role.Id.ToString()))
+                        {
+                            joinableRoles = joinableRoles.Replace(role.Id.ToString() + "\n", string.Empty);
+                            File.WriteAllText(Path.Combine(downloadPath, "JoinableRoles.txt"), joinableRoles);
+                            await Context.Channel.SendMessageAsync($"Removed joinable role **{role.Name}**.");
+                        }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is not a joinable role.");
+                        }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is not a joinable role.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
             }
         }
@@ -7286,39 +7404,54 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (RoleInGuild(Context.Guild, mod) != null)
+                    try
                     {
-                        IRole role = RoleInGuild(Context.Guild, mod);
-                        string currentModRoles = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaffRoles.txt"));
-                        if (currentModRoles.Contains(role.Id.ToString()))
+                        if (RoleInGuild(Context.Message, Context.Guild, mod) != null)
                         {
-                            File.WriteAllText(Path.Combine(downloadPath, "DiscordStaffRoles.txt"), currentModRoles);
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is already a mod role.");
+                            SocketRole role = RoleInGuild(Context.Message, Context.Guild, mod);
+                            string currentModRoles = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaffRoles.txt"));
+                            if (currentModRoles.Contains(role.Id.ToString()))
+                            {
+                                File.WriteAllText(Path.Combine(downloadPath, "DiscordStaffRoles.txt"), currentModRoles);
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is already a mod role.");
+                            }
+                            else
+                            {
+                                File.WriteAllText(Path.Combine(downloadPath, "DiscordStaffRoles.txt"), currentModRoles + role.Id.ToString() + "\n");
+                                await Context.Channel.SendMessageAsync($"Added mod role **{role.Name}**.");
+                            }
+                            return;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        //ignore
+                    }
+                    try
+                    {
+                        if (UserInGuild(Context.Message, Context.Guild, mod) != null)
+                        {
+                            SocketUser user = UserInGuild(Context.Message, Context.Guild, mod);
+                            string currentModUsers = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
+                            if (currentModUsers.Contains(user.Id.ToString()))
+                            {
+                                File.WriteAllText(Path.Combine(downloadPath, "DiscordStaff.txt"), currentModUsers);
+                                await Context.Channel.SendMessageAsync($"{ Context.User.Mention} the user `{user.Username}` is already a mod.");
+                            }
+                            else
+                            {
+                                File.WriteAllText(Path.Combine(downloadPath, "DiscordStaff.txt"), currentModUsers + user.Id.ToString() + "\n");
+                                await Context.Channel.SendMessageAsync($"Added mod **{user.Username}#{user.Discriminator}**.");
+                            }
                         }
                         else
                         {
-                            File.WriteAllText(Path.Combine(downloadPath, "DiscordStaffRoles.txt"), currentModRoles + role.Id.ToString() + "\n");
-                            await Context.Channel.SendMessageAsync($"Added mod role **{role.Name}**.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role `{mod}`.");
                         }
                     }
-                    else if (UserInGuild(Context.Guild, mod) != null)
+                    catch (Exception)
                     {
-                        IUser user = UserInGuild(Context.Guild, mod);
-                        string currentModUsers = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
-                        if (currentModUsers.Contains(user.Id.ToString()))
-                        {
-                            File.WriteAllText(Path.Combine(downloadPath, "DiscordStaff.txt"), currentModUsers);
-                            await Context.Channel.SendMessageAsync($"{ Context.User.Mention} the user `{user.Username}` is already a mod.");
-                        }
-                        else
-                        {
-                            File.WriteAllText(Path.Combine(downloadPath, "DiscordStaff.txt"), currentModUsers + user.Id.ToString() + "\n");
-                            await Context.Channel.SendMessageAsync($"Added mod **{user.Username}#{user.Discriminator}**.");
-                        }
-                    }
-                    else
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role `{mod}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role with ID: **{mod}**.");
                     }
                 }
             }
@@ -7353,39 +7486,53 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (RoleInGuild(Context.Guild, mod) != null)
+                    try
                     {
-                        ulong roleID = (RoleInGuild(Context.Guild, mod)).Id;
-                        string modRoles = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaffRoles.txt"));
-                        if (modRoles.Contains(roleID.ToString()))
+                        if (RoleInGuild(Context.Message, Context.Guild, mod) != null)
                         {
-                            modRoles = modRoles.Replace(roleID.ToString() + "\n", string.Empty);
-                            File.WriteAllText(Path.Combine(downloadPath, "DiscordStaffRoles.txt"), modRoles);
-                            await Context.Channel.SendMessageAsync($"Removed mod role **{mod}**.");
+                            ulong roleID = (RoleInGuild(Context.Message, Context.Guild, mod)).Id;
+                            string modRoles = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaffRoles.txt"));
+                            if (modRoles.Contains(roleID.ToString()))
+                            {
+                                modRoles = modRoles.Replace(roleID.ToString() + "\n", string.Empty);
+                                File.WriteAllText(Path.Combine(downloadPath, "DiscordStaffRoles.txt"), modRoles);
+                                await Context.Channel.SendMessageAsync($"Removed mod role **{mod}**.");
+                            }
+                            else
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{mod}` is not a mod role.");
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        //ignore
+                    }
+                    try
+                    {
+                        if (UserInGuild(Context.Message, Context.Guild, mod) != null)
+                        {
+                            ulong userID = (UserInGuild(Context.Message, Context.Guild, mod)).Id;
+                            string modUsers = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
+                            if (modUsers.Contains(userID.ToString()))
+                            {
+                                modUsers = modUsers.Replace(userID.ToString() + "\n", string.Empty);
+                                File.WriteAllText(Path.Combine(downloadPath, "DiscordStaff.txt"), modUsers);
+                                await Context.Channel.SendMessageAsync($"Removed mod **{mod}**.");
+                            }
+                            else
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{mod}` is not a mod.");
+                            }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{mod}` is not a mod role.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role `{mod}`.");
                         }
                     }
-                    else if (UserInGuild(Context.Guild, mod) != null)
+                    catch (Exception)
                     {
-                        ulong userID = (UserInGuild(Context.Guild, mod)).Id;
-                        string modUsers = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
-                        if (modUsers.Contains(userID.ToString()))
-                        {
-                            modUsers = modUsers.Replace(userID.ToString() + "\n", string.Empty);
-                            File.WriteAllText(Path.Combine(downloadPath, "DiscordStaff.txt"), modUsers);
-                            await Context.Channel.SendMessageAsync($"Removed mod **{mod}**.");
-                        }
-                        else
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{mod}` is not a mod.");
-                        }
-                    }
-                    else
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role `{mod}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role with ID: **{mod}**.");
                     }
                 }
             }

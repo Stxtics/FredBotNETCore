@@ -170,7 +170,7 @@ namespace FredBotNETCore
                 sb.Append($"{time.Seconds}s ");  /*Pulls the Uptime in Seconds*/
                 await _client.SetGameAsync($"/help for {sb.ToString()}", null, type: ActivityType.Playing);
                 await Task.Delay(new Random().Next(300000, 600000));
-                await _client.SetGameAsync($"/help in {_client.Guilds.Count} guilds", null, type: ActivityType.Watching);
+                await _client.SetGameAsync($"/help in {_client.Guilds.Count} servers", null, type: ActivityType.Watching);
                 await Task.Delay(new Random().Next(300000, 600000));
                 int users = 0;
                 foreach (SocketGuild guild in _client.Guilds)
