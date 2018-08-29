@@ -1021,16 +1021,19 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
-                        var song = _internalQueue.Peek();
-                        _internalQueue.Clear();
-                        NowPlaying.Clear();
+                        if (_internalQueue.Count > 0)
+                        {
+                            var song = _internalQueue.Peek();
+                            _internalQueue.Clear();
+                            NowPlaying.Clear();
+                            PlayingUrl = song.Item7;
+                            var _ = RemoveFiles();
+                        }
                         Playing = false;
                         Pause = true;
                         MusicStarted = false;
                         await Audio.StopAsync();
                         await ReplyAsync($"The music was successfully stopped by {Context.User.Mention} .");
-                        PlayingUrl = song.Item7;
-                        var _ = RemoveFiles();
                     }
                 }
                 else
@@ -1117,7 +1120,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         catch(Exception e)
                         {
-                            Console.WriteLine(e.Message + e.StackTrace);
+                            await PublicModule.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
                             fail = true;
                         }
                     }

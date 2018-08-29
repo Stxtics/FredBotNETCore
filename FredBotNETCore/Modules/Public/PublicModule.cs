@@ -52,16 +52,12 @@ namespace FredBotNETCore.Modules.Public
         }
         public static async Task ExceptionInfo(DiscordSocketClient client, string message, string stacktrace)
         {
-            IUser user = client.GetUser(181853112045142016);
-            try
+            SocketUser user = client.GetUser(181853112045142016);
+            string error = message + stacktrace;
+            var parts = error.SplitInParts(2000);
+            foreach (string part in parts)
             {
-                await user.SendMessageAsync(message + stacktrace);
-                return;
-            }
-            catch(Exception)
-            {
-                Console.WriteLine(message + stacktrace);
-                return;
+                await user.SendMessageAsync(part);
             }
         }
 
@@ -101,20 +97,6 @@ namespace FredBotNETCore.Modules.Public
         public static String HexConverter(Color c)
         {
             return c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
-        }
-
-        public static ITextChannel ChannelExists(IReadOnlyCollection<ITextChannel> channels, string channel)
-        {
-            ITextChannel tChannel = null;
-            foreach (ITextChannel textChannel in channels)
-            {
-                if (textChannel.Name.Equals(channel, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    tChannel = textChannel;
-                    break;
-                }
-            }
-            return tChannel;
         }
 
         public static SocketUser UserInGuild(SocketUserMessage message, SocketGuild guild, string username)
@@ -5663,10 +5645,8 @@ namespace FredBotNETCore.Modules.Public
         public async Task Giveaway(string channel = null, string time = null, [Remainder] string item = null)
         {
             try
-            {
-                var channels = Context.Guild.TextChannels;
-                ITextChannel giveawayChannel = ChannelExists(channels, channel);
-                if (channel == null || giveawayChannel == null || time == null || !double.TryParse(time, out double num2) || Math.Round(Convert.ToDouble(time), 0) < 0 || item == null)
+            {              
+                if (channel == null || time == null || !double.TryParse(time, out double num2) || Math.Round(Convert.ToDouble(time), 0) < 0 || item == null)
                 {
                     EmbedBuilder embed = new EmbedBuilder()
                     {
@@ -5678,6 +5658,27 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
+                    SocketTextChannel giveawayChannel = null;
+                    try
+                    {
+                        if (ChannelInGuild(Context.Message, Context.Guild, channel) != null)
+                        {
+                            if (ChannelInGuild(Context.Message, Context.Guild, channel) is SocketTextChannel)
+                            {
+                                giveawayChannel = ChannelInGuild(Context.Message, Context.Guild, channel) as SocketTextChannel;
+                            }
+                            else
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel `{channel}` is not a text channel so a giveaway cannot happen there.");
+                                return;
+                            }
+                        }
+                    }
+                    catch(Exception)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a text channel with ID: `{channel}`.");
+                        return;
+                    }
                     double minutes = Math.Round(Convert.ToDouble(time), 0);
                     EmbedBuilder embed = new EmbedBuilder()
                     {
@@ -6077,9 +6078,8 @@ namespace FredBotNETCore.Modules.Public
         }
 
         [Command("userinfo", RunMode = RunMode.Async)]
-        [Alias("uinfo", "UserInfo","whois")]
+        [Alias("uinfo","whois")]
         [Summary("Returns information about the mentioned user")]
-        [Name("userinfo `<user>`")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
         public async Task UserInfo([Remainder] string username = null)
@@ -6093,7 +6093,6 @@ namespace FredBotNETCore.Modules.Public
                 if (UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
                     SocketGuildUser user = UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
-                    IApplication application = await Context.Client.GetApplicationInfoAsync(); // Gets The Client's info
                     string createdMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.CreatedAt.Month);
                     string createdDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.CreatedAt.DayOfWeek);
                     string date = $"{createdDay}, {createdMonth} {user.CreatedAt.Day}, {user.CreatedAt.Year} {user.CreatedAt.DateTime.ToString("h:mm tt")}"; // Shows the date the account was made
@@ -6113,14 +6112,14 @@ namespace FredBotNETCore.Modules.Public
                         IconUrl = Context.User.GetAvatarUrl(),
                         Text = ($"ID: {user.Id}")
                     };
-                    embed.Description = $"{Context.User.Mention}";
+                    embed.Description = $"{user.Mention}";
                     string roleList = "";
                     var guildusers = Context.Guild.Users.OrderBy(x => x.JoinedAt);
                     int position = 0;
                     string joinedMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.JoinedAt.Value.Month);
                     string joinedDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.JoinedAt.Value.DayOfWeek);
                     string joined = $"{joinedDay}, {joinedMonth} {user.JoinedAt.Value.Day}, {user.JoinedAt.Value.Year} {user.JoinedAt.Value.LocalDateTime.ToString("h:mm tt")}";
-                    string pr2name = "";//Database.GetPR2Name(user);
+                    string pr2name = Database.GetPR2Name(user);
                     if (pr2name == null || pr2name.Length <= 0)
                     {
                         pr2name = "N/A";
@@ -6136,7 +6135,7 @@ namespace FredBotNETCore.Modules.Public
                     {
                         if (!role.IsEveryone)
                         {
-                            roleList = roleList + role.Mention;
+                            roleList = roleList + role.Mention + " ";
                         }
                     }
                     embed.AddField(y =>
