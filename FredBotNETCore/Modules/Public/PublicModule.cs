@@ -4294,7 +4294,7 @@ namespace FredBotNETCore.Modules.Public
                                 y.Value = channel.Position;
                                 y.IsInline = true;
                             });
-                            if (channel is IVoiceChannel vChannel)
+                            if (channel is SocketVoiceChannel vChannel)
                             {
                                 type = "Voice";
                                 embed.AddField(y =>
@@ -4317,10 +4317,10 @@ namespace FredBotNETCore.Modules.Public
                                         y.Value = vChannel.CategoryId;
                                         y.IsInline = true;
                                     });
-                                    embed.AddField(async y =>
+                                    embed.AddField(y =>
                                     {
                                         y.Name = "Category Name";
-                                        y.Value = (await vChannel.GetCategoryAsync()).Name;
+                                        y.Value = vChannel.Category.Name;
                                         y.IsInline = true;
                                     });
                                 }
@@ -4343,7 +4343,7 @@ namespace FredBotNETCore.Modules.Public
                                     });
                                 }
                             }
-                            else if (channel is ICategoryChannel cChannel)
+                            else if (channel is SocketCategoryChannel cChannel)
                             {
                                 type = "Category";
                                 embed.AddField(y =>
@@ -4352,8 +4352,32 @@ namespace FredBotNETCore.Modules.Public
                                     y.Value = type;
                                     y.IsInline = true;
                                 });
+                                int children = 0;
+                                foreach (SocketGuildChannel gChannel in Context.Guild.Channels)
+                                {
+                                    if (gChannel is SocketTextChannel tChannel)
+                                    {
+                                        if (tChannel.CategoryId == cChannel.Id)
+                                        {
+                                            children++;
+                                        }
+                                    }
+                                    else if (gChannel is SocketVoiceChannel vChannel2)
+                                    {
+                                        if (vChannel2.CategoryId == cChannel.Id)
+                                        {
+                                            children++;
+                                        }
+                                    }
+                                }
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Children";
+                                    y.Value = children;
+                                    y.IsInline = true;
+                                });
                             }
-                            else if (channel is ITextChannel tChannel)
+                            else if (channel is SocketTextChannel tChannel)
                             {
                                 embed.AddField(y =>
                                 {
@@ -4375,10 +4399,10 @@ namespace FredBotNETCore.Modules.Public
                                         y.Value = tChannel.CategoryId;
                                         y.IsInline = true;
                                     });
-                                    embed.AddField(async y =>
+                                    embed.AddField(y =>
                                     {
                                         y.Name = "Category Name";
-                                        y.Value = (await tChannel.GetCategoryAsync()).Name;
+                                        y.Value = tChannel.Category.Name;
                                         y.IsInline = true;
                                     });
                                 }
@@ -6087,75 +6111,38 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = ($"ID: {user.Id}")
                     };
-                    SocketGuildUser us = user as SocketGuildUser;
-                    String A = us.Discriminator; //Pulls the Discriminator
-                    ulong id = us.Id; //Gets the user's Id
-                    String S = date; //Pulls the Date the User's accound was created
-                    UserStatus status = us.Status; //Pulls The Status of the user
-                    string game = "";
-                    if (us.Activity == null)
-                    {
-                        game = "None";
-                    }
-                    else
-                    {
-                        game = us.Activity.Name;
-                    }
-                    string nickname = us.Nickname;
-                    var roles = us.Roles;
+                    embed.Description = $"{Context.User.Mention}";
                     string roleList = "";
-                    var guild = Context.Guild as SocketGuild;
-                    var guildusers = guild.Users;
-                    var guildusers2 = guildusers.OrderBy(x => x.JoinedAt);
+                    var guildusers = Context.Guild.Users.OrderBy(x => x.JoinedAt);
                     int position = 0;
                     string joinedMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.JoinedAt.Value.Month);
                     string joinedDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.JoinedAt.Value.DayOfWeek);
                     string joined = $"{joinedDay}, {joinedMonth} {user.JoinedAt.Value.Day}, {user.JoinedAt.Value.Year} {user.JoinedAt.Value.LocalDateTime.ToString("h:mm tt")}";
-                    string pr2name = Database.GetPR2Name(user);
+                    string pr2name = "";//Database.GetPR2Name(user);
                     if (pr2name == null || pr2name.Length <= 0)
                     {
                         pr2name = "N/A";
                     }
-                    foreach (SocketGuildUser member in guildusers2)
+                    foreach (SocketGuildUser member in guildusers)
                     {
                         if (member.Id == user.Id)
                         {
-                            position = guildusers2.ToList().IndexOf(member) + 1;
+                            position = guildusers.ToList().IndexOf(member) + 1;
                         }
                     }
-                    foreach (SocketRole role in roles)
+                    foreach (SocketRole role in user.Roles)
                     {
-                        roleList = roleList + role + ", ";
+                        if (!role.IsEveryone)
+                        {
+                            roleList = roleList + role.Mention;
+                        }
                     }
-                    roleList = roleList.Substring(11).TrimEnd(new char[] { ' ', ',', ',' });
-                    if (nickname == null)
-                    {
-                        nickname = "None";
-                    }
-                    embed.AddField(y =>
-                    {
-                        y.Name = "ID";
-                        y.Value = id;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Nickname";
-                        y.Value = nickname;
-                        y.IsInline = true;
-                    });
                     embed.AddField(y =>
                     {
                         y.Name = "Status";
-                        y.Value = status;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Game";
-                        y.Value = game;
+                        y.Value = user.Status;
                         y.IsInline = true;
                     });
                     embed.AddField(y =>
@@ -6184,10 +6171,19 @@ namespace FredBotNETCore.Modules.Public
                     });
                     embed.AddField(y =>
                     {
-                        y.Name = $"Roles [{roles.Count - 1}]";
+                        y.Name = $"Roles [{user.Roles.Count - 1}]";
                         y.Value = roleList;
                         y.IsInline = false;
                     });
+                    if (Context.Guild.Id == 249657315576381450)
+                    {
+                        embed.AddField(y =>
+                        {
+                            y.Name = $"Priors";
+                            y.Value = Database.Modlogs(user).Count;
+                            y.IsInline = false;
+                        });
+                    }
                     embed.ThumbnailUrl = user.GetAvatarUrl();
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
