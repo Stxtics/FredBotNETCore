@@ -135,10 +135,6 @@ namespace FredBotNETCore
                         }
                     }
                     #endregion
-
-                    #region Invites
-                    await CommandHandler.RemovePermInvitesAsync();
-                    #endregion
                 }
                 catch (Exception)
                 {

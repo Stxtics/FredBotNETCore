@@ -8,6 +8,7 @@ using System;
 using FredBotNETCore.Modules.Public;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace FredBotNETCore
 {
@@ -213,43 +214,13 @@ namespace FredBotNETCore
             await channel.SendMessageAsync($"{finder} has found the artifact!");
         }
 
-        public static async Task RemovePermInvitesAsync()
-        {
-            SocketGuild guild = _client.GetGuild(249657315576381450);
-            var invites = guild.GetInvitesAsync();
-            RequestOptions options = new RequestOptions()
-            {
-                AuditLogReason = "Auto Perm Invite Remove"
-            };
-            foreach (IInviteMetadata invite in await invites.ToAsyncEnumerable().FlattenAsync())
-            {
-                if (invite.MaxAge == null)
-                {
-                    await invite.DeleteAsync(options);
-                }
-            }
-        }
-
-        public static async Task SendError(string message, string stacktrace)
-        {
-            IUser user = _client.GetUser(181853112045142016);
-            try
-            {
-                await user.SendMessageAsync(message + stacktrace);
-            }
-            catch(Exception)
-            {
-                Console.WriteLine(message + stacktrace);
-            }
-        }
-
         public async Task Install(DiscordSocketClient c)
         {
             _client = c;
             _cmds = new CommandService();
             await _cmds.AddModulesAsync(Assembly.GetEntryAssembly(), Program._provider);
 
-            _client.MessageReceived += HandleCommand;
+            _client.MessageReceived += OnMessageReceived;
 
             _client.UserJoined += AnnounceUserJoined;
             _client.UserLeft += AnnounceUserLeft;
@@ -283,35 +254,102 @@ namespace FredBotNETCore
                 return;
             }
             SocketTextChannel log = role.Guild.GetTextChannel(327575359765610496);
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "Role Updated",
+                IconUrl = role.Guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {role.Id}"
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(0, 255, 0),
+                Footer = footer
+            };
+            embed.WithCurrentTimestamp();
+            IUser user = null;
+            string reason = null;
+            foreach(Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.RoleUpdated)
+                {
+                    user = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
             if (role.Name != role2.Name)
             {
-                await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The role **{role.Name}** was renamed to **{role2.Name}**.");
+                embed.Description = $"**{user.Username}#{user.Discriminator}** renamed the role **{role.Name}** to **{role2.Name}**.";
+                if (reason != null)
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = reason;
+                        y.IsInline = false;
+                    });
+                }
+                await log.SendMessageAsync("", false, embed.Build());
             }
             else if (role.IsMentionable != role2.IsMentionable)
             {
                 if (role.IsMentionable)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The role **{role.Name}** is no longer mentionable.");
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** made the role **{role.Name}** unmentionable.";
                 }
                 else
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The role **{role.Name}** is now mentionable.");
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** made the role **{role.Name}** mentionable.";
                 }
+                if (reason != null)
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = reason;
+                        y.IsInline = false;
+                    });
+                }
+                await log.SendMessageAsync("", false, embed.Build());
             }
             else if (role.IsHoisted != role2.IsHoisted)
             {
                 if (role.IsHoisted)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The role **{role.Name}** is no longer displayed separately.");
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** made the role **{role.Name}** not display separately.";
                 }
                 else
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The role **{role.Name}** is now displayed separately.");
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** made the role **{role.Name}** display separately.";
                 }
+                if (reason != null)
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = reason;
+                        y.IsInline = false;
+                    });
+                }
+                await log.SendMessageAsync("", false, embed.Build());
             }
             else if (!role.Color.Equals(role2.Color))
             {
-                await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The role **{role.Name}** color was changed from **#{PublicModule.HexConverter(role.Color)}** to **#{PublicModule.HexConverter(role2.Color)}**.");
+                embed.Description = $"**{user.Username}#{user.Discriminator}** changed the color of **{role.Name}** from **#{PublicModule.HexConverter(role.Color)}** to **#{PublicModule.HexConverter(role2.Color)}**.";
+                if (reason != null)
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = reason;
+                        y.IsInline = false;
+                    });
+                }
+                await log.SendMessageAsync("", false, embed.Build());
             }
         }
 
@@ -322,7 +360,44 @@ namespace FredBotNETCore
                 return;
             }
             SocketTextChannel log = role.Guild.GetTextChannel(327575359765610496);
-            await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Role deleted: **{role.Name}**.");
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "Role Deleted",
+                IconUrl = role.Guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {role.Id}"
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(255, 0, 0),
+                Footer = footer
+            };
+            embed.WithCurrentTimestamp();
+            IUser user = null;
+            string reason = null;
+            foreach (Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.RoleDeleted)
+                {
+                    user = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
+            embed.Description = $"**{user.Username}#{user.Discriminator}** deleted the role {role.Name}.";
+            if (reason != null)
+            {
+                embed.AddField(y =>
+                {
+                    y.Name = "Reason";
+                    y.Value = reason;
+                    y.IsInline = false;
+                });
+            }
+            await log.SendMessageAsync("", false, embed.Build());
         }
 
         public async Task AnnounceRoleCreated(SocketRole role)
@@ -332,7 +407,44 @@ namespace FredBotNETCore
                 return;
             }
             SocketTextChannel log = role.Guild.GetTextChannel(327575359765610496);
-            await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Role created: **{role.Name}**.");
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "Role Deleted",
+                IconUrl = role.Guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {role.Id}"
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(0, 255, 0),
+                Footer = footer
+            };
+            embed.WithCurrentTimestamp();
+            IUser user = null;
+            string reason = null;
+            foreach (Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.RoleCreated)
+                {
+                    user = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
+            embed.Description = $"**{user.Username}#{user.Discriminator}** created the role {role.Name}.";
+            if (reason != null)
+            {
+                embed.AddField(y =>
+                {
+                    y.Name = "Reason";
+                    y.Value = reason;
+                    y.IsInline = false;
+                });
+            }
+            await log.SendMessageAsync("", false, embed.Build());
         }
 
         public async Task AnnounceChannelUpdated(SocketChannel channel, SocketChannel channel2)
@@ -342,59 +454,156 @@ namespace FredBotNETCore
                 return;
             }
             SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(327575359765610496);
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "Channel Updated",
+                IconUrl = (channel as SocketGuildChannel).Guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {channel.Id}"
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(0, 255, 0),
+                Footer = footer
+            };
+            embed.WithCurrentTimestamp();
+            IUser user = null;
+            string reason = null;
+            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.ChannelUpdated)
+                {
+                    user = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
             if (channel is SocketTextChannel)
             {
                 if ((channel as SocketTextChannel).Name != (channel2 as SocketTextChannel).Name)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The text channel **{(channel as SocketTextChannel).Name}** was renamed to **{(channel2 as SocketTextChannel).Name}**.");
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** renamed the text channel **{(channel as SocketTextChannel).Name}** to **{(channel2 as SocketTextChannel).Name}**.";
+                    if (reason != null)
+                    {
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = false;
+                        });
+                    }
+                    await log.SendMessageAsync("", false, embed.Build());
                 }
                 else if ((channel as SocketTextChannel).Topic != (channel2 as SocketTextChannel).Topic)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketTextChannel).Mention}'s topic was changed from **{(channel2 as SocketTextChannel).Topic}** to **{(channel2 as SocketTextChannel).Topic}**.");
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** changed the topic of {(channel as SocketTextChannel).Mention} from **{(channel2 as SocketTextChannel).Topic}** to **{(channel2 as SocketTextChannel).Topic}**.";
+                    if (reason != null)
+                    {
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = false;
+                        });
+                    }
+                    await log.SendMessageAsync("", false, embed.Build());
                 }
                 else if ((channel as SocketTextChannel).IsNsfw != (channel2 as SocketTextChannel).IsNsfw)
                 {
                     if ((channel as SocketTextChannel).IsNsfw)
                     {
-                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketTextChannel).Mention} is no longer NSFW.");
+                        embed.Description = $"**{user.Username}#{user.Discriminator}** set {(channel as SocketTextChannel).Mention} as SFW.";
                     }
                     else
                     {
-                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketTextChannel).Mention} is now NSFW.");
+                        embed.Description = $"**{user.Username}#{user.Discriminator}** set {(channel as SocketTextChannel).Mention} as NSFW.";
                     }
+                    if (reason != null)
+                    {
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = false;
+                        });
+                    }
+                    await log.SendMessageAsync("", false, embed.Build());
                 }
             }
             else if (channel is SocketVoiceChannel)
             {
                 if ((channel as SocketVoiceChannel).Name != (channel2 as SocketVoiceChannel).Name)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The text channel **{(channel as SocketVoiceChannel).Name}** was renamed to **{(channel2 as SocketVoiceChannel).Name}**.");
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** renamed the voice channel **{(channel as SocketVoiceChannel).Name}** to **{(channel2 as SocketVoiceChannel).Name}**.";
+                    if (reason != null)
+                    {
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = false;
+                        });
+                    }
+                    await log.SendMessageAsync("", false, embed.Build());
                 }
                 else if ((channel as SocketVoiceChannel).Bitrate != (channel2 as SocketVoiceChannel).Bitrate)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}] {(channel as SocketVoiceChannel).Name}'s birate was changed from **{(channel as SocketVoiceChannel).Bitrate}** to **{(channel2 as SocketVoiceChannel).Bitrate}**.");
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** changed {(channel as SocketVoiceChannel).Name}'s birate from **{(channel as SocketVoiceChannel).Bitrate}** to **{(channel2 as SocketVoiceChannel).Bitrate}**.";
+                    if (reason != null)
+                    {
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = false;
+                        });
+                    }
+                    await log.SendMessageAsync("", false, embed.Build());
                 }
                 else if ((channel as SocketVoiceChannel).UserLimit != (channel2 as SocketVoiceChannel).UserLimit)
                 {
                     if ((channel as SocketVoiceChannel).UserLimit == null)
                     {
-                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketVoiceChannel).Name}'s user limit was changed from **unlimited** to **{(channel2 as SocketVoiceChannel).UserLimit}**.");
+                        embed.Description = $"**{user.Username}#{user.Discriminator}** changed {(channel as SocketVoiceChannel).Name}'s user limit from **unlimited** to **{(channel2 as SocketVoiceChannel).UserLimit}**.";
                     }
                     else if ((channel2 as SocketVoiceChannel).UserLimit == null)
                     {
-                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketVoiceChannel).Name}'s user limit was changed from **{(channel as SocketVoiceChannel).UserLimit}** to **unlimited**.");
+                        embed.Description = $"**{user.Username}#{user.Discriminator}** changed {(channel as SocketVoiceChannel).Name}'s user limit from **{(channel as SocketVoiceChannel).UserLimit}** to **unlimited**.";
                     }
                     else
                     {
-                        await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {(channel as SocketVoiceChannel).Name}'s user limit was changed from **{(channel as SocketVoiceChannel).UserLimit}** to **{(channel2 as SocketVoiceChannel).UserLimit}**.");
+                        embed.Description = $"**{user.Username}#{user.Discriminator}** changed {(channel as SocketVoiceChannel).Name}'s user limit from **{(channel as SocketVoiceChannel).UserLimit}** to **{(channel2 as SocketVoiceChannel).UserLimit}**.";
                     }
+                    if (reason != null)
+                    {
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = false;
+                        });
+                    }
+                    await log.SendMessageAsync("", false, embed.Build());
                 }
             }
             else if (channel is SocketCategoryChannel)
             {
                 if ((channel as SocketCategoryChannel).Name != (channel2 as SocketCategoryChannel).Name)
                 {
-                    await log.SendMessageAsync($":tools: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` The category channel **{(channel as SocketCategoryChannel).Name}** was renamed to **{(channel2 as SocketCategoryChannel).Name}**.");
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** renamed the category channel **{(channel as SocketCategoryChannel).Name}** to **{(channel2 as SocketCategoryChannel).Name}**.";
+                    if (reason != null)
+                    {
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = false;
+                        });
+                    }
+                    await log.SendMessageAsync("", false, embed.Build());
                 }
             }
         }
@@ -406,18 +615,55 @@ namespace FredBotNETCore
                 return;
             }
             SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(327575359765610496);
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "Channel Deleted",
+                IconUrl = (channel as SocketGuildChannel).Guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {channel.Id}"
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(255, 0, 0),
+                Footer = footer
+            };
+            embed.WithCurrentTimestamp();
+            IUser user = null;
+            string reason = null;
+            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.ChannelDeleted)
+                {
+                    user = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
             if (channel is SocketTextChannel)
             {
-                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Text channel deleted: **{(channel as SocketGuildChannel).Name}**.");
+                embed.Description = $"**{user.Username}#{user.Discriminator}** deleted the text channel: **{(channel as SocketGuildChannel).Name}**.";
             }
             else if (channel is SocketVoiceChannel)
             {
-                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Voice channel deleted: **{(channel as SocketGuildChannel).Name}**.");
+                embed.Description = $"**{user.Username}#{user.Discriminator}** deleted the voice channel: **{(channel as SocketGuildChannel).Name}**.";
             }
             else if (channel is SocketCategoryChannel)
             {
-                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Category channel deleted: **{(channel as SocketGuildChannel).Name}**.");
+                embed.Description = $"**{user.Username}#{user.Discriminator}** deleted the category channel: **{(channel as SocketGuildChannel).Name}**.";
             }
+            if (reason != null)
+            {
+                embed.AddField(y =>
+                {
+                    y.Name = "Reason";
+                    y.Value = reason;
+                    y.IsInline = false;
+                });
+            }
+            await log.SendMessageAsync("", false, embed.Build());
         }
 
         public async Task AnnounceChannelCreated(SocketChannel channel)
@@ -427,18 +673,55 @@ namespace FredBotNETCore
                 return;
             }
             SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(327575359765610496);
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "Channel Created",
+                IconUrl = (channel as SocketGuildChannel).Guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {channel.Id}"
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(0, 255, 0),
+                Footer = footer
+            };
+            embed.WithCurrentTimestamp();
+            IUser user = null;
+            string reason = null;
+            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.ChannelCreated)
+                {
+                    user = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
             if (channel is SocketTextChannel)
             {
-                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Text channel created: {(channel as SocketTextChannel).Mention}.");
+                embed.Description = $"**{user.Username}#{user.Discriminator}** created the text channel: {(channel as SocketTextChannel).Mention}.";
             }
             else if (channel is SocketVoiceChannel)
             {
-                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Voice channel created: **{(channel as SocketGuildChannel).Name}**.");
+                embed.Description = $"**{user.Username}#{user.Discriminator}** created the voice channel: **{(channel as SocketGuildChannel).Name}**.";
             }
             else if (channel is SocketCategoryChannel)
             {
-                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Category channel created: **{(channel as SocketGuildChannel).Name}**.");
+                embed.Description = $"**{user.Username}#{user.Discriminator}** created the category channel: **{(channel as SocketGuildChannel).Name}**.";
             }
+            if (reason != null)
+            {
+                embed.AddField(y =>
+                {
+                    y.Name = "Reason";
+                    y.Value = reason;
+                    y.IsInline = false;
+                });
+            }
+            await log.SendMessageAsync("", false, embed.Build());
         }
 
         public async Task AnnounceGuildMemberUpdated(SocketGuildUser user, SocketGuildUser user2)
@@ -452,35 +735,78 @@ namespace FredBotNETCore
                 return;
             }
             SocketTextChannel log = user.Guild.GetTextChannel(327575359765610496);
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "Member Updated",
+                IconUrl = user.Guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {user.Id}",
+                IconUrl = user.GetAvatarUrl()
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(0, 255, 0),
+                Footer = footer
+            };
+            embed.WithCurrentTimestamp();
+            IUser iUser = null;
+            string reason = null;
+            foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.MemberUpdated)
+                {
+                    iUser = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
             if (user.Nickname != user2.Nickname)
             {
                 string nickname = user.Nickname;
                 string nickname2 = user2.Nickname;
-                if (nickname == null)
+                if (iUser.Id == user.Id)
                 {
-                    await log.SendMessageAsync($":person_with_pouting_face: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** " +
-                    $"set their nickname to **{nickname2}**.");
-                }
-                else if (nickname2 == null)
-                {
-                    await log.SendMessageAsync($":person_with_pouting_face: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** " +
-                    $"removed their nickname of **{nickname}**.");
+                    if (nickname == null)
+                    {
+                        embed.Description = $"**{user.Username}#{user.Discriminator}** set their nickname to **{nickname2}**.";
+                    }
+                    else if (nickname2 == null)
+                    {
+                        embed.Description = $"**{user.Username}#{user.Discriminator}** removed their nickname of **{nickname}**.";
+                    }
+                    else
+                    {
+                        embed.Description = $"**{user.Username}#{user.Discriminator}** has changed their nickname from **{nickname}** to **{nickname2}**.";
+                    }
                 }
                 else
                 {
-                    await log.SendMessageAsync($":person_with_pouting_face: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** " +
-                        $"has changed their nickname from **{nickname}** to **{nickname2}**.");
+                    if (nickname == null)
+                    {
+                        embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** set **{user.Username}#{user.Discriminator}'s** nickname to **{nickname2}**.";
+                    }
+                    else if (nickname2 == null)
+                    {
+                        embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** removed **{user.Username}#{user.Discriminator}'s** nickname of **{nickname}**.";
+                    }
+                    else
+                    {
+                        embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** changed **{user.Username}#{user.Discriminator}'s** nickname from **{nickname}** to **{nickname2}**.";
+                    }
                 }
-            }
-            if (user.Username != user2.Username)
-            {
-                await log.SendMessageAsync($":person_with_pouting_face: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** " +
-                    $"has changed their username to **{user2.Username}#{user2.Discriminator}**.");
-            }
-            if (user.Discriminator != user2.Discriminator && user.Username == user2.Username)
-            {
-                await log.SendMessageAsync($":person_with_pouting_face: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** " +
-                    $"has changed their discriminator from **#{user.Discriminator}** to **#{user2.Discriminator}**.");
+                if (reason != null)
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = reason;
+                        y.IsInline = false;
+                    });
+                }
+                await log.SendMessageAsync("", false, embed.Build());
             }
             if (user.Roles.Count != user2.Roles.Count)
             {
@@ -505,16 +831,24 @@ namespace FredBotNETCore
                 {
                     var diff = roleList.Except(roleList2);
                     var role = diff.ElementAt(0);
-                    await log.SendMessageAsync($":person_with_pouting_face: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** " +
-                    $"was removed from the `{role}` role.");
+                    embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** removed **{user.Username}#{user.Discriminator}** from the **{role}** role.";
                 }
                 else
                 {
                     var diff = roleList2.Except(roleList);
                     var role = diff.ElementAt(0);
-                    await log.SendMessageAsync($":person_with_pouting_face: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** " +
-                    $"was given the `{role}` role.");
+                    embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** added **{user.Username}#{user.Discriminator}** to the **{role}** role.";
                 }
+                if (reason != null)
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = reason;
+                        y.IsInline = false;
+                    });
+                }
+                await log.SendMessageAsync("", false, embed.Build());
             }
         }
 
@@ -526,20 +860,79 @@ namespace FredBotNETCore
             }
             IMessage message2 = await message.GetOrDownloadAsync();
             SocketTextChannel channel2 = channel as SocketTextChannel;
-            SocketTextChannel log = channel2.Guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = _client.GetChannel(327575359765610496) as SocketTextChannel;
             if (channel2.Id == log.Id || channel2.Guild.Id != 249657315576381450)
             {
                 return;
             }
-            foreach(Discord.Rest.RestBan ban in await channel2.Guild.GetBansAsync())
+            foreach (Discord.Rest.RestBan ban in await channel2.Guild.GetBansAsync())
             {
                 if (ban.User.Id == message2.Author.Id)
                 {
                     return;
                 }
             }
-            await log.SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Channel: {channel2.Mention} **{message2.Author.Username}#{message2.Author.Discriminator}'s** " +
-                $"message was deleted. Content: `{message2.Content}`");
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "Message Deleted",
+                IconUrl = channel2.Guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {message2.Author.Id}",
+                IconUrl = message2.Author.GetAvatarUrl()
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(255, 0, 0),
+                Footer = footer
+            };
+            embed.WithCurrentTimestamp();
+            IUser iUser = null;
+            string reason = null;
+            foreach (Discord.Rest.RestAuditLogEntry audit in await channel2.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.MessageDeleted)
+                {
+                    iUser = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
+
+            if (iUser != null)
+            {
+                if (message2.Content.Length > 252)
+                {
+                    embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** deleted a message by **{message2.Author.Username}#{message2.Author.Discriminator}** in {channel2.Mention}.\nContent: **{message2.Content.SplitInParts(252).ElementAt(0)}...**";
+                }
+                else
+                {
+                    embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** deleted a message by **{message2.Author.Username}#{message2.Author.Discriminator}** in {channel2.Mention}.\nContent: **{message2.Content}**";
+                }
+            }
+            else
+            {
+                if (message2.Content.Length > 252)
+                {
+                    embed.Description = $"Message deleted from **{message2.Author.Username}#{message2.Author.Discriminator}** in {channel2.Mention}.\nContent: **{message2.Content.SplitInParts(252).ElementAt(0)}...**";
+                }
+                else
+                {
+                    embed.Description = $"Message deleted from **{message2.Author.Username}#{message2.Author.Discriminator}** in {channel2.Mention}.\nContent: **{message2.Content}**";
+                }
+            }
+            if (reason != null)
+            {
+                embed.AddField(y =>
+                {
+                    y.Name = "Reason";
+                    y.Value = reason;
+                    y.IsInline = false;
+                });
+            }
+            await log.SendMessageAsync("", false, embed.Build());
         }
 
         public async Task AnnounceUserUnbanned(SocketUser user, SocketGuild guild)
@@ -549,7 +942,45 @@ namespace FredBotNETCore
                 return;
             }
             SocketTextChannel log = guild.GetTextChannel(327575359765610496);
-            await log.SendMessageAsync($":hammer: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** was unbanned from the guild.");
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "User Unbanned",
+                IconUrl = guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {user.Id}",
+                IconUrl = user.GetAvatarUrl()
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(0, 255, 0),
+                Footer = footer
+            };
+            embed.WithCurrentTimestamp();
+            IUser iUser = null;
+            string reason = null;
+            foreach (Discord.Rest.RestAuditLogEntry audit in await guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.Unban)
+                {
+                    iUser = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
+            embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** unbanned **{user.Username}#{user.Discriminator}** from the guild.";
+            if (reason != null)
+            {
+                embed.AddField(y =>
+                {
+                    y.Name = "Reason";
+                    y.Value = reason;
+                    y.IsInline = false;
+                });
+            }
+            await log.SendMessageAsync("", false, embed.Build());
         }
 
         public async Task AnnounceUserBanned(SocketUser user, SocketGuild guild)
@@ -559,8 +990,45 @@ namespace FredBotNETCore
                 return;
             }
             SocketTextChannel log = guild.GetTextChannel(327575359765610496);
-            await log.SendMessageAsync($":hammer: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** was banned from the guild. " +
-                $"Total members: **{guild.MemberCount - 1}**");
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "User Banned",
+                IconUrl = guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {user.Id}",
+                IconUrl = user.GetAvatarUrl()
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(255, 0, 0),
+                Footer = footer
+            };
+            embed.WithCurrentTimestamp();
+            IUser iUser = null;
+            string reason = null;
+            foreach (Discord.Rest.RestAuditLogEntry audit in await guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.Ban)
+                {
+                    iUser = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
+            embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** banned **{user.Username}#{user.Discriminator}** from the guild.\nTotal members: **{guild.MemberCount - 1}**";
+            if (reason != null)
+            {
+                embed.AddField(y =>
+                {
+                    y.Name = "Reason";
+                    y.Value = reason;
+                    y.IsInline = false;
+                });
+            }
+            await log.SendMessageAsync("", false, embed.Build());
         }
 
         public async Task AnnounceUserJoined(SocketGuildUser user)
@@ -570,8 +1038,25 @@ namespace FredBotNETCore
                 SocketTextChannel log = user.Guild.GetTextChannel(327575359765610496), channel = user.Guild.GetTextChannel(249657315576381450);
                 IEnumerable<SocketRole> members = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Members".ToUpper()), verified = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Verified".ToUpper()), muted = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Muted".ToUpper());
                 SocketTextChannel rules = user.Guild.GetTextChannel(249682754407497728), roles = user.Guild.GetTextChannel(260272249976782848);
-                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** joined the guild. " +
-                    $"Total members: **{user.Guild.MemberCount}**");
+                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                {
+                    Name = "User Joined",
+                    IconUrl = user.Guild.IconUrl
+                };
+                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                {
+                    Text = $"ID: {user.Id}",
+                    IconUrl = user.GetAvatarUrl()
+                };
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Author = author,
+                    Color = new Color(0, 255, 0),
+                    Footer = footer
+                };
+                embed.WithCurrentTimestamp();
+                embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild.\nTotal members: **{user.Guild.MemberCount}**";
+                await log.SendMessageAsync("", false, embed.Build());
                 var result = Database.CheckExistingUser(user);
                 if (result.Count() <= 0)
                 {
@@ -631,30 +1116,150 @@ namespace FredBotNETCore
                     return;
                 }
             }
-            SocketTextChannel channel = user.Guild.GetTextChannel(249657315576381450);
             SocketTextChannel log = user.Guild.GetTextChannel(327575359765610496);
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "User Left",
+                IconUrl = user.Guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {user.Id}",
+                IconUrl = user.GetAvatarUrl()
+            };
             EmbedBuilder embed = new EmbedBuilder()
             {
-                Color = new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256)),
+                Author = author,
+                Color = new Color(255, 0, 0),
+                Footer = footer
             };
-
             embed.WithCurrentTimestamp();
-            embed.Title = "__**User Left**__";
-            embed.Description = $"**{user.Username} left the Platform Racing Group. :frowning: **";
-            await channel.SendMessageAsync("", false, embed.Build());
-            await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{user.Username}#{user.Discriminator}** left the guild, " +
-                $"or was kicked. Total members: **{user.Guild.MemberCount}**");
+            IUser iUser = null;
+            string reason = null;
+            foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            {
+                if (audit.Action == ActionType.Kick)
+                {
+                    iUser = audit.User;
+                    reason = audit.Reason;
+                    break;
+                }
+            }
+            if (iUser == null)
+            {
+                embed.Description = $"**{user.Username}#{user.Discriminator}** left the guild. Total members: **{user.Guild.MemberCount}**";
+            }
+            else
+            {
+                embed.Author.Name = "User Kicked";
+                embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** kicked **{user.Username}#{user.Discriminator}** from the guild.\nTotal members: **{user.Guild.MemberCount}**";
+                if (reason != null)
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = reason;
+                        y.IsInline = false;
+                    });
+                }
+            }
+            await log.SendMessageAsync("", false, embed.Build());
         }
 
         #endregion
 
-        public async Task HandleCommand(SocketMessage s)
+        public async Task OnMessageReceived(SocketMessage m)
         {
-            SocketUserMessage msg = s as SocketUserMessage;
-            if (msg == null) return;
-            
-            SocketCommandContext context = new SocketCommandContext(_client, msg);
+            try
+            {
+                SocketUserMessage msg = m as SocketUserMessage;
+                if (msg == null) return;
+                if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
+                {
+                    if (channel.Guild.Id == 249657315576381450 && channel.Id != 327575359765610496)
+                    {
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = msg.Author.Username + "#" + msg.Author.Discriminator,
+                            IconUrl = msg.Author.GetAvatarUrl()
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = $"ID: {msg.Author.Id}"
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(255, 0, 0),
+                            Footer = footer,
+                            Fields = new List<EmbedFieldBuilder>
+                        {
+                            new EmbedFieldBuilder
+                            {
+                                Name = "Reason",
+                                Value = "Bad words",
+                                IsInline = false
+                            }
+                        }
+                        };
+                        embed.WithCurrentTimestamp();
+                        var log = channel.Guild.GetTextChannel(327575359765610496);
+                        Discord.Rest.RestUserMessage message = null;
+                        //var usermessages = channel.GetMessagesAsync().Flatten().Where(x => x.Author == msg.Author).Take(4).ToEnumerable();
+                        //if (((usermessages.ElementAt(0) as SocketUserMessage).CreatedAt - (usermessages.ElementAt(3) as SocketUserMessage).CreatedAt).Seconds < 5)
+                        //{
+                        //    embed.Fields.ElementAt(0).Value = "Sent 4 messages in less than 5 seconds";
+                        //    embed.Description = $"**Messages sent by {msg.Author.Mention} deleted in {channel.Mention}**\n{msg.Content}";
+                        //    PublicModule.Purging = true;
+                        //    await channel.DeleteMessagesAsync(usermessages);
+                        //    await log.SendMessageAsync("", false, embed.Build());
+                        //    PublicModule.Purging = false;
+                        //    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no spamming!");
+                        //    await Task.Delay(5000);
+                        //    PublicModule.Purging = true;
+                        //    await message.DeleteAsync();
+                        //    PublicModule.Purging = false;
+                        //}
+                        var bannedwords = File.ReadAllText(Path.Combine(PublicModule.downloadPath, "BlacklistedWords.txt")).Split("\r\n");
+                        foreach (string bannedword in bannedwords)
+                        {
+                            if (msg.Content.Contains(bannedword, StringComparison.OrdinalIgnoreCase))
+                            {
+                                PublicModule.Purging = true;
+                                await msg.DeleteAsync();
+                                PublicModule.Purging = false;
+                                embed.Fields.ElementAt(0).Value = "Bad words";
+                                if (msg.Content.Length > 252)
+                                {
+                                    embed.Description = $"**Message sent by {msg.Author.Mention} deleted in {channel.Mention}**\n{msg.Content.SplitInParts(252).ElementAt(0)}...";
+                                }
+                                else
+                                {
+                                    embed.Description = $"**Message sent by {msg.Author.Mention} deleted in {channel.Mention}**\n{msg.Content}";
+                                }
+                                await log.SendMessageAsync("", false, embed.Build());
+                                message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} watch your language.");
+                                await Task.Delay(5000);
+                                PublicModule.Purging = true;
+                                await message.DeleteAsync();
+                                PublicModule.Purging = false;
+                                return;
+                            }
+                        }
 
+                    }
+                }
+                await HandleCommand(msg);
+            }
+            catch (Exception e)
+            {
+                await PublicModule.ExceptionInfo(_client, e.Message, e.StackTrace);
+            }
+        }
+
+        public async Task HandleCommand(SocketUserMessage msg)
+        {
+            SocketCommandContext context = new SocketCommandContext(_client, msg);
             int argPos = 0;
             if (msg.HasStringPrefix("/", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
             {

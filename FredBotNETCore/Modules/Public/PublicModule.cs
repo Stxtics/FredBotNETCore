@@ -741,19 +741,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you are not a memeber of The Platform Racing Group.");
                 }
-                IRole verified = guild.GetRole(255513962798514177);
-                //if (user.Roles.Any(e => e.Name == "Verified"))
-                //{
-                //    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you are already verified.");
-                //    return;
-                //}
-                //if (user.Roles.Any(e => e.Position > verified.Position))
-                //{
-                //    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you already have a role higher than verified.");
-                //    return;
-                //}
-                //else
-                //{
+                SocketRole verified = guild.GetRole(255513962798514177);
                 var pr2token = new StreamReader(path: Path.Combine(downloadPath, "PR2Token.txt"));
                 var values = new Dictionary<string, string>
                 {
@@ -783,11 +771,7 @@ namespace FredBotNETCore.Modules.Public
                             }
                             result = Database.CheckForVerified(user, "Not verified");
                             bool isVerified = false;
-                            if (!(result.Count() <= 0))
-                            {
-                                Database.VerifyUser(user, username);
-                            }
-                            else
+                            if (result.Count() <= 0)
                             {
                                 isVerified = true;
                             }
@@ -805,14 +789,14 @@ namespace FredBotNETCore.Modules.Public
                                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{username}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
                                     return;
                                 }
-                                Database.VerifyUser(user, username);
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully changed your verified account from {pr2name} to {username}.");
+                                Database.VerifyUser(user, username); 
                                 SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
                                 await channel.SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {Context.User.Mention} changed their verified account from **{pr2name}** to **{username}**.");
                                 if (!user.Username.Equals(username))
                                 {
                                     await user.ModifyAsync(x => x.Nickname = username);
                                 }
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully changed your verified account from {pr2name} to {username}.");
                             }
                             else
                             {
@@ -822,7 +806,7 @@ namespace FredBotNETCore.Modules.Public
                                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{username}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
                                     return;
                                 }
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully verified your PR2 Account.");
+                                Database.VerifyUser(user, username);
                                 SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
                                 await channel.SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Verified {Context.User.Mention} who is **{username}** on PR2.");
                                 IEnumerable<SocketRole> role = guild.Roles.Where(input => input.Name.ToUpper() == "Verified".ToUpper());
@@ -837,6 +821,7 @@ namespace FredBotNETCore.Modules.Public
                                 {
                                     await user.ModifyAsync(x => x.Nickname = username);
                                 }
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully verified your PR2 Account.");
                             }
                             WebClient wc = new WebClient();
                             wc.Headers.Add("Referer", "https://pr2hub.com/");
@@ -874,7 +859,6 @@ namespace FredBotNETCore.Modules.Public
                     }
                     tries = tries + 1;
                 }
-                //}
                 if (responseString.Equals("{\"error\":\"Could not find a valid login token. Please log in again.\"}"))
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token of FredTheG.CactusBot has expired. Please mention Stxtics#0001 in Platform Racing Group and tell him this so that he can fix it.");

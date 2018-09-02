@@ -35,6 +35,15 @@ namespace FredBotNETCore.Modules.Public
             }
             set => _internalAudio = value;
         }
+        static AudioOutStream _internalDiscord;
+        private static AudioOutStream Discord
+        {
+            get
+            {
+                return _internalDiscord;
+            }
+            set => _internalDiscord = value;
+        }
         /// <summary>
         /// Tuple(FilePath, Video Name, Duration, Requested by, channel, thumbnail, url)
         /// </summary>
@@ -318,6 +327,7 @@ namespace FredBotNETCore.Modules.Public
                                     if (Context.Guild.CurrentUser.VoiceChannel == null)
                                     {
                                         Audio = await _voiceChannel.ConnectAsync();
+                                        Discord = Audio.CreatePCMStream(AudioApplication.Mixed, 64000);
                                     }
                                     if (Playing)
                                     {
@@ -440,6 +450,7 @@ namespace FredBotNETCore.Modules.Public
                                 if (Context.Guild.CurrentUser.VoiceChannel == null)
                                 {
                                     Audio = await _voiceChannel.ConnectAsync();
+                                    Discord = Audio.CreatePCMStream(AudioApplication.Mixed, 64000);
                                 }
                                 if (Playing)
                                 {
@@ -772,6 +783,7 @@ namespace FredBotNETCore.Modules.Public
                     Audio?.Dispose();
                     await Context.Channel.SendMessageAsync($"Joined voice channel `{_voiceChannel.Name}`.");
                     Audio = await _voiceChannel.ConnectAsync();
+                    Discord = Audio.CreatePCMStream(AudioApplication.Mixed, 64000);
                     return;
                 }
             }
@@ -1075,7 +1087,7 @@ namespace FredBotNETCore.Modules.Public
             Process ffmpeg = GetFfmpeg(path);
             using (Stream output = ffmpeg.StandardOutput.BaseStream)
             {
-                using (AudioOutStream discord = Audio.CreatePCMStream(AudioApplication.Mixed, 64000))
+                using (Discord)
                 {
                     int bufferSize = 1024;
                     int bytesSent = 0;
@@ -1099,7 +1111,7 @@ namespace FredBotNETCore.Modules.Public
                                 break;
                             }
 
-                            await discord.WriteAsync(buffer, 0, read, _disposeToken.Token);
+                            await Discord.WriteAsync(buffer, 0, read, _disposeToken.Token);
 
                             if (Pause)
                             {
@@ -1124,7 +1136,7 @@ namespace FredBotNETCore.Modules.Public
                             fail = true;
                         }
                     }
-                    await discord.FlushAsync();
+                    await Discord.FlushAsync();
                 }
             }
         }
