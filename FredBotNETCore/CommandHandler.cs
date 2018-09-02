@@ -756,7 +756,7 @@ namespace FredBotNETCore
             string reason = null;
             foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(20).FlattenAsync())
             {
-                if (audit.Action == ActionType.MemberUpdated)
+                if (audit.Action == ActionType.MemberUpdated && audit.CreatedAt.Second == DateTime.Now.Second)
                 {
                     iUser = audit.User;
                     reason = audit.Reason;
@@ -893,7 +893,7 @@ namespace FredBotNETCore
             string reason = null;
             foreach (Discord.Rest.RestAuditLogEntry audit in await channel2.Guild.GetAuditLogsAsync(20).FlattenAsync())
             {
-                if (audit.Action == ActionType.MessageDeleted)
+                if (audit.Action == ActionType.MessageDeleted && audit.CreatedAt.Second == DateTime.Now.Second)
                 {
                     iUser = audit.User;
                     reason = audit.Reason;
@@ -1138,7 +1138,7 @@ namespace FredBotNETCore
             string reason = null;
             foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(20).FlattenAsync())
             {
-                if (audit.Action == ActionType.Kick)
+                if (audit.Action == ActionType.Kick && audit.CreatedAt.Second == DateTime.Now.Second)
                 {
                     iUser = audit.User;
                     reason = audit.Reason;
@@ -1227,7 +1227,6 @@ namespace FredBotNETCore
                             {
                                 PublicModule.Purging = true;
                                 await msg.DeleteAsync();
-                                PublicModule.Purging = false;
                                 embed.Fields.ElementAt(0).Value = "Bad words";
                                 if (msg.Content.Length > 252)
                                 {
@@ -1238,10 +1237,12 @@ namespace FredBotNETCore
                                     embed.Description = $"**Message sent by {msg.Author.Mention} deleted in {channel.Mention}**\n{msg.Content}";
                                 }
                                 await log.SendMessageAsync("", false, embed.Build());
+                                PublicModule.Purging = false;
                                 message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} watch your language.");
                                 await Task.Delay(5000);
                                 PublicModule.Purging = true;
                                 await message.DeleteAsync();
+                                await Task.Delay(100);
                                 PublicModule.Purging = false;
                                 return;
                             }

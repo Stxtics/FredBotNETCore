@@ -775,6 +775,22 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 isVerified = true;
                             }
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "User Verify",
+                                IconUrl = guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}"
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(0, 255, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
                             if (isVerified)
                             {
                                 string pr2name = Database.GetPR2Name(user);
@@ -791,7 +807,8 @@ namespace FredBotNETCore.Modules.Public
                                 }
                                 Database.VerifyUser(user, username); 
                                 SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
-                                await channel.SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` {Context.User.Mention} changed their verified account from **{pr2name}** to **{username}**.");
+                                embed.Description = $"{Context.User.Mention} changed their verified account from **{pr2name}** to **{username}**.";
+                                await channel.SendMessageAsync("", false, embed.Build());
                                 if (!user.Username.Equals(username))
                                 {
                                     await user.ModifyAsync(x => x.Nickname = username);
@@ -808,7 +825,8 @@ namespace FredBotNETCore.Modules.Public
                                 }
                                 Database.VerifyUser(user, username);
                                 SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
-                                await channel.SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` Verified {Context.User.Mention} who is **{username}** on PR2.");
+                                embed.Description = $"Verified {Context.User.Mention} who is **{username}** on PR2.";
+                                await channel.SendMessageAsync("", false, embed.Build());
                                 IEnumerable<SocketRole> role = guild.Roles.Where(input => input.Name.ToUpper() == "Verified".ToUpper());
                                 IEnumerable<SocketRole> role2 = guild.Roles.Where(input => input.Name.ToUpper() == "Members".ToUpper());
                                 RequestOptions options = new RequestOptions()
@@ -6311,6 +6329,22 @@ namespace FredBotNETCore.Modules.Public
                 return;
             }
             ITextChannel channel = Context.Channel as ITextChannel, log = Context.Guild.GetTextChannel(327575359765610496);
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = "Purge Messages",
+                IconUrl = Context.Guild.IconUrl
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                Text = $"ID: {Context.User.Id}"
+            };
+            EmbedBuilder embed2 = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(255, 0, 0),
+                Footer = footer
+            };
+            embed2.WithCurrentTimestamp();
             if (username == null)
             {
                 await Context.Message.DeleteAsync();
@@ -6320,8 +6354,7 @@ namespace FredBotNETCore.Modules.Public
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message in {channel.Mention} .");
                     Purging = true;
                     await (Context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
-                    await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
-                    $"purged **{amount}** message in {channel.Mention}.");
+                    embed2.Description = $"**{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** message in {channel.Mention}.";
                     Purging = false;
                 }
                 else
@@ -6329,10 +6362,10 @@ namespace FredBotNETCore.Modules.Public
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} messages in {channel.Mention} .");
                     Purging = true;
                     await (Context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
-                    await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
-                    $"purged **{amount}** messages in {channel.Mention}.");
+                    embed2.Description = $"**{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** messages in {channel.Mention}.";
                     Purging = false;
                 }
+                await log.SendMessageAsync("", false, embed2.Build());
                 return;
             }
             else
@@ -6349,8 +6382,7 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
                             Purging = true;
                             await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
-                            await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
-                            $"purged **{amount}** message in {channel.Mention} from **{user.Username}#{user.Discriminator}**.");
+                            embed2.Description = $"**{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** message in {channel.Mention} from **{user.Username}#{user.Discriminator}**.";
                             Purging = false;
                         }
                         else
@@ -6358,10 +6390,10 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} messages from {user.Mention} in {channel.Mention} .");
                             Purging = true;
                             await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
-                            await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH:mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** " +
-                            $"purged **{amount}** messages in {channel.Mention} from **{user.Username}#{user.Discriminator}**.");
+                            embed2.Description = $" **{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** messages in {channel.Mention} from **{user.Username}#{user.Discriminator}**.";
                             Purging = false;
                         }
+                        await log.SendMessageAsync("", false, embed2.Build());
                     }
                     else
                     {
