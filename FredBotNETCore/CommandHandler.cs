@@ -185,9 +185,13 @@ namespace FredBotNETCore
                 SocketGuild Guild = _client.GetGuild(249657315576381450);
                 SocketRole RoleM = Guild.GetRole(307631922094407682);
                 SocketTextChannel channel = Guild.GetTextChannel(249678944956055562);
-                await RoleM.ModifyAsync(x => x.Mentionable = true);
+                RequestOptions options = new RequestOptions()
+                {
+                    AuditLogReason = "Announcing happy hour"
+                };
+                await RoleM.ModifyAsync(x => x.Mentionable = true, options);
                 await channel.SendMessageAsync($"{RoleM.Mention} A happy hour has just started on Server: {Name}");
-                await RoleM.ModifyAsync(x => x.Mentionable = false);
+                await RoleM.ModifyAsync(x => x.Mentionable = false, options);
             }
         }
 
@@ -195,12 +199,16 @@ namespace FredBotNETCore
         {
             SocketGuild Guild = _client.GetGuild(249657315576381450);
             SocketTextChannel channel = Guild.GetTextChannel(249678944956055562);
+            RequestOptions options = new RequestOptions()
+            {
+                AuditLogReason = "Announcing new artifact"
+            };
             if (newArti)
             {
-                await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = true);
+                await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = true, options);
                 await channel.SendMessageAsync($"{Guild.GetRole(347312071618330626).Mention} Hmm... I seem to have misplaced the artifact. Maybe you can help me find it?\n" +
                         $"Here's what I remember: `{hint}`. Maybe I can remember more later!!");
-                await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = false);
+                await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = false, options);
             }
             else
             {
@@ -266,13 +274,13 @@ namespace FredBotNETCore
             EmbedBuilder embed = new EmbedBuilder()
             {
                 Author = author,
-                Color = new Color(0, 255, 0),
+                Color = new Color(0, 0, 255),
                 Footer = footer
             };
             embed.WithCurrentTimestamp();
             IUser user = null;
             string reason = null;
-            foreach(Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach(Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
                 if (audit.Action == ActionType.RoleUpdated)
                 {
@@ -283,7 +291,7 @@ namespace FredBotNETCore
             }
             if (role.Name != role2.Name)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** renamed the role **{role.Name}** to **{role2.Name}**.";
+                embed.Description = $"{user.Mention} renamed the role **{role.Name}** to {role2.Mention}.";
                 if (reason != null)
                 {
                     embed.AddField(y =>
@@ -299,11 +307,11 @@ namespace FredBotNETCore
             {
                 if (role.IsMentionable)
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** made the role **{role.Name}** unmentionable.";
+                    embed.Description = $"{user.Mention} made the role {role.Mention} unmentionable.";
                 }
                 else
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** made the role **{role.Name}** mentionable.";
+                    embed.Description = $"{user.Mention} made the role {role.Mention} mentionable.";
                 }
                 if (reason != null)
                 {
@@ -320,11 +328,11 @@ namespace FredBotNETCore
             {
                 if (role.IsHoisted)
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** made the role **{role.Name}** not display separately.";
+                    embed.Description = $"{user.Mention} made the role {role.Mention} not display separately.";
                 }
                 else
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** made the role **{role.Name}** display separately.";
+                    embed.Description = $"{user.Mention} made the role {role.Mention} display separately.";
                 }
                 if (reason != null)
                 {
@@ -339,7 +347,7 @@ namespace FredBotNETCore
             }
             else if (!role.Color.Equals(role2.Color))
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** changed the color of **{role.Name}** from **#{PublicModule.HexConverter(role.Color)}** to **#{PublicModule.HexConverter(role2.Color)}**.";
+                embed.Description = $"{user.Mention} changed the color of {role.Mention} from **#{PublicModule.HexConverter(role.Color)}** to **#{PublicModule.HexConverter(role2.Color)}**.";
                 if (reason != null)
                 {
                     embed.AddField(y =>
@@ -378,7 +386,7 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser user = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
                 if (audit.Action == ActionType.RoleDeleted)
                 {
@@ -387,7 +395,7 @@ namespace FredBotNETCore
                     break;
                 }
             }
-            embed.Description = $"**{user.Username}#{user.Discriminator}** deleted the role {role.Name}.";
+            embed.Description = $"{user.Mention} deleted the role **{role.Name}**.";
             if (reason != null)
             {
                 embed.AddField(y =>
@@ -425,7 +433,7 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser user = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
                 if (audit.Action == ActionType.RoleCreated)
                 {
@@ -434,7 +442,7 @@ namespace FredBotNETCore
                     break;
                 }
             }
-            embed.Description = $"**{user.Username}#{user.Discriminator}** created the role {role.Name}.";
+            embed.Description = $"{user.Mention} created the role {role.Mention}.";
             if (reason != null)
             {
                 embed.AddField(y =>
@@ -466,13 +474,13 @@ namespace FredBotNETCore
             EmbedBuilder embed = new EmbedBuilder()
             {
                 Author = author,
-                Color = new Color(0, 255, 0),
+                Color = new Color(0, 0, 255),
                 Footer = footer
             };
             embed.WithCurrentTimestamp();
             IUser user = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
                 if (audit.Action == ActionType.ChannelUpdated)
                 {
@@ -485,7 +493,7 @@ namespace FredBotNETCore
             {
                 if ((channel as SocketTextChannel).Name != (channel2 as SocketTextChannel).Name)
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** renamed the text channel **{(channel as SocketTextChannel).Name}** to **{(channel2 as SocketTextChannel).Name}**.";
+                    embed.Description = $"{user.Mention} renamed the text channel **{(channel as SocketTextChannel).Name}** to {(channel2 as SocketTextChannel).Mention}.";
                     if (reason != null)
                     {
                         embed.AddField(y =>
@@ -499,7 +507,17 @@ namespace FredBotNETCore
                 }
                 else if ((channel as SocketTextChannel).Topic != (channel2 as SocketTextChannel).Topic)
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** changed the topic of {(channel as SocketTextChannel).Mention} from **{(channel2 as SocketTextChannel).Topic}** to **{(channel2 as SocketTextChannel).Topic}**.";
+                    string topic1 = (channel as SocketTextChannel).Topic;
+                    string topic2 = (channel2 as SocketTextChannel).Topic;
+                    if (topic1.Length > 100)
+                    {
+                        topic1 = (channel as SocketTextChannel).Topic.Replace("`", string.Empty).SplitInParts(100).ElementAt(0) + "...";
+                    }
+                    if (topic2.Length > 100)
+                    {
+                        topic2 = (channel2 as SocketTextChannel).Topic.Replace("`", string.Empty).SplitInParts(100).ElementAt(0) + "...";
+                    }
+                    embed.Description = $"{user.Mention} changed the topic of {(channel as SocketTextChannel).Mention} from **{topic1}** to **{topic2}**.";
                     if (reason != null)
                     {
                         embed.AddField(y =>
@@ -515,11 +533,11 @@ namespace FredBotNETCore
                 {
                     if ((channel as SocketTextChannel).IsNsfw)
                     {
-                        embed.Description = $"**{user.Username}#{user.Discriminator}** set {(channel as SocketTextChannel).Mention} as SFW.";
+                        embed.Description = $"{user.Mention} set {(channel as SocketTextChannel).Mention} as SFW.";
                     }
                     else
                     {
-                        embed.Description = $"**{user.Username}#{user.Discriminator}** set {(channel as SocketTextChannel).Mention} as NSFW.";
+                        embed.Description = $"{user.Mention} set {(channel as SocketTextChannel).Mention} as NSFW.";
                     }
                     if (reason != null)
                     {
@@ -537,7 +555,7 @@ namespace FredBotNETCore
             {
                 if ((channel as SocketVoiceChannel).Name != (channel2 as SocketVoiceChannel).Name)
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** renamed the voice channel **{(channel as SocketVoiceChannel).Name}** to **{(channel2 as SocketVoiceChannel).Name}**.";
+                    embed.Description = $"{user.Mention} renamed the voice channel **{(channel as SocketVoiceChannel).Name}** to **{(channel2 as SocketVoiceChannel).Name}**.";
                     if (reason != null)
                     {
                         embed.AddField(y =>
@@ -551,7 +569,7 @@ namespace FredBotNETCore
                 }
                 else if ((channel as SocketVoiceChannel).Bitrate != (channel2 as SocketVoiceChannel).Bitrate)
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** changed {(channel as SocketVoiceChannel).Name}'s birate from **{(channel as SocketVoiceChannel).Bitrate}** to **{(channel2 as SocketVoiceChannel).Bitrate}**.";
+                    embed.Description = $"{user.Mention} changed **{(channel as SocketVoiceChannel).Name}'s** birate from **{(channel as SocketVoiceChannel).Bitrate}** to **{(channel2 as SocketVoiceChannel).Bitrate}**.";
                     if (reason != null)
                     {
                         embed.AddField(y =>
@@ -567,15 +585,15 @@ namespace FredBotNETCore
                 {
                     if ((channel as SocketVoiceChannel).UserLimit == null)
                     {
-                        embed.Description = $"**{user.Username}#{user.Discriminator}** changed {(channel as SocketVoiceChannel).Name}'s user limit from **unlimited** to **{(channel2 as SocketVoiceChannel).UserLimit}**.";
+                        embed.Description = $"{user.Mention} changed **{(channel as SocketVoiceChannel).Name}'s** user limit from **unlimited** to **{(channel2 as SocketVoiceChannel).UserLimit}**.";
                     }
                     else if ((channel2 as SocketVoiceChannel).UserLimit == null)
                     {
-                        embed.Description = $"**{user.Username}#{user.Discriminator}** changed {(channel as SocketVoiceChannel).Name}'s user limit from **{(channel as SocketVoiceChannel).UserLimit}** to **unlimited**.";
+                        embed.Description = $"{user.Mention} changed **{(channel as SocketVoiceChannel).Name}'s** user limit from **{(channel as SocketVoiceChannel).UserLimit}** to **unlimited**.";
                     }
                     else
                     {
-                        embed.Description = $"**{user.Username}#{user.Discriminator}** changed {(channel as SocketVoiceChannel).Name}'s user limit from **{(channel as SocketVoiceChannel).UserLimit}** to **{(channel2 as SocketVoiceChannel).UserLimit}**.";
+                        embed.Description = $"{user.Mention} changed **{(channel as SocketVoiceChannel).Name}'s** user limit from **{(channel as SocketVoiceChannel).UserLimit}** to **{(channel2 as SocketVoiceChannel).UserLimit}**.";
                     }
                     if (reason != null)
                     {
@@ -593,7 +611,7 @@ namespace FredBotNETCore
             {
                 if ((channel as SocketCategoryChannel).Name != (channel2 as SocketCategoryChannel).Name)
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** renamed the category channel **{(channel as SocketCategoryChannel).Name}** to **{(channel2 as SocketCategoryChannel).Name}**.";
+                    embed.Description = $"{user.Mention} renamed the category channel **{(channel as SocketCategoryChannel).Name}** to **{(channel2 as SocketCategoryChannel).Name}**.";
                     if (reason != null)
                     {
                         embed.AddField(y =>
@@ -633,7 +651,7 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser user = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
                 if (audit.Action == ActionType.ChannelDeleted)
                 {
@@ -644,15 +662,15 @@ namespace FredBotNETCore
             }
             if (channel is SocketTextChannel)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** deleted the text channel: **{(channel as SocketGuildChannel).Name}**.";
+                embed.Description = $"{user.Mention} deleted the text channel: **{(channel as SocketGuildChannel).Name}**.";
             }
             else if (channel is SocketVoiceChannel)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** deleted the voice channel: **{(channel as SocketGuildChannel).Name}**.";
+                embed.Description = $"{user.Mention} deleted the voice channel: **{(channel as SocketGuildChannel).Name}**.";
             }
             else if (channel is SocketCategoryChannel)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** deleted the category channel: **{(channel as SocketGuildChannel).Name}**.";
+                embed.Description = $"{user.Mention} deleted the category channel: **{(channel as SocketGuildChannel).Name}**.";
             }
             if (reason != null)
             {
@@ -691,7 +709,7 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser user = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
                 if (audit.Action == ActionType.ChannelCreated)
                 {
@@ -702,15 +720,15 @@ namespace FredBotNETCore
             }
             if (channel is SocketTextChannel)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** created the text channel: {(channel as SocketTextChannel).Mention}.";
+                embed.Description = $"{user.Mention} created the text channel: {(channel as SocketTextChannel).Mention}.";
             }
             else if (channel is SocketVoiceChannel)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** created the voice channel: **{(channel as SocketGuildChannel).Name}**.";
+                embed.Description = $"{user.Mention} created the voice channel: **{(channel as SocketGuildChannel).Name}**.";
             }
             else if (channel is SocketCategoryChannel)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** created the category channel: **{(channel as SocketGuildChannel).Name}**.";
+                embed.Description = $"{user.Mention} created the category channel: **{(channel as SocketGuildChannel).Name}**.";
             }
             if (reason != null)
             {
@@ -748,15 +766,15 @@ namespace FredBotNETCore
             EmbedBuilder embed = new EmbedBuilder()
             {
                 Author = author,
-                Color = new Color(0, 255, 0),
+                Color = new Color(0, 0, 255),
                 Footer = footer
             };
             embed.WithCurrentTimestamp();
             IUser iUser = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
-                if (audit.Action == ActionType.MemberUpdated && audit.CreatedAt.Second == DateTime.Now.Second)
+                if (audit.Action == ActionType.MemberUpdated && audit.Data.ToString().Contains(user.Username))
                 {
                     iUser = audit.User;
                     reason = audit.Reason;
@@ -771,30 +789,30 @@ namespace FredBotNETCore
                 {
                     if (nickname == null)
                     {
-                        embed.Description = $"**{user.Username}#{user.Discriminator}** set their nickname to **{nickname2}**.";
+                        embed.Description = $"{user.Mention} set their nickname to **{nickname2}**.";
                     }
                     else if (nickname2 == null)
                     {
-                        embed.Description = $"**{user.Username}#{user.Discriminator}** removed their nickname of **{nickname}**.";
+                        embed.Description = $"{user.Mention} removed their nickname of **{nickname}**.";
                     }
                     else
                     {
-                        embed.Description = $"**{user.Username}#{user.Discriminator}** has changed their nickname from **{nickname}** to **{nickname2}**.";
+                        embed.Description = $"{user.Mention} has changed their nickname from **{nickname}** to **{nickname2}**.";
                     }
                 }
                 else
                 {
                     if (nickname == null)
                     {
-                        embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** set **{user.Username}#{user.Discriminator}'s** nickname to **{nickname2}**.";
+                        embed.Description = $"{iUser.Mention} set **{user.Mention}'s** nickname to **{nickname2}**.";
                     }
                     else if (nickname2 == null)
                     {
-                        embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** removed **{user.Username}#{user.Discriminator}'s** nickname of **{nickname}**.";
+                        embed.Description = $"{iUser.Mention} removed **{user.Mention}'s** nickname of **{nickname}**.";
                     }
                     else
                     {
-                        embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** changed **{user.Username}#{user.Discriminator}'s** nickname from **{nickname}** to **{nickname2}**.";
+                        embed.Description = $"{iUser.Mention} changed **{user.Mention}'s** nickname from **{nickname}** to **{nickname2}**.";
                     }
                 }
                 if (reason != null)
@@ -831,13 +849,13 @@ namespace FredBotNETCore
                 {
                     var diff = roleList.Except(roleList2);
                     var role = diff.ElementAt(0);
-                    embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** removed **{user.Username}#{user.Discriminator}** from the **{role}** role.";
+                    embed.Description = $"{iUser.Mention} removed {user.Mention} from the {role.Mention} role.";
                 }
                 else
                 {
                     var diff = roleList2.Except(roleList);
                     var role = diff.ElementAt(0);
-                    embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** added **{user.Username}#{user.Discriminator}** to the **{role}** role.";
+                    embed.Description = $"{iUser.Mention} added {user.Mention} to the {role.Mention} role.";
                 }
                 if (reason != null)
                 {
@@ -891,9 +909,9 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser iUser = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await channel2.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await channel2.Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
-                if (audit.Action == ActionType.MessageDeleted && audit.CreatedAt.Second == DateTime.Now.Second)
+                if (audit.Action == ActionType.MessageDeleted && audit.Data.ToString().Contains(message2.Author.Username))
                 {
                     iUser = audit.User;
                     reason = audit.Reason;
@@ -905,22 +923,22 @@ namespace FredBotNETCore
             {
                 if (message2.Content.Length > 252)
                 {
-                    embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** deleted a message by **{message2.Author.Username}#{message2.Author.Discriminator}** in {channel2.Mention}.\nContent: **{message2.Content.SplitInParts(252).ElementAt(0)}...**";
+                    embed.Description = $"{iUser.Mention} deleted a message by {message2.Author.Mention} in {channel2.Mention}.\nContent: **{message2.Content.Replace("`", string.Empty).SplitInParts(252).ElementAt(0)}...**";
                 }
                 else
                 {
-                    embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** deleted a message by **{message2.Author.Username}#{message2.Author.Discriminator}** in {channel2.Mention}.\nContent: **{message2.Content}**";
+                    embed.Description = $"{iUser.Mention} deleted a message by {message2.Author.Mention} in {channel2.Mention}.\nContent: **{message2.Content.Replace("`", string.Empty)}**";
                 }
             }
             else
             {
                 if (message2.Content.Length > 252)
                 {
-                    embed.Description = $"Message deleted from **{message2.Author.Username}#{message2.Author.Discriminator}** in {channel2.Mention}.\nContent: **{message2.Content.SplitInParts(252).ElementAt(0)}...**";
+                    embed.Description = $"{message2.Author.Mention} deleted their message in {channel2.Mention}.\nContent: **{message2.Content.Replace("`", string.Empty).SplitInParts(252).ElementAt(0)}...**";
                 }
                 else
                 {
-                    embed.Description = $"Message deleted from **{message2.Author.Username}#{message2.Author.Discriminator}** in {channel2.Mention}.\nContent: **{message2.Content}**";
+                    embed.Description = $"{message2.Author.Mention} deleted their message in {channel2.Mention}.\nContent: **{message2.Content.Replace("`", string.Empty)}**";
                 }
             }
             if (reason != null)
@@ -961,7 +979,7 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser iUser = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await guild.GetAuditLogsAsync(5).FlattenAsync())
             {
                 if (audit.Action == ActionType.Unban)
                 {
@@ -970,7 +988,7 @@ namespace FredBotNETCore
                     break;
                 }
             }
-            embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** unbanned **{user.Username}#{user.Discriminator}** from the guild.";
+            embed.Description = $"{iUser.Mention} unbanned **{user.Username}#{user.Discriminator}** from the guild.";
             if (reason != null)
             {
                 embed.AddField(y =>
@@ -1009,7 +1027,7 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser iUser = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await guild.GetAuditLogsAsync(5).FlattenAsync())
             {
                 if (audit.Action == ActionType.Ban)
                 {
@@ -1018,7 +1036,7 @@ namespace FredBotNETCore
                     break;
                 }
             }
-            embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** banned **{user.Username}#{user.Discriminator}** from the guild.\nTotal members: **{guild.MemberCount - 1}**";
+            embed.Description = $"{iUser.Mention} banned **{user.Username}#{user.Discriminator}** from the guild.\nTotal members: **{guild.MemberCount - 1}**";
             if (reason != null)
             {
                 embed.AddField(y =>
@@ -1136,9 +1154,9 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser iUser = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(20).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
-                if (audit.Action == ActionType.Kick && audit.CreatedAt.Second == DateTime.Now.Second)
+                if (audit.Action == ActionType.Kick && audit.Data.ToString().Contains(user.Username))
                 {
                     iUser = audit.User;
                     reason = audit.Reason;
@@ -1152,7 +1170,7 @@ namespace FredBotNETCore
             else
             {
                 embed.Author.Name = "User Kicked";
-                embed.Description = $"**{iUser.Username}#{iUser.Discriminator}** kicked **{user.Username}#{user.Discriminator}** from the guild.\nTotal members: **{user.Guild.MemberCount}**";
+                embed.Description = $"{iUser.Mention} kicked **{user.Username}#{user.Discriminator}** from the guild.\nTotal members: **{user.Guild.MemberCount}**";
                 if (reason != null)
                 {
                     embed.AddField(y =>
@@ -1180,12 +1198,13 @@ namespace FredBotNETCore
                     {
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
-                            Name = msg.Author.Username + "#" + msg.Author.Discriminator,
-                            IconUrl = msg.Author.GetAvatarUrl()
+                            Name = "Message Deleted",
+                            IconUrl = channel.Guild.IconUrl
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            Text = $"ID: {msg.Author.Id}"
+                            Text = $"ID: {msg.Author.Id}",
+                            IconUrl = msg.Author.GetAvatarUrl()
                         };
                         EmbedBuilder embed = new EmbedBuilder()
                         {
@@ -1230,11 +1249,11 @@ namespace FredBotNETCore
                                 embed.Fields.ElementAt(0).Value = "Bad words";
                                 if (msg.Content.Length > 252)
                                 {
-                                    embed.Description = $"**Message sent by {msg.Author.Mention} deleted in {channel.Mention}**\n{msg.Content.SplitInParts(252).ElementAt(0)}...";
+                                    embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty).SplitInParts(252).ElementAt(0)}...**";
                                 }
                                 else
                                 {
-                                    embed.Description = $"**Message sent by {msg.Author.Mention} deleted in {channel.Mention}**\n{msg.Content}";
+                                    embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty)}**";
                                 }
                                 await log.SendMessageAsync("", false, embed.Build());
                                 PublicModule.Purging = false;

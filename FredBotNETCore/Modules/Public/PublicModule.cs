@@ -289,16 +289,6 @@ namespace FredBotNETCore.Modules.Public
             }
         }
 
-        [Command("getrole", RunMode = RunMode.Async)]
-        [Alias("grole")]
-        [Summary("Gets role id")]
-        [RequireOwner]
-        public async Task GetRole(IRole role)
-        {
-            ulong roleId = role.Id;
-            await Context.Channel.SendMessageAsync($"{roleId}");
-        }
-
         [Command("updatetoken", RunMode = RunMode.Async)]
         [Alias("utoken", "changetoken")]
         [Summary("Updates token used in some commands")]
@@ -473,7 +463,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username}` does not exist or could not be found.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username.Replace("`", string.Empty)}` does not exist or could not be found.");
                         }
                     }
                     catch (Exception)
@@ -700,7 +690,7 @@ namespace FredBotNETCore.Modules.Public
             if (Context.Channel is IDMChannel)
             {
                 await channel.SendMessageAsync($"Hello {Context.User.Mention} , to verify your PR2 account please send a PM to `FredTheG.CactusBot` on PR2 " +
-                    $"saying only `{channel.Id}`.\nThen once you have sent the PM type `/verifycomplete <PR2 account name>` here without <>. PR2 account name = name of " +
+                    $"saying only `{channel.Id}`.\nThen once you have sent the PM type `/verifycomplete <PR2 account name>` without <> in this channel. PR2 account name = name of " +
                     $"account you sent the PM from.");
             }
             else
@@ -811,7 +801,11 @@ namespace FredBotNETCore.Modules.Public
                                 await channel.SendMessageAsync("", false, embed.Build());
                                 if (!user.Username.Equals(username))
                                 {
-                                    await user.ModifyAsync(x => x.Nickname = username);
+                                    RequestOptions options = new RequestOptions()
+                                    {
+                                        AuditLogReason = "Setting nickname to PR2 name."
+                                    };
+                                    await user.ModifyAsync(x => x.Nickname = username, options);
                                 }
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully changed your verified account from {pr2name} to {username}.");
                             }
@@ -837,7 +831,8 @@ namespace FredBotNETCore.Modules.Public
                                 await user.RemoveRolesAsync(role2, options);
                                 if (!user.Username.Equals(username))
                                 {
-                                    await user.ModifyAsync(x => x.Nickname = username);
+                                    options.AuditLogReason = "Setting nickname to PR2 name.";
+                                    await user.ModifyAsync(x => x.Nickname = username, options);
                                 }
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully verified your PR2 Account.");
                             }
@@ -966,7 +961,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     catch (NullReferenceException)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the city `{city}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the city `{city.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
                     }
                     double lat = weather.Coord.Lat;
@@ -1206,13 +1201,13 @@ namespace FredBotNETCore.Modules.Public
                                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                     {
                                         Name = $"-- {name} --",
-                                        Url = "https://pr2hub.com/player_search.php?name=" + name
+                                        Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(name)
                                     };
                                     embed.WithAuthor(author);
                                     embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
                                     if (pr2info.Contains(value: "{\"error\":\""))
                                     {
-                                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{Uri.UnescapeDataString(pr2user)}` does not exist or could not be found.");
+                                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{Uri.UnescapeDataString(pr2user.Replace("`", string.Empty))}` does not exist or could not be found.");
                                     }
                                     else
                                     {
@@ -1237,7 +1232,7 @@ namespace FredBotNETCore.Modules.Public
                         String pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
                         if (pr2info.Contains(value: "{\"error\":\""))
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{Uri.UnescapeDataString(pr2name)}` does not exist or could not be found.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{Uri.UnescapeDataString(pr2name.Replace("`", string.Empty))}` does not exist or could not be found.");
                             return;
                         }
                         string rank = GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
@@ -1373,13 +1368,13 @@ namespace FredBotNETCore.Modules.Public
                                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                     {
                                         Name = $"-- {name} --",
-                                        Url = "https://pr2hub.com/player_search.php?name=" + name
+                                        Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(name)
                                     };
                                     embed.WithAuthor(author);
                                     embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
                                     if (pr2info.Contains(value: "{\"error\":\""))
                                     {
-                                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID `{pr2user}` does not exist or could not be found.");
+                                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID `{pr2user.Replace("`", string.Empty)}` does not exist or could not be found.");
                                     }
                                     else
                                     {
@@ -1404,7 +1399,7 @@ namespace FredBotNETCore.Modules.Public
                         String pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + id);
                         if (pr2info.Contains(value: "{\"error\":\""))
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID `{id}` does not exist or could not be found.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID `{id.Replace("`", string.Empty)}` does not exist or could not be found.");
                             return;
                         }
                         string rank = GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
@@ -1517,7 +1512,7 @@ namespace FredBotNETCore.Modules.Public
 
                     if (pr2info.Contains(value: "{\"error\":\""))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild `{guildname}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild `{guildname.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
                     }
                     string name = GetBetween(pr2info, "guild_name\":\"", "\",\"creation");
@@ -1580,7 +1575,7 @@ namespace FredBotNETCore.Modules.Public
                     String pr2info = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&id=" + id);
                     if (pr2info.Contains(value: "{\"error\":\""))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild with ID `{id}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild with ID `{id.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
                     }
                     string name = GetBetween(pr2info, "\"guild_name\":\"", "\",\"");
@@ -1869,7 +1864,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName.Replace("`", string.Empty)}` does not exist or could not be found.");
                         }
                     }
                     catch(Exception)
@@ -2098,7 +2093,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     catch(HttpRequestException)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
                     }
                     var o = JObject.Parse(text).GetValue("teams");
@@ -2114,7 +2109,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     if (stats.Count == 0)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
                     }
                     embed.AddField(y =>
@@ -2442,7 +2437,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the server `{server}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the server `{server.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
                     }
                 }
@@ -2514,7 +2509,7 @@ namespace FredBotNETCore.Modules.Public
                     string text = await web.GetStringAsync("http://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
                     if (text.Contains(value: "{\"error\":\""))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild `{guildname}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild `{guildname.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
                     }
                     string[] users = text.Split('}');
@@ -2720,7 +2715,7 @@ namespace FredBotNETCore.Modules.Public
                     string user = Uri.UnescapeDataString(GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
                     if (title.Length <= 0)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the level `{level}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the level `{level.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
                     }
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -3919,8 +3914,26 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
                                 SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** blacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                {
+                                    Name = "Music Blacklist Add",
+                                    IconUrl = Context.Guild.IconUrl
+                                };
+                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                {
+                                    Text = $"ID: {Context.User.Id}",
+                                    IconUrl = Context.User.GetAvatarUrl()
+                                };
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Author = author,
+                                    Color = new Color(255, 0, 0),
+                                    Footer = footer
+                                };
+                                embed.WithCurrentTimestamp();
+                                embed.Description = $"{Context.User.Mention} blacklisted {user.Mention} from using music commands.";
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                                await log.SendMessageAsync("", false, embed.Build());
                             }
                         }
                         else
@@ -3972,8 +3985,26 @@ namespace FredBotNETCore.Modules.Public
                                 currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
                                 File.WriteAllText(Path.Combine(downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
                                 SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** unblacklisted **{user.Username}#{user.Discriminator}** from using music commands.");
+                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                {
+                                    Name = "Music Blacklist Remove",
+                                    IconUrl = Context.Guild.IconUrl
+                                };
+                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                {
+                                    Text = $"ID: {Context.User.Id}",
+                                    IconUrl = Context.User.GetAvatarUrl()
+                                };
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Author = author,
+                                    Color = new Color(0, 255, 0),
+                                    Footer = footer
+                                };
+                                embed.WithCurrentTimestamp();
+                                embed.Description = $"{Context.User.Mention} unblacklisted {user.Mention} from using music commands.";
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully removed blacklisted music command user **{user.Username}#{user.Discriminator}**.");
+                                await log.SendMessageAsync("", false, embed.Build());
                             }
                             else
                             {
@@ -4089,8 +4120,26 @@ namespace FredBotNETCore.Modules.Public
                                 };
                                 await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny), options);
                                 SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                                await log.SendMessageAsync($":x: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** blacklisted **{user.Username}#{user.Discriminator}** from the **suggestions** channel.");
+                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                {
+                                    Name = "Suggestions Blacklist Add",
+                                    IconUrl = Context.Guild.IconUrl
+                                };
+                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                {
+                                    Text = $"ID: {Context.User.Id}",
+                                    IconUrl = Context.User.GetAvatarUrl()
+                                };
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Author = author,
+                                    Color = new Color(255, 0, 0),
+                                    Footer = footer
+                                };
+                                embed.WithCurrentTimestamp();
+                                embed.Description = $"{Context.User.Mention} blacklisted {user.Mention} from the suggestions channel.";
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted **{user.Username}#{user.Discriminator}** from suggestions.");
+                                await log.SendMessageAsync("", false, embed.Build());
                             }
                         }
                         else
@@ -4148,8 +4197,26 @@ namespace FredBotNETCore.Modules.Public
                                 };
                                 await suggestions.RemovePermissionOverwriteAsync(user, options);
                                 SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                                await log.SendMessageAsync($":white_check_mark: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** unblacklisted **{user.Username}#{user.Discriminator}** from the **suggestions** channel.");
+                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                {
+                                    Name = "Suggestions Blacklist Remove",
+                                    IconUrl = Context.Guild.IconUrl
+                                };
+                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                {
+                                    Text = $"ID: {Context.User.Id}",
+                                    IconUrl = Context.User.GetAvatarUrl()
+                                };
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Author = author,
+                                    Color = new Color(0, 255, 0),
+                                    Footer = footer
+                                };
+                                embed.WithCurrentTimestamp();
+                                embed.Description = $"{Context.User.Mention} unblacklisted {user.Mention} from the suggestions channel.";
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully removed blacklisted suggestions user **{user.Username}#{user.Discriminator}**.");
+                                await log.SendMessageAsync("", false, embed.Build());
                             }
                             else
                             {
@@ -5402,7 +5469,14 @@ namespace FredBotNETCore.Modules.Public
                 Database.UpdateReason(caseN, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                 await Context.Message.DeleteAsync();
                 await Context.Channel.SendMessageAsync($"Updated case {caseN}.");
-                await Context.Guild.GetTextChannel(327575359765610496).SendMessageAsync($":pencil: `[{DateTime.Now.ToUniversalTime().ToString("HH: mm:ss")}]` **{Context.User.Username}#{Context.User.Discriminator}** updated case **{caseN}**.");
+                embed.Author.Name = "Updated Case";
+                embed.Author.IconUrl = Context.Guild.IconUrl;
+                embed.Footer.Text = "ID: " + Context.User.Id;
+                embed.Footer.IconUrl = Context.User.GetAvatarUrl();
+                embed.Color = new Color(0, 0, 255);
+                embed.Fields.Clear();
+                embed.Description = $"{Context.User.Mention} updated case **{caseN}**.";
+                await Context.Guild.GetTextChannel(327575359765610496).SendMessageAsync("", false, embed.Build());
             }
         }
 
@@ -5644,18 +5718,18 @@ namespace FredBotNETCore.Modules.Public
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.AddReactions)]
         [RequireContext(ContextType.Guild)]
-        public async Task Giveaway(string channel = null, string time = null, [Remainder] string item = null)
+        public async Task Giveaway(string channel = null, string time = null, string winnersS = null, [Remainder] string item = null)
         {
             try
             {              
-                if (channel == null || time == null || !double.TryParse(time, out double num2) || Math.Round(Convert.ToDouble(time), 0) < 0 || item == null)
+                if (channel == null || time == null || !double.TryParse(time, out double num2) || Math.Round(Convert.ToDouble(time), 0) < 0 || !int.TryParse(winnersS, out int winners) || winners < 1 || item == null)
                 {
                     EmbedBuilder embed = new EmbedBuilder()
                     {
                         Color = new Color(220, 220, 220)
                     };
                     embed.Title = "Command: /giveaway";
-                    embed.Description = "**Description:** Create a giveaway.\n**Usage:** /giveaway [channel] [time] [item]\n**Example:** /giveaway pr2-discussion 60 Cowboy Hat";
+                    embed.Description = "**Description:** Create a giveaway.\n**Usage:** /giveaway [channel] [time] [winners] [item]\n**Example:** /giveaway pr2-discussion 60 1 Cowboy Hat";
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
@@ -5675,6 +5749,11 @@ namespace FredBotNETCore.Modules.Public
                                 return;
                             }
                         }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find text channel `{channel}`.");
+                            return;
+                        }
                     }
                     catch(Exception)
                     {
@@ -5689,11 +5768,11 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = ($"Winners: {winners} | Ends at")
                     };
                     embed.WithFooter(footer);
                     embed.Title = $"{item}";
-                    embed.WithCurrentTimestamp();
+                    embed.WithTimestamp((DateTime.Now).AddMinutes(minutes));
                     embed.Description = $"React with <:artifact:260898610734956574> to enter the giveaway.\nTime left: {minutes} minutes.";
                     IUserMessage message = null;
                     try
@@ -5729,21 +5808,53 @@ namespace FredBotNETCore.Modules.Public
                         var users = user.ElementAt(0).Result;
                         if (users.Count <= 1)
                         {
-                            await giveawayChannel.SendMessageAsync("Nobody Entered the Giveaway.");
+                            await giveawayChannel.SendMessageAsync("Nobody entered the Giveaway.");
                             embed.Description = $"Nobody Entered the Giveaway.";
+                            embed.Footer.Text = $"Winners: {winners} | Ended at";
                             await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
                             await message.ModifyAsync(x => x.Embed = embed.Build());
                             return;
                         }
-                        IUser randomUser = users.GetRandomElement();
-                        while (randomUser.Id == 383927022583545859)
+                        if (users.Count <= winners)
                         {
-                            randomUser = users.GetRandomElement();
+                            await giveawayChannel.SendMessageAsync("Not enough users entered the Giveaway.");
+                            embed.Description = $"Not enough users entered the Giveaway.";
+                            embed.Footer.Text = $"Winners: {winners} | Ended at";
+                            await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
+                            await message.ModifyAsync(x => x.Embed = embed.Build());
+                            return;
                         }
-                        embed.Description = $"Winner: {randomUser.Mention}";
-                        await giveawayChannel.SendMessageAsync($"The winner of the {item} is {randomUser.Mention} !");
-                        await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
-                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                        List<IUser> userWinners = new List<IUser>();
+                        for (int i = 0; i < winners; i++)
+                        {
+                            IUser randomUser = users.GetRandomElement();
+                            while (randomUser.Id == 383927022583545859)
+                            {
+                                randomUser = users.GetRandomElement();
+                            }
+                            userWinners.Add(randomUser);
+                        }
+                        if (winners == 1)
+                        {
+                            embed.Description = $"Winner: {userWinners.ElementAt(0).Mention}";
+                            embed.Footer.Text = $"Winners: {winners} | Ended at";
+                            await giveawayChannel.SendMessageAsync($"The winner of the {item} is {userWinners.ElementAt(0).Mention} !");
+                            await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
+                            await message.ModifyAsync(x => x.Embed = embed.Build());
+                        }
+                        else
+                        {
+                            string description = "";
+                            foreach(IUser userWinner in userWinners)
+                            {
+                                description = description + userWinner.Mention + "\n";
+                            }
+                            embed.Description = $"Winners: {description}";
+                            embed.Footer.Text = $"Winners: {winners} | Ended at";
+                            await giveawayChannel.SendMessageAsync($"The winners of the {item} are {description.Replace("\n",", ").Substring(0, description.Replace("\n", ", ").Length - 2)} !");
+                            await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
+                            await message.ModifyAsync(x => x.Embed = embed.Build());
+                        }
                     }
                 }
             }
@@ -6355,7 +6466,6 @@ namespace FredBotNETCore.Modules.Public
                     Purging = true;
                     await (Context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
                     embed2.Description = $"**{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** message in {channel.Mention}.";
-                    Purging = false;
                 }
                 else
                 {
@@ -6363,9 +6473,9 @@ namespace FredBotNETCore.Modules.Public
                     Purging = true;
                     await (Context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
                     embed2.Description = $"**{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** messages in {channel.Mention}.";
-                    Purging = false;
                 }
                 await log.SendMessageAsync("", false, embed2.Build());
+                Purging = false;
                 return;
             }
             else
@@ -6383,7 +6493,6 @@ namespace FredBotNETCore.Modules.Public
                             Purging = true;
                             await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
                             embed2.Description = $"**{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** message in {channel.Mention} from **{user.Username}#{user.Discriminator}**.";
-                            Purging = false;
                         }
                         else
                         {
@@ -6391,9 +6500,9 @@ namespace FredBotNETCore.Modules.Public
                             Purging = true;
                             await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
                             embed2.Description = $" **{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** messages in {channel.Mention} from **{user.Username}#{user.Discriminator}**.";
-                            Purging = false;
                         }
                         await log.SendMessageAsync("", false, embed2.Build());
+                        Purging = false;
                     }
                     else
                     {
@@ -7024,14 +7133,35 @@ namespace FredBotNETCore.Modules.Public
                         else
                         {
                             Database.ClearWarn(user);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Warnings Cleared",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {user.Id}",
+                                IconUrl = user.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(0, 255, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
                             if (warnCount == 1)
                             {
                                 await Context.Channel.SendMessageAsync($"Cleared **{warnCount}** warning for **{user.Username}#{user.Discriminator}**.");
+                                embed.Description = $"{Context.User.Mention} cleared **{warnCount}** warning for {user.Mention}.";
                             }
                             else
                             {
                                 await Context.Channel.SendMessageAsync($"Cleared **{warnCount}** warnings for **{user.Username}#{user.Discriminator}**.");
+                                embed.Description = $"{Context.User.Mention} cleared **{warnCount}** warnings for {user.Mention}.";
                             }
+                            await log.SendMessageAsync("", false, embed.Build());
                         }
                     }
                     else
@@ -7117,7 +7247,7 @@ namespace FredBotNETCore.Modules.Public
                         SocketRole role = RoleInGuild(Context.Message, Context.Guild, roleName);
                         RequestOptions options = new RequestOptions()
                         {
-                            AuditLogReason = $"Toggled Mentionable by {Context.User.Username}#{Context.User.Discriminator}"
+                            AuditLogReason = $"Toggled Mentionable by: {Context.User.Username}#{Context.User.Discriminator}"
                         };
                         if (role.IsMentionable)
                         {
@@ -7261,7 +7391,11 @@ namespace FredBotNETCore.Modules.Public
                             try
                             {
                                 System.Drawing.Color color = System.Drawing.Color.FromArgb(int.Parse(split[1].Replace("#", ""), NumberStyles.AllowHexSpecifier));
-                                await role.ModifyAsync(x => x.Color = new Color(color.R, color.G, color.B));
+                                RequestOptions options = new RequestOptions()
+                                {
+                                    AuditLogReason = $"Changed by: {Context.User.Mention}#{Context.User.Discriminator}"
+                                };
+                                await role.ModifyAsync(x => x.Color = new Color(color.R, color.G, color.B), options);
                                 await Context.Channel.SendMessageAsync($"Successfully changed the color of **{role.Name}** to **#{split[1]}**.");
                             }
                             catch (FormatException)
@@ -7323,7 +7457,27 @@ namespace FredBotNETCore.Modules.Public
                         else
                         {
                             File.WriteAllText(Path.Combine(downloadPath, "JoinableRoles.txt"), currentJoinableRoles + role.Id.ToString() + "\n");
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Added Joinable Role",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(0, 255, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} added {role.Mention} to the joinable roles.";
                             await Context.Channel.SendMessageAsync($"Added joinable role **{role.Name}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
                         }
                     }
                     else
@@ -7371,7 +7525,27 @@ namespace FredBotNETCore.Modules.Public
                         {
                             joinableRoles = joinableRoles.Replace(role.Id.ToString() + "\n", string.Empty);
                             File.WriteAllText(Path.Combine(downloadPath, "JoinableRoles.txt"), joinableRoles);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Removed Joinable Role",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(255, 0, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} removed {role.Mention} from the joinable roles.";
                             await Context.Channel.SendMessageAsync($"Removed joinable role **{role.Name}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
                         }
                         else
                         {
@@ -7429,7 +7603,27 @@ namespace FredBotNETCore.Modules.Public
                             else
                             {
                                 File.WriteAllText(Path.Combine(downloadPath, "DiscordStaffRoles.txt"), currentModRoles + role.Id.ToString() + "\n");
+                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                {
+                                    Name = "Added Mod Role",
+                                    IconUrl = Context.Guild.IconUrl
+                                };
+                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                {
+                                    Text = $"ID: {Context.User.Id}",
+                                    IconUrl = Context.User.GetAvatarUrl()
+                                };
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Author = author,
+                                    Color = new Color(0, 255, 0),
+                                    Footer = footer
+                                };
+                                embed.WithCurrentTimestamp();
+                                embed.Description = $"{Context.User.Mention} added {role.Mention} to the mod roles.";
                                 await Context.Channel.SendMessageAsync($"Added mod role **{role.Name}**.");
+                                await log.SendMessageAsync("", false, embed.Build());
                             }
                             return;
                         }
@@ -7452,7 +7646,27 @@ namespace FredBotNETCore.Modules.Public
                             else
                             {
                                 File.WriteAllText(Path.Combine(downloadPath, "DiscordStaff.txt"), currentModUsers + user.Id.ToString() + "\n");
+                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                {
+                                    Name = "Added Mod User",
+                                    IconUrl = Context.Guild.IconUrl
+                                };
+                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                {
+                                    Text = $"ID: {Context.User.Id}",
+                                    IconUrl = Context.User.GetAvatarUrl()
+                                };
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Author = author,
+                                    Color = new Color(0, 255, 0),
+                                    Footer = footer
+                                };
+                                embed.WithCurrentTimestamp();
+                                embed.Description = $"{Context.User.Mention} added {user.Mention} to the mod users.";
                                 await Context.Channel.SendMessageAsync($"Added mod **{user.Username}#{user.Discriminator}**.");
+                                await log.SendMessageAsync("", false, embed.Build());
                             }
                         }
                         else
@@ -7501,13 +7715,33 @@ namespace FredBotNETCore.Modules.Public
                     {
                         if (RoleInGuild(Context.Message, Context.Guild, mod) != null)
                         {
-                            ulong roleID = (RoleInGuild(Context.Message, Context.Guild, mod)).Id;
+                            SocketRole role = (RoleInGuild(Context.Message, Context.Guild, mod));
                             string modRoles = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaffRoles.txt"));
-                            if (modRoles.Contains(roleID.ToString()))
+                            if (modRoles.Contains(role.Id.ToString()))
                             {
-                                modRoles = modRoles.Replace(roleID.ToString() + "\n", string.Empty);
+                                modRoles = modRoles.Replace(role.Id.ToString() + "\n", string.Empty);
                                 File.WriteAllText(Path.Combine(downloadPath, "DiscordStaffRoles.txt"), modRoles);
+                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                {
+                                    Name = "Removed Mod Role",
+                                    IconUrl = Context.Guild.IconUrl
+                                };
+                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                {
+                                    Text = $"ID: {Context.User.Id}",
+                                    IconUrl = Context.User.GetAvatarUrl()
+                                };
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Author = author,
+                                    Color = new Color(255, 0, 0),
+                                    Footer = footer
+                                };
+                                embed.WithCurrentTimestamp();
+                                embed.Description = $"{Context.User.Mention} removed {role.Mention} from the mod roles.";
                                 await Context.Channel.SendMessageAsync($"Removed mod role **{mod}**.");
+                                await log.SendMessageAsync("", false, embed.Build());
                             }
                             else
                             {
@@ -7523,13 +7757,33 @@ namespace FredBotNETCore.Modules.Public
                     {
                         if (UserInGuild(Context.Message, Context.Guild, mod) != null)
                         {
-                            ulong userID = (UserInGuild(Context.Message, Context.Guild, mod)).Id;
+                            SocketUser user = (UserInGuild(Context.Message, Context.Guild, mod));
                             string modUsers = File.ReadAllText(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
-                            if (modUsers.Contains(userID.ToString()))
+                            if (modUsers.Contains(user.Id.ToString()))
                             {
-                                modUsers = modUsers.Replace(userID.ToString() + "\n", string.Empty);
+                                modUsers = modUsers.Replace(user.Id.ToString() + "\n", string.Empty);
                                 File.WriteAllText(Path.Combine(downloadPath, "DiscordStaff.txt"), modUsers);
+                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                {
+                                    Name = "Removed Mod User",
+                                    IconUrl = Context.Guild.IconUrl
+                                };
+                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                {
+                                    Text = $"ID: {Context.User.Id}",
+                                    IconUrl = Context.User.GetAvatarUrl()
+                                };
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Author = author,
+                                    Color = new Color(255, 0, 0),
+                                    Footer = footer
+                                };
+                                embed.WithCurrentTimestamp();
+                                embed.Description = $"{Context.User.Mention} removed {user.Mention} from the mod users.";
                                 await Context.Channel.SendMessageAsync($"Removed mod **{mod}**.");
+                                await log.SendMessageAsync("", false, embed.Build());
                             }
                             else
                             {
