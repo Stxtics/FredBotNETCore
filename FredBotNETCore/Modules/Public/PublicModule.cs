@@ -193,14 +193,6 @@ namespace FredBotNETCore.Modules.Public
 
         #region Owner
 
-        [Command("audit")]
-        [RequireOwner]
-        public async Task Audit()
-        {
-            Discord.Rest.RestAuditLogEntry audit = (await Context.Guild.GetAuditLogsAsync(1).FlattenAsync()).ElementAt(0);
-            await Context.Channel.SendMessageAsync(audit.Data.GetType().ToString());
-        }
-
         [Command("setbalance", RunMode = RunMode.Async)]
         [Alias("balanceset")]
         [Summary("Sets balance for a user")]
