@@ -6405,14 +6405,14 @@ namespace FredBotNETCore.Modules.Public
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message in {channel.Mention} .");
                     Purging = true;
                     await (Context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
-                    embed2.Description = $"**{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** message in {channel.Mention}.";
+                    embed2.Description = $"{Context.User.Mention} purged **{amount}** message in {channel.Mention}.";
                 }
                 else
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} messages in {channel.Mention} .");
                     Purging = true;
                     await (Context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
-                    embed2.Description = $"**{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** messages in {channel.Mention}.";
+                    embed2.Description = $"{Context.User.Mention} purged **{amount}** messages in {channel.Mention}.";
                 }
                 await log.SendMessageAsync("", false, embed2.Build());
                 Purging = false;
@@ -6432,14 +6432,14 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
                             Purging = true;
                             await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
-                            embed2.Description = $"**{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** message in {channel.Mention} from **{user.Username}#{user.Discriminator}**.";
+                            embed2.Description = $"{Context.User.Mention} purged **{amount}** message in {channel.Mention} from {user.Mention}.";
                         }
                         else
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} messages from {user.Mention} in {channel.Mention} .");
                             Purging = true;
                             await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
-                            embed2.Description = $" **{Context.User.Username}#{Context.User.Discriminator}** purged **{amount}** messages in {channel.Mention} from **{user.Username}#{user.Discriminator}**.";
+                            embed2.Description = $"{Context.User.Mention} purged **{amount}** messages in {channel.Mention} from {user.Mention}.";
                         }
                         await log.SendMessageAsync("", false, embed2.Build());
                         Purging = false;

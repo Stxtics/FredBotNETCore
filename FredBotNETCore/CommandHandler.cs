@@ -819,7 +819,7 @@ namespace FredBotNETCore
             string reason = null;
             foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
-                if (audit.Action == ActionType.MemberUpdated)
+                if (audit.Action == ActionType.MemberUpdated || audit.Action == ActionType.MemberRoleUpdated)
                 {
                     iUser = audit.User;
                     reason = audit.Reason;
@@ -830,7 +830,7 @@ namespace FredBotNETCore
             {
                 string nickname = user.Nickname;
                 string nickname2 = user2.Nickname;
-                if (iUser.Id == user.Id)
+                if (iUser == null || iUser.Id == user.Id)
                 {
                     if (nickname == null)
                     {
@@ -964,7 +964,7 @@ namespace FredBotNETCore
                 }
             }
 
-            if (iUser != null)
+            if (iUser != null && iUser.Id != message2.Author.Id)
             {
                 if (message2.Content.Length > 252)
                 {
