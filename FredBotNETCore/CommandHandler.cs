@@ -817,10 +817,12 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser iUser = null;
             string reason = null;
+            Discord.Rest.RestAuditLogEntry restAuditLog = null;
             foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
                 if (audit.Action == ActionType.MemberUpdated || audit.Action == ActionType.MemberRoleUpdated)
                 {
+                    restAuditLog = audit;
                     iUser = audit.User;
                     reason = audit.Reason;
                     break;
@@ -830,7 +832,7 @@ namespace FredBotNETCore
             {
                 string nickname = user.Nickname;
                 string nickname2 = user2.Nickname;
-                if (iUser == null || iUser.Id == user.Id)
+                if (iUser == null || iUser.Id == user.Id || restAuditLog.Action == ActionType.MemberRoleUpdated)
                 {
                     if (nickname == null)
                     {
