@@ -102,18 +102,21 @@ namespace FredBotNETCore.Modules.Public
         public static SocketUser UserInGuild(SocketUserMessage message, SocketGuild guild, string username)
         {
             SocketUser user = null;
-            if (message.MentionedUsers.Count > 0)
+            if (message != null)
             {
-                int argPos = 0;
-                if (message.HasStringPrefix("/", ref argPos))
+                if (message.MentionedUsers.Count > 0)
                 {
-                    user = message.MentionedUsers.First();
+                    int argPos = 0;
+                    if (message.HasStringPrefix("/", ref argPos))
+                    {
+                        user = message.MentionedUsers.First();
+                    }
+                    else if (message.HasMentionPrefix(guild.CurrentUser, ref argPos) && message.MentionedUsers.Count > 1)
+                    {
+                        user = message.MentionedUsers.ElementAt(1);
+                    }
+                    return user;
                 }
-                else if (message.HasMentionPrefix(guild.CurrentUser, ref argPos) && message.MentionedUsers.Count > 1)
-                {
-                    user = message.MentionedUsers.ElementAt(1);
-                }
-                return user;
             }
             if (ulong.TryParse(username, out ulong userid))
             {
@@ -189,6 +192,14 @@ namespace FredBotNETCore.Modules.Public
         #endregion
 
         #region Owner
+
+        [Command("audit")]
+        [RequireOwner]
+        public async Task Audit()
+        {
+            Discord.Rest.RestAuditLogEntry audit = (await Context.Guild.GetAuditLogsAsync(1).FlattenAsync()).ElementAt(0);
+            await Context.Channel.SendMessageAsync(audit.Data.GetType().ToString());
+        }
 
         [Command("setbalance", RunMode = RunMode.Async)]
         [Alias("balanceset")]
@@ -1055,7 +1066,7 @@ namespace FredBotNETCore.Modules.Public
             if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 HttpClient web = new HttpClient();
-                String text = await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt");
+                String text = await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt");
 
                 string levelname = GetBetween(text, "hint\":\"", "\"");
                 string person = GetBetween(text, "finder_name\":\"", "\"");
@@ -1232,7 +1243,7 @@ namespace FredBotNETCore.Modules.Public
                         String pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
                         if (pr2info.Contains(value: "{\"error\":\""))
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{Uri.UnescapeDataString(pr2name.Replace("`", string.Empty))}` does not exist or could not be found.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{Uri.UnescapeDataString(pr2name).Replace("`", string.Empty)}` does not exist or could not be found.");
                             return;
                         }
                         string rank = GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
@@ -1278,7 +1289,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         catch(Exception e)
                         {
-                            await ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                            await ExceptionInfo(Context.Client, e.Message, e.StackTrace);
                         }
                         embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
                         await Context.Channel.SendMessageAsync("", false, embed.Build());
@@ -1322,127 +1333,53 @@ namespace FredBotNETCore.Modules.Public
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
-                    if (id.Contains("%20%7C%20") && Context.Channel is IDMChannel)
-                    {
-                        try
-                        {
-                            string[] pr2users = id.Split("%20%7C%20");
-                            if (pr2users.Count() <= 5)
-                            {
-                                foreach (string pr2user in pr2users)
-                                {
-                                    String pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + pr2user);
 
-                                    string rank = GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
-                                    string hats = GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
-                                    string group = GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
-                                    string status = GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
-                                    string lastlogin = GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
-                                    string createdat = GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
-                                    string guild = GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
-                                    string name = Uri.UnescapeDataString(GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
-                                    if (group == "0")
-                                    {
-                                        group = "Guest";
-                                    }
-                                    if (group == "1")
-                                    {
-                                        group = "Member";
-                                    }
-                                    if (group == "2")
-                                    {
-                                        group = "Moderator";
-                                    }
-                                    if (group == "3")
-                                    {
-                                        group = "Admin";
-                                    }
-                                    if (guild.Length < 1)
-                                    {
-                                        guild = "none";
-                                    }
-                                    if (createdat.Contains("1970"))
-                                    {
-                                        createdat = "Age of Heroes";
-                                    }
-                                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                    {
-                                        Name = $"-- {name} --",
-                                        Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(name)
-                                    };
-                                    embed.WithAuthor(author);
-                                    embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
-                                    if (pr2info.Contains(value: "{\"error\":\""))
-                                    {
-                                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID `{pr2user.Replace("`", string.Empty)}` does not exist or could not be found.");
-                                    }
-                                    else
-                                    {
-                                        await Context.Channel.SendMessageAsync("", false, embed.Build());
-                                    }
-                                    await Task.Delay(1000);
-                                }
-                            }
-                            else
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you can only view a maximum of 5 users at a time.");
-                                return;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            await ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
-                        }
-                    }
-                    else
+                    String pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + id);
+                    if (pr2info.Contains(value: "{\"error\":\""))
                     {
-                        String pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + id);
-                        if (pr2info.Contains(value: "{\"error\":\""))
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID `{id.Replace("`", string.Empty)}` does not exist or could not be found.");
-                            return;
-                        }
-                        string rank = GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
-                        string hats = GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
-                        string group = GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
-                        string status = GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
-                        string lastlogin = GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
-                        string createdat = GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
-                        string guild = GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
-                        string name = Uri.UnescapeDataString(GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
-                        if (group == "0")
-                        {
-                            group = "Guest";
-                        }
-                        if (group == "1")
-                        {
-                            group = "Member";
-                        }
-                        if (group == "2")
-                        {
-                            group = "Moderator";
-                        }
-                        if (group == "3")
-                        {
-                            group = "Admin";
-                        }
-                        if (guild.Length < 1)
-                        {
-                            guild = "none";
-                        }
-                        if (createdat.Contains("1970"))
-                        {
-                            createdat = "Age of Heroes";
-                        }
-                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                        {
-                            Name = $"-- {name} --",
-                            Url = "https://pr2hub.com/player_search.php?name=" + name
-                        };
-                        embed.WithAuthor(author);
-                        embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
-                        await Context.Channel.SendMessageAsync("", false, embed.Build());
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID `{id}` does not exist or could not be found.");
+                        return;
                     }
+                    string rank = GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
+                    string hats = GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
+                    string group = GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
+                    string status = GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
+                    string lastlogin = GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
+                    string createdat = GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
+                    string guild = GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
+                    string name = Uri.UnescapeDataString(GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
+                    if (group == "0")
+                    {
+                        group = "Guest";
+                    }
+                    if (group == "1")
+                    {
+                        group = "Member";
+                    }
+                    if (group == "2")
+                    {
+                        group = "Moderator";
+                    }
+                    if (group == "3")
+                    {
+                        group = "Admin";
+                    }
+                    if (guild.Length < 1)
+                    {
+                        guild = "none";
+                    }
+                    if (createdat.Contains("1970"))
+                    {
+                        createdat = "Age of Heroes";
+                    }
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = $"-- {name} --",
+                        Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(name)
+                    };
+                    embed.WithAuthor(author);
+                    embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
             }
             else
@@ -1508,7 +1445,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         guildname = guild;
                     }
-                    String pr2info = await web.GetStringAsync("http://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
+                    String pr2info = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
 
                     if (pr2info.Contains(value: "{\"error\":\""))
                     {
@@ -1540,7 +1477,7 @@ namespace FredBotNETCore.Modules.Public
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
-                    embed.ThumbnailUrl = "http://pr2hub.com/emblems/" + guildpic;
+                    embed.ThumbnailUrl = "https://pr2hub.com/emblems/" + guildpic;
                     embed.Description = $"**Created At:** {createdat}\n**Members:** {members} ({active} active)\n**GP Total:** {gptotal}\n**GP Today:** {gptoday}\n**Description:** {note}";
 
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
@@ -1589,7 +1526,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
                         Name = $"-- {name} --",
-                        Url = "http://pr2hub.com/guild_search.php?id=" + id
+                        Url = "https://pr2hub.com/guild_search.php?id=" + id
                     };
                     EmbedBuilder embed = new EmbedBuilder()
                     {
@@ -1603,7 +1540,7 @@ namespace FredBotNETCore.Modules.Public
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
-                    embed.ThumbnailUrl = "http://pr2hub.com/emblems/" + guildpic;
+                    embed.ThumbnailUrl = "https://pr2hub.com/emblems/" + guildpic;
                     embed.Description = $"**Created At:** {createdat}\n**Members:** {members} ({active} active)\n**GP Total:** {gptotal}\n**GP Today:** {gptoday}\n**Description:** {note}";
 
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
@@ -1941,7 +1878,7 @@ namespace FredBotNETCore.Modules.Public
             if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 HttpClient web = new HttpClient();
-                String text = await web.GetStringAsync("http://pr2hub.com/guilds_top.php?");
+                String text = await web.GetStringAsync("https://pr2hub.com/guilds_top.php");
 
                 string[] guildlist = text.Split('}');
                 string guild1name = GetBetween(guildlist[0], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
@@ -2006,7 +1943,8 @@ namespace FredBotNETCore.Modules.Public
                 embed.WithFooter(footer);
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
-                    Name = $"PR2 Top 10 Guilds"
+                    Name = $"PR2 Top 10 Guilds",
+                    Url = "https://pr2hub.com/guilds_top.php"
                 };
                 embed.WithAuthor(author);
                 embed.WithCurrentTimestamp();
@@ -2161,7 +2099,7 @@ namespace FredBotNETCore.Modules.Public
                     try
                     {
                         HttpClient web = new HttpClient();
-                        String text = await web.GetStringAsync("http://pr2hub.com/bans/show_record.php?ban_id=" + id);
+                        String text = await web.GetStringAsync("https://pr2hub.com/bans/show_record.php?ban_id=" + id);
                         if (text.Contains("banned for 0 seconds on Jan 1, 1970 12:00 AM."))
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} the ban with the Id `{id}` does not exist or could not be found.");
@@ -2170,7 +2108,7 @@ namespace FredBotNETCore.Modules.Public
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
                             Name = $"Ban ID - {id}",
-                            Url = "http://pr2hub.com/bans/show_record.php?ban_id=" + id
+                            Url = "https://pr2hub.com/bans/show_record.php?ban_id=" + id
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
@@ -2277,7 +2215,7 @@ namespace FredBotNETCore.Modules.Public
             if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 HttpClient web = new HttpClient();
-                String text = await web.GetStringAsync("http://pr2hub.com/files/server_status_2.txt");
+                String text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
 
                 string[] pops = text.Split('}');
                 int pop = 0;
@@ -2299,8 +2237,13 @@ namespace FredBotNETCore.Modules.Public
                     IconUrl = Context.User.GetAvatarUrl(),
                     Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
                 };
+                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                {
+                    Name = "PR2 Total Online Users",
+                    Url = "https://pr2hub.com/server_status.php"
+                };
                 embed.WithFooter(footer);
-                embed.Title = "__PR2 Total Online Users__";
+                embed.WithAuthor(author);
                 embed.WithCurrentTimestamp();
                 embed.Description = $"The total number of users on PR2 currently is {pop}";
 
@@ -2370,7 +2313,7 @@ namespace FredBotNETCore.Modules.Public
                         status = status.Substring(11);
                         server = status;
                     }
-                    String text = await web.GetStringAsync("http://pr2hub.com/files/server_status_2.txt");
+                    String text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
                     if (text.ToLower().Contains(server.ToLower()))
                     {
                         string serverInfo = GetBetween(text.ToLower(), server.ToLower(), "}");
@@ -2405,8 +2348,13 @@ namespace FredBotNETCore.Modules.Public
                             IconUrl = Context.User.GetAvatarUrl(),
                             Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
                         };
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = $"Server Stats - {server}",
+                            Url = "https://pr2hub.com/server_status.php"
+                        };
                         embed.WithFooter(footer);
-                        embed.Title = $"__Server Stats - {server}__";
+                        embed.WithAuthor(author);
                         embed.AddField(y =>
                         {
                             y.Name = "Population";
@@ -2506,7 +2454,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         guildname = guild;
                     }
-                    string text = await web.GetStringAsync("http://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
+                    string text = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
                     if (text.Contains(value: "{\"error\":\""))
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild `{guildname.Replace("`", string.Empty)}` does not exist or could not be found.");
@@ -2516,7 +2464,7 @@ namespace FredBotNETCore.Modules.Public
                     string guildMembers = "";
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
-                        Url = "http://pr2hub.com/guild_search.php?name=" + guildname.Replace(" ", "%20"),
+                        Url = "https://pr2hub.com/guild_search.php?name=" + Uri.EscapeDataString(guildname),
                         Name = "Guild Members - " + guildname
                     };
                     EmbedBuilder embed = new EmbedBuilder()
@@ -2579,7 +2527,7 @@ namespace FredBotNETCore.Modules.Public
                     string guildMembers = "";
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
-                        Url = "http://pr2hub.com/guild_search.php?id=" + id,
+                        Url = "https://pr2hub.com/guild_search.php?id=" + id,
                         Name = "Guild Members - " + gName
                     };
                     EmbedBuilder embed = new EmbedBuilder()
@@ -2619,7 +2567,7 @@ namespace FredBotNETCore.Modules.Public
             {
                 HttpClient web = new HttpClient();
                 string hhServers = "", happyHour = "";
-                String text = await web.GetStringAsync("http://pr2hub.com/files/server_status_2.txt");
+                String text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
                 string[] servers = text.Split('}');
                 foreach (string server_name in servers)
                 {
@@ -2639,7 +2587,7 @@ namespace FredBotNETCore.Modules.Public
                 int count = hhServers.Split(',').Length - 1;
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
-                    Url = "http://pr2hub.com/server_status.php"
+                    Url = "https://pr2hub.com/server_status.php"
                 };
                 EmbedBuilder embed = new EmbedBuilder()
                 {
@@ -2709,7 +2657,7 @@ namespace FredBotNETCore.Modules.Public
                     string version = GetBetween(responseString, "&version0=", "&title0=");
                     string title = Uri.UnescapeDataString(GetBetween(responseString, "&title0=", "&rating0=")).Replace("+", " ");
                     string rating = GetBetween(responseString, "&rating0=", "&playCount0=");
-                    string plays = GetBetween(responseString, "&playCount0=", "&minLevel0=");
+                    string plays = int.Parse(GetBetween(responseString, "&playCount0=", "&minLevel0=")).ToString("N0");
                     string minLevel = GetBetween(responseString, "&minLevel0=", "&note0=");
                     string note = Uri.UnescapeDataString(GetBetween(responseString, "&note0=", "&userName0=")).Replace("+", " ");
                     string user = Uri.UnescapeDataString(GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
@@ -2769,7 +2717,7 @@ namespace FredBotNETCore.Modules.Public
                 String userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
                 string guild = GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
                 string id = GetBetween(userinfo, "\",\"userId\":\"", "\",\"hatColor2\":");
-                String guildinfo = await web.GetStringAsync("http://pr2hub.com/guild_info.php?getMembers=yes&name=" + guild);
+                String guildinfo = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guild);
                 string owner = GetBetween(guildinfo, "\",\"owner_id\":\"", "\",\"note\":\"");
                 if (id.Equals(owner))
                 {
@@ -2881,13 +2829,13 @@ namespace FredBotNETCore.Modules.Public
             if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 HttpClient web = new HttpClient();
-                String text = await web.GetStringAsync("http://pr2hub.com/files/server_status_2.txt");
+                String text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
                 string[] serversinfo = text.Split('}');
                 string pop = "", name = "", status = "", happyHour = "";
                 int serverId = 0;
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
-                    Url = "http://pr2hub.com/server_status.php",
+                    Url = "https://pr2hub.com/server_status.php",
                     Name = "Server Status"
                 };
                 EmbedBuilder embed = new EmbedBuilder()
@@ -2955,12 +2903,12 @@ namespace FredBotNETCore.Modules.Public
             if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 HttpClient web = new HttpClient();
-                String text = await web.GetStringAsync("http://pr2hub.com/staff.php");
+                String text = await web.GetStringAsync("https://pr2hub.com/staff.php");
                 string[] staff = text.Split("player_search");
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
                     Name = "Staff Online",
-                    Url = "http://pr2hub.com/staff.php"
+                    Url = "https://pr2hub.com/staff.php"
                 };
                 EmbedBuilder embed = new EmbedBuilder()
                 {
