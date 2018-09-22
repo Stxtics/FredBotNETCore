@@ -213,7 +213,7 @@ namespace FredBotNETCore.Modules.Public
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username}` does not exist or could not be found.");
                 }
             }
-            catch(Exception)
+            catch (Exception)
             {
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
@@ -257,7 +257,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireOwner]
         public async Task SetGame(string type = null, string streamUrl = null, [Remainder] string name = null)
         {
-            
+
             bool result = Uri.TryCreate(streamUrl, UriKind.Absolute, out Uri uriResult)
                        && (uriResult.Scheme == "http" || uriResult.Scheme == "https");
             if (result)
@@ -407,6 +407,13 @@ namespace FredBotNETCore.Modules.Public
                 "/skip - Vote to skip current song.\n" +
                 "/np - Displays current playing song.\n" +
                 "/queue - Displays song queue.\n" +
+                "**DMS Only**\n" +
+                "/balance - Get how much money you have or someone else has.\n" +
+                "/jackpot - Tells you how much money is in the jackpot.\n" +
+                "/leaderboard - Gets users with the highest money.\n" +
+                "/lotto - Have a go at winning the jackpot.\n" +
+                "/daily - Collect money the day.\n" +
+                "/pay - Pay a user money.\n" +
                 "**Everyone**\n" +
                 "/help - Tells you commands that you can use for me.\n" +
                 "/suggest - Lets you add a suggestion for the suggestions channel.\n" +
@@ -414,7 +421,7 @@ namespace FredBotNETCore.Modules.Public
                 "/weather - Get weather for a city.";
             embed.Title = "Fred the G. Cactus Commands";
             var parts = help.SplitInParts(2000);
-            foreach(string part in parts)
+            foreach (string part in parts)
             {
                 embed.Description = part;
                 await Context.User.SendMessageAsync("", false, embed.Build());
@@ -426,10 +433,70 @@ namespace FredBotNETCore.Modules.Public
 
         #region Everyone
 
+        [Command("pay", RunMode = RunMode.Async)]
+        [Alias("give")]
+        [Summary("Pay money to another user.")]
+        [RequireContext(ContextType.DM)]
+        public async Task Pay(string amount = null, [Remainder] string username = null)
+        {
+            var result = Database.CheckExistingUser(Context.User);
+            if (result.Count() <= 0)
+            {
+                Database.EnterUser(Context.User);
+            }
+            string pr2name = Database.GetPR2Name(Context.User);
+            if (pr2name.Equals("Not verified") || pr2name.Length <= 0)
+            {
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to verify yourself to use this command.");
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(amount) || !int.TryParse(amount, out int money) || string.IsNullOrWhiteSpace(username))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220)
+                    };
+                    embed.Title = "Command: /pay";
+                    embed.Description = "**Description:** Pay money to another user.\n**Usage:** /pay [amount] [user]\n**Example:** /pay 100 Jiggmin";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    try
+                    {
+                        if (Database.GetBalance(Context.User) > money)
+                        {
+                            if (UserInGuild(Context.Message, Context.Client.GetGuild(249657315576381450), username) != null)
+                            {
+                                SocketUser user = UserInGuild(Context.Message, Context.Client.GetGuild(249657315576381450), username);
+                                Database.SetBalance(Context.User, Database.GetBalance(Context.User) - money);
+                                Database.SetBalance(user, Database.GetBalance(user) + money);
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully paid **{user.Username}#{user.Discriminator} ${money.ToString("N0")}**.\nYour new balance is ${Database.GetBalance(Context.User).ToString("N0")}.");
+                                await user.SendMessageAsync($"{user.Mention} you have been paid **${money}** by **{Context.User.Username}#{Context.User.Discriminator}**");
+                            }
+                            else
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username.Replace("`", string.Empty)}` does not exist or could not be found.");
+                            }
+                        }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you do not have enough money to do that.");
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    }
+                }
+            }
+        }
+
         [Command("balance", RunMode = RunMode.Async)]
         [Alias("bal")]
         [Summary("Tells a user how much money they have.")]
-        [RequireContext(ContextType.Guild)]
+        [RequireContext(ContextType.DM)]
         public async Task Balance([Remainder] string username = null)
         {
             var result = Database.CheckExistingUser(Context.User);
@@ -453,9 +520,9 @@ namespace FredBotNETCore.Modules.Public
                 {
                     try
                     {
-                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
+                        if (UserInGuild(Context.Message, Context.Client.GetGuild(249657315576381450), username) != null)
                         {
-                            SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
+                            SocketUser user = UserInGuild(Context.Message, Context.Client.GetGuild(249657315576381450), username);
                             result = Database.CheckExistingUser(user);
                             if (result.Count() <= 0)
                             {
@@ -480,7 +547,7 @@ namespace FredBotNETCore.Modules.Public
         [Command("jackpot", RunMode = RunMode.Async)]
         [Alias("lottobal")]
         [Summary("See how much money is in the jackpot.")]
-        [RequireContext(ContextType.Guild)]
+        [RequireContext(ContextType.DM)]
         public async Task Jackpot()
         {
             var result = Database.CheckExistingUser(Context.User);
@@ -498,13 +565,13 @@ namespace FredBotNETCore.Modules.Public
                 StreamReader lotto = new StreamReader(path: Path.Combine(downloadPath, "LottoBalance.txt"));
                 int lottobal = Convert.ToInt32(lotto.ReadLine());
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} the jackpot is currently worth **${lottobal.ToString("N0")}**.");
-            } 
+            }
         }
 
         [Command("leaderboard", RunMode = RunMode.Async)]
         [Alias("lb")]
         [Summary("Shows users with the most money.")]
-        [RequireContext(ContextType.Guild)]
+        [RequireContext(ContextType.DM)]
         public async Task Leaderboard()
         {
             var result = Database.CheckExistingUser(Context.User);
@@ -522,7 +589,7 @@ namespace FredBotNETCore.Modules.Public
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     Name = "Leaderboard",
-                    IconUrl = Context.Guild.IconUrl
+                    IconUrl = Context.Client.GetGuild(249657315576381450).IconUrl
                 };
                 EmbedBuilder embed = new EmbedBuilder()
                 {
@@ -550,10 +617,10 @@ namespace FredBotNETCore.Modules.Public
                     {
                         try
                         {
-                            leaderboard = leaderboard + (Context.Client.GetUser(Convert.ToUInt64(userid)).Username + "#" + Context.Client.GetUser(Convert.ToUInt64(userid)).Discriminator + " - " + topBalance.ElementAt(i) + "\n");
+                            leaderboard = leaderboard + "**" + (i + 1).ToString() + ".**" + (Context.Client.GetUser(Convert.ToUInt64(userid)).Username + "#" + Context.Client.GetUser(Convert.ToUInt64(userid)).Discriminator + " - " + topBalance.ElementAt(i) + "\n");
                             i++;
                         }
-                        catch(Exception)
+                        catch (Exception)
                         {
                             //ignore
                         }
@@ -561,7 +628,7 @@ namespace FredBotNETCore.Modules.Public
                     embed.Description = leaderboard;
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     await ExceptionInfo(Context.Client, e.Message, e.StackTrace);
                 }
@@ -571,7 +638,7 @@ namespace FredBotNETCore.Modules.Public
         [Command("lotto", RunMode = RunMode.Async)]
         [Alias("lottery")]
         [Summary("Have a go at winning the jackpot.")]
-        [RequireContext(ContextType.Guild)]
+        [RequireContext(ContextType.DM)]
         public async Task Lotto(string ticketsS = null)
         {
             var result = Database.CheckExistingUser(Context.User);
@@ -654,7 +721,7 @@ namespace FredBotNETCore.Modules.Public
         [Command("daily", RunMode = RunMode.Async)]
         [Alias("work")]
         [Summary("Collect daily cash.")]
-        [RequireContext(ContextType.Guild)]
+        [RequireContext(ContextType.DM)]
         public async Task Daily()
         {
             var result = Database.CheckExistingUser(Context.User);
@@ -798,7 +865,7 @@ namespace FredBotNETCore.Modules.Public
                                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{username}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
                                     return;
                                 }
-                                Database.VerifyUser(user, username); 
+                                Database.VerifyUser(user, username);
                                 SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
                                 embed.Description = $"{Context.User.Mention} changed their verified account from **{pr2name}** to **{username}**.";
                                 await channel.SendMessageAsync("", false, embed.Build());
@@ -1051,7 +1118,7 @@ namespace FredBotNETCore.Modules.Public
         #region PR2 Commands
 
         [Command("hint", RunMode = RunMode.Async)]
-        [Alias("arti","artifact")]
+        [Alias("arti", "artifact")]
         [Summary("Tells the user the current artifact hint.")]
         public async Task Hint()
         {
@@ -1279,7 +1346,7 @@ namespace FredBotNETCore.Modules.Public
                             };
                             embed.WithAuthor(author);
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             await ExceptionInfo(Context.Client, e.Message, e.StackTrace);
                         }
@@ -1675,7 +1742,7 @@ namespace FredBotNETCore.Modules.Public
         }
 
         [Command("role", RunMode = RunMode.Async)]
-        [Alias("joinrole","leaverole")]
+        [Alias("joinrole", "leaverole")]
         [Summary("Adds HH, Arti, Trapper, Glitcher, Fruster, Racer or PR2 role.")]
         public async Task Role([Remainder] string roleName = null)
         {
@@ -1796,13 +1863,13 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName.Replace("`", string.Empty)}` does not exist or could not be found.");
                         }
                     }
-                    catch(Exception)
+                    catch (Exception)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role with ID: `{roleName}` does not exist or could not be found.");
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 await ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
             }
@@ -2021,7 +2088,7 @@ namespace FredBotNETCore.Modules.Public
                     {
                         text = await web.GetStringAsync("https://stats.foldingathome.org/api/donor/" + fahuser.Replace(' ', '_'));
                     }
-                    catch(HttpRequestException)
+                    catch (HttpRequestException)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
@@ -2921,7 +2988,7 @@ namespace FredBotNETCore.Modules.Public
                     if (status.Contains("Playing on"))
                     {
                         status = GetBetween(name, "</a></td><td>Playing on ", "</td><td>");
-                        string pr2Name = GetBetween(name, "; text-decoration: underline;'>", "</a></td><td>").Replace("&nbsp;"," ");
+                        string pr2Name = GetBetween(name, "; text-decoration: underline;'>", "</a></td><td>").Replace("&nbsp;", " ");
                         embed.Description = embed.Description + pr2Name + "(" + status + "), ";
                     }
                 };
@@ -2945,878 +3012,6 @@ namespace FredBotNETCore.Modules.Public
         #endregion
 
         #region Moderator
-
-        [Command("judge", RunMode = RunMode.Async)]
-        [Alias("ggp")]
-        [Summary("Post a judge result.")]
-        [RequireContext(ContextType.Guild)]
-        public async Task Judge(string username, string cupS, string time1S, string time2S, string time3S, string time4S, string time5S = null)
-        {
-            if ((Context.User as SocketGuildUser).Roles.Any(e => e.Name.ToUpperInvariant() == "GGP Judge".ToUpperInvariant()))
-            {
-                bool race1dnf = false, race2dnf = false, race3dnf = false, race4dnf = false, race5dnf = false;
-                bool race1dns = false, race2dns = false, race3dns = false, race4dns = false, race5dns = false;
-                if (time1S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase) || time1S.Equals("DNS"))
-                {
-                    time1S = "0:00:00";
-                    if (time1S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        race1dnf = true;
-                    }
-                    else
-                    {
-                        race1dns = true;
-                    }
-                }
-                if (time2S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase) || time2S.Equals("DNS"))
-                {
-                    time2S = "0:00:00";
-                    if (time2S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        race2dnf = true;
-                    }
-                    else
-                    {
-                        race2dns = true;
-                    }
-                }
-                if (time3S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase) || time3S.Equals("DNS"))
-                {
-                    time3S = "0:00:00";
-                    if (time3S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        race3dnf = true;
-                    }
-                    else
-                    {
-                        race3dns = true;
-                    }
-                }
-                if (time4S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase) || time4S.Equals("DNS"))
-                {
-                    time4S = "0:00:00";
-                    if (time4S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        race4dnf = true;
-                    }
-                    else
-                    {
-                        race4dns = true;
-                    }
-                }
-                if (time5S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase) || time5S.Equals("DNS"))
-                {
-                    time5S = "0:00:00";
-                    if (time5S.Equals("DNF", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        race5dnf = true;
-                    }
-                    else
-                    {
-                        race5dns = true;
-                    }
-                }
-                if (string.IsNullOrWhiteSpace(username) || !int.TryParse(cupS, out int cup) || !DateTime.TryParseExact(time1S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt1) 
-                    || !DateTime.TryParseExact(time2S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt2) 
-                    || !DateTime.TryParseExact(time3S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt3) 
-                    || !DateTime.TryParseExact(time4S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt4))
-                {
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 220, 220)
-                    };
-                    embed.Title = "Command: /judge";
-                    embed.Description = "**Description:** Post a judge result.\n**Usage:** /judge [user] [cup] [time1] [time2] [time3] [time4] [optional time5]\n" +
-                        "**Example:** /judge Jiggmin 1 1:02:00 1:07:00 1:25:00 1:27:00";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    try
-                    {
-                        if (UserInGuild(Context.Message, Context.Guild, username) != null)
-                        {
-                            SocketUser user = UserInGuild(Context.Message, Context.Guild, username);
-                            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                            {
-                                Name = user.Username + "#" + user.Discriminator,
-                                IconUrl = user.GetAvatarUrl()
-                            };
-                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                            {
-                                IconUrl = Context.User.GetAvatarUrl(),
-                                Text = $"Judged by: {Context.User.Username}#{Context.User.Discriminator}"
-                            };
-                            EmbedBuilder embed = new EmbedBuilder()
-                            {
-                                Author = auth,
-                                Footer = footer
-                            };
-                            embed.WithCurrentTimestamp();
-                            TimeSpan total;
-                            SocketTextChannel ggp = Context.Client.GetChannel(351132984134598670) as SocketTextChannel;
-                            if (string.IsNullOrWhiteSpace(time5S))
-                            {
-                                await Context.Message.DeleteAsync();
-                                switch (cup)
-                                {
-                                    case 1:
-                                        embed.Description = "1. Retro – 5:01:00";
-                                        TimeSpan retro1 = new TimeSpan(0, 0, 1, 2, 0);
-                                        TimeSpan retro2 = new TimeSpan(0, 0, 1, 7, 0);
-                                        TimeSpan retro3 = new TimeSpan(0, 0, 1, 25, 0);
-                                        TimeSpan retro4 = new TimeSpan(0, 0, 1, 27, 0);
-                                        TimeSpan retroCupTime = new TimeSpan(0, 0, 5, 1, 0);
-                                        TimeSpan retroExpertTime = new TimeSpan(0, 0, 4, 49, 0);
-                                        if (race1dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nStarter Steps by Kinx – DNF";
-                                        }
-                                        else if (race1dns)
-                                        {
-                                            embed.Description = embed.Description + "\nStarter Steps by Kinx – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(retro1, dt1.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nStarter Steps by Kinx – " + time1S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nStarter Steps by Kinx – " + time1S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race2dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nShangriLa by Juustokakku – DNF";
-                                        }
-                                        else if (race2dns)
-                                        {
-                                            embed.Description = embed.Description + "\nShangriLa by Juustokakku – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(retro2, dt2.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nShangriLa by Juustokakku – " + time2S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nShangriLa by Juustokakku – " + time2S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race3dnf)
-                                        {
-                                            embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – DNF";
-                                        }
-                                        else if (race3dns)
-                                        {
-                                            embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(retro3, dt3.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – " + time3S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\n~Fantasy World~ by Gerben – " + time3S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race4dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nPerfect Storm by Colind – DNF";
-                                        }
-                                        else if (race4dns)
-                                        {
-                                            embed.Description = embed.Description + "\nPerfect Storm by Colind – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(retro4, dt4.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nPerfect Storm by Colind – " + time4S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nPerfect Storm by Colind – " + time4S + " <:fred:264982794311041035>";
-                                        }
-                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                        if (TimeSpan.Compare(retroCupTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                        }
-                                        else if (TimeSpan.Compare(retroCupTime, total) > 0 && TimeSpan.Compare(retroExpertTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                        }
-                                        await ggp.SendMessageAsync("", false, embed.Build());
-                                        break;
-                                    case 2:
-                                        embed.Description = "2. Space – 7:22:00";
-                                        TimeSpan space1 = new TimeSpan(0, 0, 1, 20, 0);
-                                        TimeSpan space2 = new TimeSpan(0, 0, 1, 47, 0);
-                                        TimeSpan space3 = new TimeSpan(0, 0, 2, 0, 0);
-                                        TimeSpan space4 = new TimeSpan(0, 0, 2, 15, 0);
-                                        TimeSpan spaceCupTime = new TimeSpan(0, 0, 7, 22, 0);
-                                        TimeSpan spaceExpertTime = new TimeSpan(0, 0, 6, 55, 0);
-                                        if (race1dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – DNF";
-                                        }
-                                        else if (race1dns)
-                                        {
-                                            embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(space1, dt1.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – " + time1S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nMission: Disappearance by Cooldude90 – " + time1S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race2dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – DNF";
-                                        }
-                                        else if (race2dns)
-                                        {
-                                            embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(space2, dt2.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – " + time2S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nSpaceflight 2 by Makie98 – " + time2S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race3dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – DNF";
-                                        }
-                                        else if (race3dns)
-                                        {
-                                            embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(space3, dt3.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – " + time3S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nGalaxy Run 3 by The Hat Bonuser – " + time3S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race4dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – DNF";
-                                        }
-                                        else if (race4dns)
-                                        {
-                                            embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(space4, dt4.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – " + time4S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nCosmic Journey by Joltghonz – " + time4S + " <:fred:264982794311041035>";
-                                        }
-                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                        if (TimeSpan.Compare(spaceCupTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                        }
-                                        else if (TimeSpan.Compare(spaceCupTime, total) > 0 && TimeSpan.Compare(spaceExpertTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                        }
-                                        await ggp.SendMessageAsync("", false, embed.Build());
-                                        break;
-                                    case 3:
-                                        embed.Description = "3. Speed – 5:10:00";
-                                        TimeSpan speed1 = new TimeSpan(0, 0, 0, 50, 0);
-                                        TimeSpan speed2 = new TimeSpan(0, 0, 1, 0, 0);
-                                        TimeSpan speed3 = new TimeSpan(0, 0, 1, 35, 0);
-                                        TimeSpan speed4 = new TimeSpan(0, 0, 1, 45, 0);
-                                        TimeSpan speedCupTime = new TimeSpan(0, 0, 5, 10, 0);
-                                        TimeSpan speedExpertTime = new TimeSpan(0, 0, 4, 50, 0);
-                                        if (race1dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nLandscape by Campaigns – DNF";
-                                        }
-                                        else if (race1dns)
-                                        {
-                                            embed.Description = embed.Description + "\nLandscape by Campaigns – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(speed1, dt1.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nLandscape by Campaigns – " + time1S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nLandscape by Campaigns – " + time1S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race2dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – DNF";
-                                        }
-                                        else if (race2dns)
-                                        {
-                                            embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(speed2, dt2.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – " + time2S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nPlasma Ball by Atomic Galaxy – " + time2S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race3dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nYx by Evil Crash – DNF";
-                                        }
-                                        else if (race3dns)
-                                        {
-                                            embed.Description = embed.Description + "\nYx by Evil Crash – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(speed3, dt3.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nYx by Evil Crash – " + time3S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nYx by Evil Crash – " + time3S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race4dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nRage! by Good Job Man – DNF";
-                                        }
-                                        else if (race4dns)
-                                        {
-                                            embed.Description = embed.Description + "\nRage! by Good Job Man – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(speed4, dt4.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nRage! by Good Job Man – " + time4S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nRage! by Good Job Man – " + time4S + " <:fred:264982794311041035>";
-                                        }
-                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                        if (TimeSpan.Compare(speedCupTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                        }
-                                        else if (TimeSpan.Compare(speedCupTime, total) > 0 && TimeSpan.Compare(speedExpertTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                        }
-                                        await ggp.SendMessageAsync("", false, embed.Build());
-                                        break;
-                                    case 4:
-                                        embed.Description = "4. Desert – 5:48:00";
-                                        TimeSpan desert1 = new TimeSpan(0, 0, 0, 47, 0);
-                                        TimeSpan desert2 = new TimeSpan(0, 0, 1, 2, 0);
-                                        TimeSpan desert3 = new TimeSpan(0, 0, 1, 27, 0);
-                                        TimeSpan desert4 = new TimeSpan(0, 0, 2, 32, 0);
-                                        TimeSpan desertCupTime = new TimeSpan(0, 0, 5, 48, 0);
-                                        TimeSpan desertExpertTime = new TimeSpan(0, 0, 5, 40, 0);
-                                        if (race1dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – DNF";
-                                        }
-                                        else if (race1dns)
-                                        {
-                                            embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(desert1, dt1.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – " + time1S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nJourney To Fred by RidePonyRide – " + time1S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race2dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – DNF";
-                                        }
-                                        else if (race2dns)
-                                        {
-                                            embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(desert2, dt2.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – " + time2S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nJungle Adventure by Forgiveness – " + time2S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race3dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nPit of Despair by Ringstaart – DNF";
-                                        }
-                                        else if (race3dns)
-                                        {
-                                            embed.Description = embed.Description + "\nPit of Despair by Ringstaart – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(desert3, dt3.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nPit of Despair by Ringstaart – " + time3S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nPit of Despair by Ringstaart – " + time3S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race4dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – DNF";
-                                        }
-                                        else if (race4dns)
-                                        {
-                                            embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(desert4, dt4.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – " + time4S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nPitfall Valley by Shadow Z – " + time4S + " <:fred:264982794311041035>";
-                                        }
-                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                        if (TimeSpan.Compare(desertCupTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                        }
-                                        else if (TimeSpan.Compare(desertCupTime, total) > 0 && TimeSpan.Compare(desertExpertTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                        }
-                                        await ggp.SendMessageAsync("", false, embed.Build());
-                                        break;
-                                    case 5:
-                                        embed.Description = "5. Nature – 7:37:00";
-                                        TimeSpan nature1 = new TimeSpan(0, 0, 1, 30, 0);
-                                        TimeSpan nature2 = new TimeSpan(0, 0, 1, 25, 0);
-                                        TimeSpan nature3 = new TimeSpan(0, 0, 1, 25, 0);
-                                        TimeSpan nature4 = new TimeSpan(0, 0, 3, 17, 0);
-                                        TimeSpan natureCupTime = new TimeSpan(0, 0, 7, 37, 0);
-                                        TimeSpan natureExpertTime = new TimeSpan(0, 0, 7, 10, 0);
-                                        if (race1dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – DNF";
-                                        }
-                                        else if (race1dns)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(nature1, dt1.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – " + time1S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nThe Heaven by RedDragonEye – " + time1S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race2dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nLost Woods by Surcosman – DNF";
-                                        }
-                                        else if (race2dns)
-                                        {
-                                            embed.Description = embed.Description + "\nLost Woods by Surcosman – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(nature2, dt2.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nLost Woods by Surcosman – " + time2S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nLost Woods by Surcosman – " + time2S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race3dnf)
-                                        {
-                                            embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – DNF";
-                                        }
-                                        else if (race3dns)
-                                        {
-                                            embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(nature3, dt3.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – " + time3S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\n~Oceana~ by Astecarmyman – " + time3S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race4dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – DNF";
-                                        }
-                                        else if (race4dns)
-                                        {
-                                            embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(nature4, dt4.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – " + time4S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nDown You Go by Team-Rotomman – " + time4S + " <:fred:264982794311041035>";
-                                        }
-                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                        if (TimeSpan.Compare(natureCupTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                        }
-                                        else if (TimeSpan.Compare(natureCupTime, total) > 0 && TimeSpan.Compare(natureExpertTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                        }
-                                        await ggp.SendMessageAsync("", false, embed.Build());
-                                        break;
-                                    case 6:
-                                        embed.Description = "6. Dark – 7:30:00";
-                                        TimeSpan dark1 = new TimeSpan(0, 0, 1, 40, 0);
-                                        TimeSpan dark2 = new TimeSpan(0, 0, 1, 50, 0);
-                                        TimeSpan dark3 = new TimeSpan(0, 0, 2, 20, 0);
-                                        TimeSpan dark4 = new TimeSpan(0, 0, 1, 40, 0);
-                                        TimeSpan darkCupTime = new TimeSpan(0, 0, 7, 30, 0);
-                                        TimeSpan darkExpertTime = new TimeSpan(0, 0, 7, 10, 0);
-                                        if (race1dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nDark Manor by Se!tres – DNF";
-                                        }
-                                        else if (race1dns)
-                                        {
-                                            embed.Description = embed.Description + "\nDark Manor by Se!tres – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(dark1, dt1.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nDark Manor by Se!tres – " + time1S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nDark Manor by Se!tres – " + time1S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race2dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – DNF";
-                                        }
-                                        else if (race2dns)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(dark2, dt2.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – " + time2S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nThe Nightmare by Pwn25 – " + time2S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race3dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nExodus by Mr Propre – DNF";
-                                        }
-                                        else if (race3dns)
-                                        {
-                                            embed.Description = embed.Description + "\nExodus by Mr Propre – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(dark3, dt3.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nExodus by Mr Propre – " + time3S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nExodus by Mr Propre – " + time3S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race4dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – DNF";
-                                        }
-                                        else if (race4dns)
-                                        {
-                                            embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(dark4, dt4.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – " + time4S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nOminous Escape by TritiumGlows – " + time4S + " <:fred:264982794311041035>";
-                                        }
-                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                        if (TimeSpan.Compare(darkCupTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                        }
-                                        else if (TimeSpan.Compare(darkCupTime, total) > 0 && TimeSpan.Compare(darkExpertTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                        }
-                                        await ggp.SendMessageAsync("", false, embed.Build());
-                                        break;
-                                    case 7:
-                                        embed.Description = "7. Quest – 13:05:00";
-                                        TimeSpan quest1 = new TimeSpan(0, 0, 2, 0, 0);
-                                        TimeSpan quest2 = new TimeSpan(0, 0, 1, 35, 0);
-                                        TimeSpan quest3 = new TimeSpan(0, 0, 4, 30, 0);
-                                        TimeSpan quest4 = new TimeSpan(0, 0, 5, 0, 0);
-                                        TimeSpan questCupTime = new TimeSpan(0, 0, 13, 5, 0);
-                                        TimeSpan questExpertTime = new TimeSpan(0, 0, 12, 15, 0);
-                                        if (race1dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Time Machine by Sanzep – DNF";
-                                        }
-                                        else if (race1dns)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Time Machine by Sanzep – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(quest1, dt1.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Time Machine by Sanzep – " + time1S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nThe Time Machine by Sanzep – " + time1S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race2dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nSweetland GTT by JGPrix – DNF";
-                                        }
-                                        else if (race2dns)
-                                        {
-                                            embed.Description = embed.Description + "\nSweetland GTT by JGPrix – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(quest2, dt2.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nSweetland GTT by JGPrix – " + time2S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nSweetland GTT by JGPrix – " + time2S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race3dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nElements by Airock – DNF";
-                                        }
-                                        else if (race3dns)
-                                        {
-                                            embed.Description = embed.Description + "\nElements by Airock – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(quest3, dt3.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nElements by Airock – " + time3S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nElements by Airock – " + time3S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race4dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nZone by What(O o) – DNF";
-                                        }
-                                        else if (race4dns)
-                                        {
-                                            embed.Description = embed.Description + "\nZone by What(O o) – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(quest4, dt4.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nZone by What(O o) – " + time4S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nZone by What(O o) – " + time4S + " <:fred:264982794311041035>";
-                                        }
-                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                        if (TimeSpan.Compare(questCupTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                        }
-                                        else if (TimeSpan.Compare(questCupTime, total) > 0 && TimeSpan.Compare(questExpertTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                        }
-                                        await ggp.SendMessageAsync("", false, embed.Build());
-                                        break;
-                                    case 8:
-                                        embed.Description = "8. Overworld – 6:10:00";
-                                        TimeSpan overworld1 = new TimeSpan(0, 0, 1, 0, 0);
-                                        TimeSpan overworld2 = new TimeSpan(0, 0, 1, 20, 0);
-                                        TimeSpan overworld3 = new TimeSpan(0, 0, 1, 50, 0);
-                                        TimeSpan overworld4 = new TimeSpan(0, 0, 2, 0, 0);
-                                        TimeSpan overworldCupTime = new TimeSpan(0, 0, 6, 10, 0);
-                                        TimeSpan overworldExpertTime = new TimeSpan(0, 0, 5, 55, 0);
-                                        if (race1dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – DNF";
-                                        }
-                                        else if (race1dns)
-                                        {
-                                            embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(overworld1, dt1.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – " + time1S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nYOSHI'S ISLAND by AlphaZ – " + time1S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race2dnf)
-                                        {
-                                            embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – DNF";
-                                        }
-                                        else if (race2dns)
-                                        {
-                                            embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(overworld2, dt2.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – " + time2S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\n~Mt. Dragon~ by Lolpig9 – " + time2S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race3dnf)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – DNF";
-                                        }
-                                        else if (race3dns)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(overworld3, dt3.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – " + time3S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nThe Adventure by Nateagnoli – " + time3S + " <:fred:264982794311041035>";
-                                        }
-                                        if (race4dnf)
-                                        {
-                                            embed.Description = embed.Description + "\n~Utherworld~ by TRUC – DNF";
-                                        }
-                                        else if (race4dns)
-                                        {
-                                            embed.Description = embed.Description + "\n~Utherworld~ by TRUC – DNS";
-                                        }
-                                        else if (TimeSpan.Compare(overworld4, dt4.TimeOfDay) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\n~Utherworld~ by TRUC – " + time4S;
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\n~Utherworld~ by TRUC – " + time4S + " <:fred:264982794311041035>";
-                                        }
-                                        total = dt1.TimeOfDay + dt2.TimeOfDay + dt3.TimeOfDay + dt4.TimeOfDay;
-                                        if (TimeSpan.Compare(overworldCupTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1);
-                                        }
-                                        else if (TimeSpan.Compare(overworldCupTime, total) > 0 && TimeSpan.Compare(overworldExpertTime, total) <= 0)
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035>";
-                                        }
-                                        else
-                                        {
-                                            embed.Description = embed.Description + "\nTotal: " + total.Minutes + ":" + total.Seconds + ":" + total.Milliseconds.ToString().Substring(0, total.Milliseconds.ToString().Length - 1) + " <:fred:264982794311041035> <:fred:264982794311041035>";
-                                        }
-                                        await ggp.SendMessageAsync("", false, embed.Build());
-                                        break;
-                                }
-                            }
-                            else if (!DateTime.TryParseExact(time5S, "m:ss:ff", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt5))
-                            {
-                                EmbedBuilder embed2 = new EmbedBuilder()
-                                {
-                                    Color = new Color(220, 220, 220)
-                                };
-                                embed2.Title = "Command: /judge";
-                                embed2.Description = "**Description:** Post a judge result.\n**Usage:** /judge [user] [cup] [time1] [time2] [time3] [time4] [optional time5]\n" +
-                                    "**Example:** /judge Jiggmin 1 1:02:00 1:07:00 1:25:00 1:27:00";
-                                await Context.Channel.SendMessageAsync("", false, embed2.Build());
-                            }
-                            else
-                            {
-                                await Context.Message.DeleteAsync();
-                                switch (cup)
-                                {
-                                    case 1:
-                                        embed.Description = "1. Velocity – 6:24:00 – 6:10:00";
-                                        break;
-                                    case 2:
-                                        embed.Description = "2. Night – 6:49:00 – 6:35:00";
-                                        break;
-                                    case 3:
-                                        embed.Description = "3. RoundTrip – 7:12:00 – 6:55:00";
-                                        break;
-                                    case 4:
-                                        embed.Description = "4. Cosmos – 9:02:00 – 8:40:00";
-                                        break;
-                                    case 5:
-                                        embed.Description = "5. Freedom – 8:07:00 – 7:50:00";
-                                        break;
-                                    case 6:
-                                        embed.Description = "6. Ancient – 9:19:00 – 9:00:00";
-                                        break;
-                                    case 7:
-                                        embed.Description = "7. Exotic – 6:14:00 – 6:00:00";
-                                        break;
-                                    case 8:
-                                        embed.Description = "8. PlatformRacing – 13:22:00 – 13:05:00g";
-                                        break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
-                    }
-                }
-            }
-            else
-            {
-                return;
-            }
-        }
 
         [Command("blacklistmusic", RunMode = RunMode.Async)]
         [Alias("musicblacklist")]
@@ -4019,7 +3214,7 @@ namespace FredBotNETCore.Modules.Public
         }
 
         [Command("blacklistsuggestions", RunMode = RunMode.Async)]
-        [Alias("blacklistsuggestion","suggestionblacklist","suggestionsblacklist")]
+        [Alias("blacklistsuggestion", "suggestionblacklist", "suggestionsblacklist")]
         [Summary("Blacklist a user from using the /suggest command")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
@@ -4416,20 +3611,20 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find channel `{channelName}`.");
                         }
                     }
-                    catch(Exception)
+                    catch (Exception)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel with ID: `{channelName}` does not exist or could not be found.");
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 await ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
             }
         }
 
         [Command("membercount", RunMode = RunMode.Async)]
-        [Alias("mcount","usercount","ucount")]
+        [Alias("mcount", "usercount", "ucount")]
         [Summary("Get the server member count")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
@@ -4585,7 +3780,7 @@ namespace FredBotNETCore.Modules.Public
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role `{roleName}`.");
                     }
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
@@ -4780,7 +3975,7 @@ namespace FredBotNETCore.Modules.Public
                 bool isBanned = false;
                 IUser user = null;
                 var bans = await Context.Guild.GetBansAsync();
-                foreach(IBan ban in bans)
+                foreach (IBan ban in bans)
                 {
                     if (ban.User.Username == username || ban.User.Id.ToString() == username)
                     {
@@ -4891,12 +4086,12 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
-                        if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= ((Context.Client as DiscordSocketClient).GetUser(383927022583545859) as SocketGuildUser).Roles.ElementAt(1).Position)
+                        if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= (Context.Client.GetUser(383927022583545859) as SocketGuildUser).Roles.ElementAt(1).Position)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
-                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        SocketTextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
                             Name = $"Case {Database.CaseCount() + 1} | Undeafen | {user.Username}#{user.Discriminator}",
@@ -4931,8 +4126,15 @@ namespace FredBotNETCore.Modules.Public
                             Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             await banlog.SendMessageAsync("", false, embed.Build());
                             await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was undeafened.");
-                            await user.SendMessageAsync($"You have been undeafened on {Context.Guild.Name} by {Context.User.Mention}");
                             await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
+                            try
+                            {
+                                await user.SendMessageAsync($"You have been undeafened on {Context.Guild.Name} by {Context.User.Mention}");
+                            }
+                            catch (Discord.Net.HttpException)
+                            {
+                                //cant send message
+                            }
                         }
                         else
                         {
@@ -4945,8 +4147,15 @@ namespace FredBotNETCore.Modules.Public
                             Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             await banlog.SendMessageAsync("", false, embed.Build());
                             await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was undeafened.");
-                            await user.SendMessageAsync($"You have been undeafened on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
                             await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
+                            try
+                            {
+                                await user.SendMessageAsync($"You have been undeafened on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
+                            }
+                            catch (Discord.Net.HttpException)
+                            {
+                                //cant send message
+                            }
                         }
                     }
                     else
@@ -5036,8 +4245,15 @@ namespace FredBotNETCore.Modules.Public
                             Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             await banlog.SendMessageAsync("", false, embed.Build());
                             await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was deafened.");
-                            await user.SendMessageAsync($"You have been deafened on {Context.Guild.Name} by {Context.User.Mention}");
                             await user.ModifyAsync(x => x.Deaf = true);
+                            try
+                            {
+                                await user.SendMessageAsync($"You have been deafened on {Context.Guild.Name} by {Context.User.Mention}");
+                            }
+                            catch (Discord.Net.HttpException)
+                            {
+                                //cant send message
+                            }
                         }
                         else
                         {
@@ -5050,8 +4266,15 @@ namespace FredBotNETCore.Modules.Public
                             Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             await banlog.SendMessageAsync("", false, embed.Build());
                             await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was deafened.");
-                            await user.SendMessageAsync($"You have been deafened on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
                             await user.ModifyAsync(x => x.Deaf = true);
+                            try
+                            {
+                                await user.SendMessageAsync($"You have been deafened on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
+                            }
+                            catch (Discord.Net.HttpException)
+                            {
+                                //cant send message
+                            }
                         }
                     }
                     else
@@ -5145,7 +4368,14 @@ namespace FredBotNETCore.Modules.Public
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Softban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                         await banlog.SendMessageAsync("", false, embed.Build());
                         await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was softbanned.");
-                        await user.SendMessageAsync($"You have been softbanned on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
+                        try
+                        {
+                            await user.SendMessageAsync($"You have been softbanned on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
+                        }
+                        catch (Discord.Net.HttpException)
+                        {
+                            //cant send message
+                        }
                         await Context.Guild.AddBanAsync(user, 7, $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}");
                         RequestOptions options = new RequestOptions()
                         {
@@ -5167,7 +4397,7 @@ namespace FredBotNETCore.Modules.Public
 
 
         [Command("getcase", RunMode = RunMode.Async)]
-        [Alias("getprior","case")]
+        [Alias("getprior", "case")]
         [Summary("Get info on a case")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
@@ -5216,7 +4446,7 @@ namespace FredBotNETCore.Modules.Public
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 await ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
             }
@@ -5317,14 +4547,14 @@ namespace FredBotNETCore.Modules.Public
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 await ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
             }
         }
 
         [Command("reason", RunMode = RunMode.Async)]
-        [Alias("edit","editcase")]
+        [Alias("edit", "editcase")]
         [Summary("Edit a reason for a mod log")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
@@ -5460,7 +4690,7 @@ namespace FredBotNETCore.Modules.Public
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                                 return;
                             }
-                            ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                            SocketTextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
                             EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                             {
                                 Name = $"Case {Database.CaseCount() + 1} | Warn | {user.Username}#{user.Discriminator}",
@@ -5499,7 +4729,14 @@ namespace FredBotNETCore.Modules.Public
                             Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Warn", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             await banlog.SendMessageAsync("", false, embed.Build());
                             await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was warned.");
-                            await user.SendMessageAsync($"You have been warned on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
+                            try
+                            {
+                                await user.SendMessageAsync($"You have been warned on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
+                            }
+                            catch (Discord.Net.HttpException)
+                            {
+                                //cant send message
+                            }
                         }
                         else
                         {
@@ -5512,14 +4749,14 @@ namespace FredBotNETCore.Modules.Public
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                await ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                await ExceptionInfo(Context.Client, e.Message, e.StackTrace);
             }
         }
 
         [Command("endgiveaway", RunMode = RunMode.Async)]
-        [Alias("endg","gend")]
+        [Alias("endg", "gend")]
         [Summary("Ends the giveaway")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
@@ -5527,63 +4764,94 @@ namespace FredBotNETCore.Modules.Public
         {
             try
             {
-                var messages = Context.Channel.GetMessagesAsync(100).ToEnumerable();
+                var messages = await Context.Channel.GetMessagesAsync(100).FlattenAsync();
                 IUserMessage message = null;
                 IEmbed msgEmbed = null;
                 EmbedBuilder embed = new EmbedBuilder();
                 string item = null;
+                int winners = 0;
                 foreach (var msg in messages)
                 {
-                    foreach (IMessage msg2 in msg)
+                    if (msg.Content.Equals(":confetti_ball: **Giveaway** :confetti_ball:") && msg.Author.Id == Context.Guild.CurrentUser.Id)
                     {
-                        if (msg2.Content.Equals(":confetti_ball: **Giveaway** :confetti_ball:") && msg2.Author.Id == 383927022583545859)
+                        message = msg as IUserMessage;
+                        var msgEmbeds = msg.Embeds;
+                        msgEmbed = msgEmbeds.ElementAt(0);
+                        embed.Title = msgEmbed.Title;
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            message = msg2 as IUserMessage;
-                            var msgEmbeds = msg2.Embeds;
-                            msgEmbed = msgEmbeds.ElementAt(0);
-                            item = msgEmbed.Title;
-                            embed.Title = msgEmbed.Title;
-                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                            {
-                                Text = msgEmbed.Footer.Value.Text,
-                                IconUrl = msgEmbed.Footer.Value.IconUrl
-                            };
-                            embed.WithFooter(footer);
-                            embed.WithCurrentTimestamp();
-                            break;
-                        }
+                            IconUrl = msgEmbed.Footer.Value.IconUrl
+                        };
+                        winners = int.Parse(GetBetween(msgEmbed.Footer.Value.Text, "Winners: ", " | Ends at"));
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        break;
                     }
                 }
-                var user = message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999);
-                var users = user.ElementAt(0).Result;
-                if (users.Count <= 1)
+                if (message != null)
                 {
-                    await Context.Channel.SendMessageAsync("Nobody Entered the Giveaway.");
+                    embed.Footer.Text = $"Winners: {winners} | Ended at";
                     await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
-                    embed.Description = "No winner.";
-                    await message.ModifyAsync(x => x.Embed = embed.Build());
+
+                    var users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
+                    if (users.Count() <= 1)
+                    {
+                        await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
+                        embed.Description = "Nobody entered the giveaway.";
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                    }
+                    else if (users.Count() <= winners)
+                    {
+                        await Context.Channel.SendMessageAsync("Not enough users entered the giveaway.");
+                        embed.Description = "Not enough users entered the giveaway.";
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                    }
+                    else if (winners == 1)
+                    {
+                        IUser randomUser = users.GetRandomElement();
+                        while (randomUser.Id == Context.Guild.CurrentUser.Id)
+                        {
+                            randomUser = users.GetRandomElement();
+                        }
+                        embed.Description = $"Winner: {randomUser.Mention}";
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                        await Context.Channel.SendMessageAsync($"The winner of the {item} is {randomUser.Mention} !");
+                    }
+                    else
+                    {
+                        List<IUser> userWinners = new List<IUser>();
+                        for (int i = 0; i < winners; i++)
+                        {
+                            IUser randomUser = users.GetRandomElement();
+                            while (randomUser.Id == Context.Guild.CurrentUser.Id || userWinners.Contains(randomUser))
+                            {
+                                randomUser = users.GetRandomElement();
+                            }
+                            userWinners.Add(randomUser);
+                        }
+                        string description = "";
+                        foreach (IUser userWinner in userWinners)
+                        {
+                            description = description + userWinner.Mention + ", ";
+                        }
+                        embed.Description = $"Winners: {description}";
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                        await Context.Channel.SendMessageAsync($"The winners of the {item} are {description.Substring(0, description.Length - 2)} !");
+                    }
                 }
                 else
                 {
-                    IUser randomUser = users.GetRandomElement();
-                    while (randomUser.Id == 383927022583545859)
-                    {
-                        randomUser = users.GetRandomElement();
-                    }
-                    embed.Description = $"Winner: {randomUser.Mention}";
-                    await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
-                    await message.ModifyAsync(x => x.Embed = embed.Build());
-                    await Context.Channel.SendMessageAsync($"The winner of the {item} is {randomUser.Mention} !");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
                 }
             }
-            catch (NullReferenceException)
+            catch(Exception e)
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
+                await ExceptionInfo(Context.Client, e.Message, e.StackTrace);
             }
         }
 
         [Command("repick", RunMode = RunMode.Async)]
-        [Alias("reroll","redo")]
+        [Alias("reroll", "redo")]
         [Summary("Repicks giveaway winner")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
@@ -5591,66 +4859,88 @@ namespace FredBotNETCore.Modules.Public
         {
             try
             {
-                var messages = Context.Channel.GetMessagesAsync(100).ToEnumerable();
+                var messages = await Context.Channel.GetMessagesAsync(100).FlattenAsync();
                 IUserMessage message = null;
                 IEmbed msgEmbed = null;
                 EmbedBuilder embed = new EmbedBuilder();
-                string oldWinner = null, item = null;
+                int winners = 0;
                 foreach (var msg in messages)
                 {
-                    foreach(IMessage msg2 in msg)
+                    if (msg.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:") && msg.Author.Id == Context.Guild.CurrentUser.Id)
                     {
-                        if (msg2.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:") && msg2.Author.Id == 383927022583545859)
-                        {
-                            message = msg2 as IUserMessage;
-                            var msgEmbeds = msg2.Embeds;
-                            msgEmbed = msgEmbeds.ElementAt(0);
-                            oldWinner = msgEmbed.Description.Substring(11, msgEmbed.Description.Length - 12);
-                            item = msgEmbed.Title;
-                            embed.Title = msgEmbed.Title;
-                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                            {
-                                Text = msgEmbed.Footer.Value.Text,
-                                IconUrl = msgEmbed.Footer.Value.IconUrl
-                            };
-                            embed.WithFooter(footer);
-                            embed.WithCurrentTimestamp();
-                            break;
-                        }
+                        message = msg as IUserMessage;
+                        msgEmbed = msg.Embeds.ElementAt(0);
+                        break;
                     }
                 }
-                var user = message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999);
-                var users = user.ElementAt(0).Result;
-                if (users.Count <= 1)
+                if (message != null)
                 {
-                    await Context.Channel.SendMessageAsync("Nobody Entered the Giveaway.");
-                    embed.Description = $"No winner.";
-                    await message.ModifyAsync(x => x.Embed = embed.Build());
+                    var users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
+                    embed = msgEmbed as EmbedBuilder;
+                    winners = int.Parse(GetBetween(embed.Footer.Text, "Winners: ", " | Ends at"));
+                    if (users.Count() <= 1)
+                    {
+                        await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
+                        embed.Description = $"Nobody entered the giveaway.";
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                    }
+                    else if (users.Count() == 2 && winners == 1)
+                    {
+                        await Context.Channel.SendMessageAsync("Nobody else can win the giveaway.");
+                        embed.Description = $"Nobody else can win the giveaway.";
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                    }
+                    else if (users.Count() <= winners)
+                    {
+                        await Context.Channel.SendMessageAsync("Not enough users entered the giveaway.");
+                        embed.Description = "Not enough users entered the giveaway.";
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                    }
+                    else if (winners == 1)
+                    {
+                        IUser randomUser = users.GetRandomElement();
+                        string oldWinner = embed.Description.Substring(8, embed.Description.Length);
+                        while (randomUser.Id == Context.Guild.CurrentUser.Id || randomUser.Mention.ToString().Equals(oldWinner))
+                        {
+                            randomUser = users.GetRandomElement();
+                        }
+                        embed.Description = $"Winner: {randomUser.Mention}";
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                        await Context.Channel.SendMessageAsync($"The new winner of the {embed.Title} is {randomUser.Mention} !");
+                    }
+                    else
+                    {
+                        List<IUser> userWinners = new List<IUser>();
+                        for (int i = 0; i < winners; i++)
+                        {
+                            IUser randomUser = users.GetRandomElement();
+                            while (randomUser.Id == Context.Guild.CurrentUser.Id || userWinners.Contains(randomUser))
+                            {
+                                randomUser = users.GetRandomElement();
+                            }
+                            userWinners.Add(randomUser);
+                        }
+                        string description = "";
+                        foreach (IUser userWinner in userWinners)
+                        {
+                            description = description + userWinner.Mention + ", ";
+                        }
+                        embed.Description = $"Winners: {description.Substring(0, description.Length - 2)}";
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                        await Context.Channel.SendMessageAsync($"The new winners of the {embed.Title} are {description.Substring(0, description.Length - 2)} !");
+                    }
                 }
                 else
                 {
-                    IUser randomUser = users.GetRandomElement();
-                    while (randomUser.Id == 383927022583545859 || randomUser.Id.ToString().Equals(oldWinner))
-                    {
-                        if (user.ElementAt(users.Count - 2).Id.ToString().Equals(oldWinner) && users.ElementAt(users.Count - 1).Id == 383927022583545859)
-                        {
-                            await Context.Channel.SendMessageAsync("Nobody else can win this giveaway.");
-                            embed.Description = $"No winner.";
-                            await message.ModifyAsync(x => x.Embed = embed.Build());
-                            return;
-                        }
-                        randomUser = users.GetRandomElement();
-                    }
-                    embed.Description = $"Winner: {randomUser.Mention}";
-                    await message.ModifyAsync(x => x.Embed = embed.Build());
-                    await Context.Channel.SendMessageAsync($"The new winner of the {item} is {randomUser.Mention} !");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
                 }
             }
-            catch(Exception)
+            catch(Exception e)
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
+                await ExceptionInfo(Context.Client, e.Message, e.StackTrace);
             }
         }
+
 
         [Command("giveaway", RunMode = RunMode.Async)]
         [Alias("give")]
@@ -5748,8 +5038,8 @@ namespace FredBotNETCore.Modules.Public
                         var users = user.ElementAt(0).Result;
                         if (users.Count <= 1)
                         {
-                            await giveawayChannel.SendMessageAsync("Nobody entered the Giveaway.");
-                            embed.Description = $"Nobody Entered the Giveaway.";
+                            await giveawayChannel.SendMessageAsync("Nobody entered the giveaway.");
+                            embed.Description = $"Nobody entered the giveaway.";
                             embed.Footer.Text = $"Winners: {winners} | Ended at";
                             await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
                             await message.ModifyAsync(x => x.Embed = embed.Build());
@@ -5768,18 +5058,18 @@ namespace FredBotNETCore.Modules.Public
                         for (int i = 0; i < winners; i++)
                         {
                             IUser randomUser = users.GetRandomElement();
-                            while (randomUser.Id == 383927022583545859)
+                            while (randomUser.Id == 383927022583545859 || userWinners.Contains(randomUser))
                             {
                                 randomUser = users.GetRandomElement();
                             }
                             userWinners.Add(randomUser);
                         }
+                        await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
+                        embed.Footer.Text = $"Winners: {winners} | Ended at";
                         if (winners == 1)
                         {
                             embed.Description = $"Winner: {userWinners.ElementAt(0).Mention}";
-                            embed.Footer.Text = $"Winners: {winners} | Ended at";
                             await giveawayChannel.SendMessageAsync($"The winner of the {item} is {userWinners.ElementAt(0).Mention} !");
-                            await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
                             await message.ModifyAsync(x => x.Embed = embed.Build());
                         }
                         else
@@ -5787,12 +5077,10 @@ namespace FredBotNETCore.Modules.Public
                             string description = "";
                             foreach(IUser userWinner in userWinners)
                             {
-                                description = description + userWinner.Mention + "\n";
+                                description = description + userWinner.Mention + ", ";
                             }
                             embed.Description = $"Winners: {description}";
-                            embed.Footer.Text = $"Winners: {winners} | Ended at";
-                            await giveawayChannel.SendMessageAsync($"The winners of the {item} are {description.Replace("\n",", ").Substring(0, description.Replace("\n", ", ").Length - 2)} !");
-                            await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
+                            await giveawayChannel.SendMessageAsync($"The winners of the {item} are {description.Substring(0, description.Length - 2)} !");
                             await message.ModifyAsync(x => x.Embed = embed.Build());
                         }
                     }
@@ -5800,7 +5088,7 @@ namespace FredBotNETCore.Modules.Public
             }
             catch(Exception e)
             {
-                await ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                await ExceptionInfo(Context.Client, e.Message, e.StackTrace);
             }
         }
 

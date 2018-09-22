@@ -875,6 +875,19 @@ namespace FredBotNETCore
             }
             if (user.Roles.Count != user2.Roles.Count)
             {
+                if (restAuditLog.Action == ActionType.MemberUpdated)
+                {
+                    foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(5).FlattenAsync())
+                    {
+                        if (audit.Action == ActionType.MemberRoleUpdated)
+                        {
+                            restAuditLog = audit;
+                            iUser = audit.User;
+                            reason = audit.Reason;
+                            break;
+                        }
+                    }
+                }
                 var roles = user.Roles.OrderBy(x => x.Name);
                 var roles2 = user2.Roles.OrderBy(x => x.Name);
                 List<SocketRole> roleList = new List<SocketRole>(), roleList2 = new List<SocketRole>();
@@ -1144,11 +1157,12 @@ namespace FredBotNETCore
                         AuditLogReason = "Auto Verify."
                     };
                     string pr2name = Database.GetPR2Name(user);
+                    await user.AddRolesAsync(roles: verified, options: options);
                     if (!user.Username.Equals(pr2name))
                     {
-                        await user.ModifyAsync(x => x.Nickname = pr2name);
+                        options.AuditLogReason = "Setting nickname to PR2 name.";
+                        await user.ModifyAsync(x => x.Nickname = pr2name, options);
                     }
-                    await user.AddRolesAsync(roles: verified, options: options);
                     await user.SendMessageAsync($"Hello {user.Username} ! Welcome back to the Platform Racing Group.\nYou have been added to the verified role as you verified yourself the last time you were here.");
                 }
                 else
@@ -1237,8 +1251,7 @@ namespace FredBotNETCore
         {
             try
             {
-                SocketUserMessage msg = m as SocketUserMessage;
-                if (msg == null) return;
+                if (!(m is SocketUserMessage msg)) return;
                 if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
                 {
                     if (channel.Guild.Id == 249657315576381450 && channel.Id != 327575359765610496)
