@@ -23,7 +23,7 @@ namespace FredBotNETCore
 
         public static string CheckHint
         {
-            get{return hint;}
+            get { return hint; }
             set
             {
                 if (value == hint)
@@ -224,6 +224,9 @@ namespace FredBotNETCore
 
         public async Task Install(DiscordSocketClient c)
         {
+
+            if (c.LoginState != LoginState.LoggedIn) return;
+
             _client = c;
             _cmds = new CommandService();
             await _cmds.AddModulesAsync(Assembly.GetEntryAssembly(), Program._provider);
@@ -246,7 +249,7 @@ namespace FredBotNETCore
             _client.Ready += async () =>
             {
                 int users = 0;
-                foreach(SocketGuild guild in _client.Guilds)
+                foreach (SocketGuild guild in _client.Guilds)
                 {
                     users = users + guild.MemberCount;
                 }
@@ -258,7 +261,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceUserUpdated(SocketUser user, SocketUser user2)
         {
-            if (PublicModule.UserInGuild(null, _client.GetGuild(249657315576381450), user.Id.ToString()) != null)
+            if (Extensions.UserInGuild(null, _client.GetGuild(249657315576381450), user.Id.ToString()) != null)
             {
                 SocketTextChannel log = _client.GetGuild(249657315576381450).GetTextChannel(327575359765610496);
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -325,7 +328,7 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser user = null;
             string reason = null;
-            foreach(Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(5).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await role.Guild.GetAuditLogsAsync(5).FlattenAsync())
             {
                 if (audit.Action == ActionType.RoleUpdated)
                 {
@@ -392,7 +395,7 @@ namespace FredBotNETCore
             }
             else if (!role.Color.Equals(role2.Color))
             {
-                embed.Description = $"{user.Mention} changed the color of {role.Mention} from **#{PublicModule.HexConverter(role.Color)}** to **#{PublicModule.HexConverter(role2.Color)}**.";
+                embed.Description = $"{user.Mention} changed the color of {role.Mention} from **#{Extensions.HexConverter(role.Color)}** to **#{Extensions.HexConverter(role2.Color)}**.";
                 if (reason != null)
                 {
                     embed.AddField(y =>
@@ -932,7 +935,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceMessageDeleted(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
         {
-            if (PublicModule.Purging)
+            if (Extensions.Purging)
             {
                 return;
             }
@@ -1252,38 +1255,12 @@ namespace FredBotNETCore
             try
             {
                 if (!(m is SocketUserMessage msg)) return;
+                bool badMessage = false;
                 if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
                 {
                     if (channel.Guild.Id == 249657315576381450 && channel.Id != 327575359765610496)
                     {
-                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                        {
-                            Name = "Message Deleted",
-                            IconUrl = channel.Guild.IconUrl
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = $"ID: {msg.Author.Id}",
-                            IconUrl = msg.Author.GetAvatarUrl()
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Author = author,
-                            Color = new Color(255, 0, 0),
-                            Footer = footer,
-                            Fields = new List<EmbedFieldBuilder>
-                        {
-                            new EmbedFieldBuilder
-                            {
-                                Name = "Reason",
-                                Value = "Bad words",
-                                IsInline = false
-                            }
-                        }
-                        };
-                        embed.WithCurrentTimestamp();
-                        var log = channel.Guild.GetTextChannel(327575359765610496);
-                        Discord.Rest.RestUserMessage message = null;
+
                         //var usermessages = channel.GetMessagesAsync().Flatten().Where(x => x.Author == msg.Author).Take(4).ToEnumerable();
                         //if (((usermessages.ElementAt(0) as SocketUserMessage).CreatedAt - (usermessages.ElementAt(3) as SocketUserMessage).CreatedAt).Seconds < 5)
                         //{
@@ -1299,42 +1276,78 @@ namespace FredBotNETCore
                         //    await message.DeleteAsync();
                         //    PublicModule.Purging = false;
                         //}
-                        var bannedwords = File.ReadAllText(Path.Combine(PublicModule.downloadPath, "BlacklistedWords.txt")).Split("\r\n");
-                        foreach (string bannedword in bannedwords)
-                        {
-                            if (msg.Content.Contains(bannedword, StringComparison.OrdinalIgnoreCase))
-                            {
-                                PublicModule.Purging = true;
-                                await msg.DeleteAsync();
-                                embed.Fields.ElementAt(0).Value = "Bad words";
-                                if (msg.Content.Length > 252)
-                                {
-                                    embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty).SplitInParts(252).ElementAt(0)}...**";
-                                }
-                                else
-                                {
-                                    embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty)}**";
-                                }
-                                await log.SendMessageAsync("", false, embed.Build());
-                                PublicModule.Purging = false;
-                                message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} watch your language.");
-                                await Task.Delay(5000);
-                                PublicModule.Purging = true;
-                                await message.DeleteAsync();
-                                await Task.Delay(100);
-                                PublicModule.Purging = false;
-                                return;
-                            }
-                        }
-
+                        badMessage = await FilterMessage(msg, channel);
                     }
                 }
-                await HandleCommand(msg);
+                if (!badMessage)
+                {
+                    await HandleCommand(msg);
+                }
             }
             catch (Exception e)
             {
-                await PublicModule.ExceptionInfo(_client, e.Message, e.StackTrace);
+                await Extensions.ExceptionInfo(_client, e.Message, e.StackTrace);
             }
+        }
+
+        public async Task<bool> FilterMessage(SocketUserMessage msg, SocketTextChannel channel)
+        {
+            var bannedwords = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt")).Split("\r\n");
+            foreach (string bannedword in bannedwords)
+            {
+                if (msg.Content.Contains(bannedword, StringComparison.OrdinalIgnoreCase))
+                {
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = "Message Deleted",
+                        IconUrl = channel.Guild.IconUrl
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {msg.Author.Id}",
+                        IconUrl = msg.Author.GetAvatarUrl()
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Author = author,
+                        Color = new Color(255, 0, 0),
+                        Footer = footer,
+                        Fields = new List<EmbedFieldBuilder>
+                        {
+                            new EmbedFieldBuilder
+                            {
+                                Name = "Reason",
+                                Value = "Bad words",
+                                IsInline = false
+                            }
+                        }
+                    };
+                    embed.WithCurrentTimestamp();
+                    var log = channel.Guild.GetTextChannel(327575359765610496);
+                    Discord.Rest.RestUserMessage message = null;
+                    Extensions.Purging = true;
+                    await msg.DeleteAsync();
+                    embed.Fields.ElementAt(0).Value = "Bad words";
+                    if (msg.Content.Length > 252)
+                    {
+                        embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty).SplitInParts(252).ElementAt(0)}...**";
+                    }
+                    else
+                    {
+                        embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty)}**";
+                    }
+                    await log.SendMessageAsync("", false, embed.Build());
+                    Extensions.Purging = false;
+                    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} watch your language.");
+                    await Task.Delay(5000);
+                    Extensions.Purging = true;
+                    await message.DeleteAsync();
+                    await Task.Delay(100);
+                    Extensions.Purging = false;
+                    return true;
+                }
+            }
+            return false;
         }
 
         public async Task HandleCommand(SocketUserMessage msg)

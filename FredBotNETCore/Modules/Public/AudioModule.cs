@@ -15,6 +15,8 @@ using Google.Apis.YouTube.v3.Data;
 
 namespace FredBotNETCore.Modules.Public
 {
+    [Name("Audio")]
+    [Summary("Module containing all of the music commands.")]
     public class AudioModule : ModuleBase<SocketCommandContext>
     {
         static readonly string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
@@ -26,48 +28,10 @@ namespace FredBotNETCore.Modules.Public
         private IVoiceChannel _voiceChannel;
         private static TaskCompletionSource<bool> _tcs = new TaskCompletionSource<bool>();
         private CancellationTokenSource _disposeToken = new CancellationTokenSource();
-        static IAudioClient _internalAudio;
-        private static IAudioClient Audio
-        {
-            get
-            {
-                return _internalAudio;
-            }
-            set => _internalAudio = value;
-        }
-        static AudioOutStream _internalDiscord;
-        private static AudioOutStream Discord
-        {
-            get
-            {
-                return _internalDiscord;
-            }
-            set => _internalDiscord = value;
-        }
-        /// <summary>
-        /// Tuple(FilePath, Video Name, Duration, Requested by, channel, thumbnail, url)
-        /// </summary>
-        static Queue<Tuple<string, string, string, string, string, string, string>> _internalQueue = new Queue<Tuple<string, string, string, string, string, string, string>>();
-        private static Queue<Tuple<string, string, string, string, string, string, string>> Queue
-        {
-            get
-            {
-                return _internalQueue;
-            }
-            set => _internalQueue = value;
-        }
-        static bool _internalPlaying = false;
-        private static bool Playing
-        {
-            get
-            {
-                return _internalPlaying;
-            }
-            set
-            {
-                _internalPlaying = value;
-            }
-        }
+        private static IAudioClient Audio { get; set; }
+        private static AudioOutStream Discord { get; set; }
+        private static Queue<Tuple<string, string, string, string, string, string, string>> Queue { get; set; } = new Queue<Tuple<string, string, string, string, string, string, string>>();
+        private static bool Playing { get; set; } = false;
         static bool _internalPause = false;
         private static bool Pause
         {
@@ -92,68 +56,28 @@ namespace FredBotNETCore.Modules.Public
             }
             set => _internalSkip = value;
         }
-        static int _internalSkipCount = 0;
-        private static int SkipCount
-        {
-            get
-            {
-                return _internalSkipCount;
-            }
-            set => _internalSkipCount = value;
-        }
-        static bool _internalLoop = false;
-        private static bool Loop
-        {
-            get
-            {
-                return _internalLoop;
-            }
-            set => _internalLoop = value;
-        }
-        static Queue<Tuple<string, string, string, string, string, string, string>> _internalNowPlaying = new Queue<Tuple<string, string, string, string, string, string, string>>();
-        private static Queue<Tuple<string, string, string, string, string, string, string>> NowPlaying
-        {
-            get
-            {
-                return _internalNowPlaying;
-            }
-            set => _internalNowPlaying = value;
-        }
-        static bool _musicStarted = false;
-        private static bool MusicStarted
-        {
-            get
-            {
-                return _musicStarted;
-            }
-            set => _musicStarted = value;
-        }
-        static string _internalPlayingUrl;
-        private static string PlayingUrl
-        {
-            get
-            {
-                return _internalPlayingUrl;
-            }
-            set => _internalPlayingUrl = value;
-        }
+        private static int SkipCount { get; set; } = 0;
+        private static bool Loop { get; set; } = false;
+        private static Queue<Tuple<string, string, string, string, string, string, string>> NowPlaying { get; set; } = new Queue<Tuple<string, string, string, string, string, string, string>>();
+        private static bool MusicStarted { get; set; } = false;
+        private static string PlayingUrl { get; set; }
         private async Task SendQueue(IMessageChannel channel)
         {
             EmbedBuilder builder = new EmbedBuilder()
             {
-                Author = new EmbedAuthorBuilder { Name = $"Queue ({_internalQueue.Count}/20)" },
+                Author = new EmbedAuthorBuilder { Name = $"Queue ({Queue.Count}/20)" },
                 Footer = new EmbedFooterBuilder() { Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})", IconUrl = Context.User.GetAvatarUrl() },
-                Color = Pause ? new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256)) : new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256))
+                Color = Pause ? new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)) : new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
             };
             builder.WithCurrentTimestamp();
-            if (_internalQueue.Count == 0)
+            if (Queue.Count == 0)
             {
                 await channel.SendMessageAsync($"{Context.User.Mention} the queue is currently empty.");
             }
             else
             {
                 int count = 1;
-                foreach (Tuple<string, string, string, string, string, string, string> song in _internalQueue)
+                foreach (Tuple<string, string, string, string, string, string, string> song in Queue)
                 {
                     builder.AddField($"{count}. {song.Item2} ({song.Item3})", $"by {Context.Guild.GetUser(Convert.ToUInt64(song.Item4)).Username}#{Context.Guild.GetUser(Convert.ToUInt64(song.Item4)).Discriminator}");
                     count++;
@@ -163,7 +87,7 @@ namespace FredBotNETCore.Modules.Public
             }
         }
 
-        public static bool Blacklisted(SocketUser user)
+        private static bool Blacklisted(SocketUser user)
         {
             if (File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt")).Contains(user.Id.ToString()))
             {
@@ -212,7 +136,7 @@ namespace FredBotNETCore.Modules.Public
                     {
                         bool result = Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult)
                                   && (uriResult.Scheme == "http" || uriResult.Scheme == "https");
-                        if (_internalQueue.Count >= 20)
+                        if (Queue.Count >= 20)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue is full.");
                         }
@@ -245,7 +169,7 @@ namespace FredBotNETCore.Modules.Public
                                 {
                                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
                                 }
-                                else if (_internalQueue.Any(x => x.Item1.Contains(urlS[1])))
+                                else if (Queue.Any(x => x.Item1.Contains(urlS[1])))
                                 {
                                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
                                 }
@@ -270,7 +194,7 @@ namespace FredBotNETCore.Modules.Public
                                     }
                                     EmbedBuilder embed = new EmbedBuilder()
                                     {
-                                        Color = new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256)),
+                                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
                                         Author = new EmbedAuthorBuilder()
                                         {
                                             Name = "Add song",
@@ -308,7 +232,7 @@ namespace FredBotNETCore.Modules.Public
                                     string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp");
                                     string location = Path.Combine(downloadPath, urlS[1] + ".webm.part");
                                     var vidInfo = new Tuple<string, string, string, string, string, string, string>(location, info.Item1, info.Item2, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
-                                    if (_internalQueue.Any(x => x.Item1.Contains(urlS[1])))
+                                    if (Queue.Any(x => x.Item1.Contains(urlS[1])))
                                     {
                                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
                                         return;
@@ -322,7 +246,7 @@ namespace FredBotNETCore.Modules.Public
                                             return;
                                         }
                                     }
-                                    _internalQueue.Enqueue(vidInfo);
+                                    Queue.Enqueue(vidInfo);
                                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                                     if (Context.Guild.CurrentUser.VoiceChannel == null)
                                     {
@@ -385,7 +309,7 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
                             }
-                            else if (_internalQueue.Any(x => x.Item1.Contains(urlS[1])))
+                            else if (Queue.Any(x => x.Item1.Contains(urlS[1])))
                             {
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
                             }
@@ -393,7 +317,7 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 EmbedBuilder embed = new EmbedBuilder()
                                 {
-                                    Color = new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256)),
+                                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
                                     Author = new EmbedAuthorBuilder()
                                     {
                                         Name = "Add song",
@@ -431,7 +355,7 @@ namespace FredBotNETCore.Modules.Public
                                 string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp");
                                 string location = Path.Combine(downloadPath, urlS[1] + ".webm.part");
                                 var vidInfo = new Tuple<string, string, string, string, string, string, string>(location, info.Item1, info.Item2, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
-                                if (_internalQueue.Any(x => x.Item1.Contains(urlS[1])))
+                                if (Queue.Any(x => x.Item1.Contains(urlS[1])))
                                 {
                                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
                                     return;
@@ -445,7 +369,7 @@ namespace FredBotNETCore.Modules.Public
                                         return;
                                     }
                                 }
-                                _internalQueue.Enqueue(vidInfo);
+                                Queue.Enqueue(vidInfo);
                                 await Context.Channel.SendMessageAsync("", false, embed.Build());
                                 if (Context.Guild.CurrentUser.VoiceChannel == null)
                                 {
@@ -689,18 +613,18 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (_internalQueue.Count <= 0)
+                    if (Queue.Count <= 0)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is nothing in the queue.");
                     }
-                    else if (_internalQueue.Count < pos)
+                    else if (Queue.Count < pos)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is not that many items in the queue.");
                     }
                     else
                     {
-                        var item = _internalQueue.ElementAt(pos-1);
-                        _internalQueue = new Queue<Tuple<string, string, string, string, string, string, string>>(_internalQueue.Where(s => s != item));
+                        var item = Queue.ElementAt(pos-1);
+                        Queue = new Queue<Tuple<string, string, string, string, string, string, string>>(Queue.Where(s => s != item));
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} removed **{item.Item2}** from the queue.");
                     }
                 }
@@ -735,13 +659,13 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (_internalQueue.Count <= 0)
+                    if (Queue.Count <= 0)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue is already empty.");
                     }
                     else
                     {
-                        _internalQueue.Clear();
+                        Queue.Clear();
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} cleared the queue.");
                     }
                 }
@@ -930,7 +854,7 @@ namespace FredBotNETCore.Modules.Public
                         {
                             EmbedBuilder embed = new EmbedBuilder()
                             {
-                                Color = new Color(PublicModule.rand.Next(256), PublicModule.rand.Next(256), PublicModule.rand.Next(256)),
+                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
                                 Author = new EmbedAuthorBuilder()
                                 {
                                     Name = "Now playing",
@@ -976,7 +900,7 @@ namespace FredBotNETCore.Modules.Public
             }
             catch(Exception e)
             {
-                await PublicModule.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
             }
         }
 
@@ -1033,10 +957,10 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
-                        if (_internalQueue.Count > 0)
+                        if (Queue.Count > 0)
                         {
-                            var song = _internalQueue.Peek();
-                            _internalQueue.Clear();
+                            var song = Queue.Peek();
+                            Queue.Clear();
                             NowPlaying.Clear();
                             PlayingUrl = song.Item7;
                             var _ = RemoveFiles();
@@ -1055,7 +979,7 @@ namespace FredBotNETCore.Modules.Public
             }
             catch(Exception e)
             {
-                await PublicModule.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
             }
         }
 
@@ -1132,7 +1056,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         catch(Exception e)
                         {
-                            await PublicModule.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                            await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
                             fail = true;
                         }
                     }
@@ -1173,11 +1097,11 @@ namespace FredBotNETCore.Modules.Public
                     {
                         next = false;
                     }
-                    if (!(_internalQueue.Count <= 0))
+                    if (!(Queue.Count <= 0))
                     {
                         if (!pause)
                         {
-                            var song = _internalQueue.Peek();
+                            var song = Queue.Peek();
                             await Context.Channel.SendMessageAsync($"Now playing: **{song.Item2}** ({song.Item3})");
                             NowPlaying.Enqueue(song);
                             await SendAudio(song.Item1);
@@ -1195,20 +1119,20 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 if (Loop)
                                 {
-                                    var item = _internalQueue.Peek();
+                                    var item = Queue.Peek();
                                     if (song == item)
                                     {
-                                        _internalQueue.Dequeue();
-                                        _internalQueue.Enqueue(song);
+                                        Queue.Dequeue();
+                                        Queue.Enqueue(song);
                                     }
                                     NowPlaying.Dequeue();
                                 }
                                 else
                                 {
-                                    var item = _internalQueue.Peek();
+                                    var item = Queue.Peek();
                                     if (song == item)
                                     {
-                                        _internalQueue.Dequeue();
+                                        Queue.Dequeue();
                                     }
                                     NowPlaying.Dequeue();
                                 }
@@ -1227,7 +1151,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 catch (Exception e)
                 {
-                    await PublicModule.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                    await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
                 }
             }
         }

@@ -58,9 +58,9 @@ namespace FredBotNETCore
             }
         }
 
-        public static List<String> CheckExistingUser(IUser user)
+        public static List<string> CheckExistingUser(IUser user)
         {
-            var result = new List<String>();
+            var result = new List<string>();
             var database = new Database("FredBotDatabase");
 
             var str = string.Format("SELECT * FROM fredbottable WHERE user_id = '{0}'", user.Id);
@@ -72,7 +72,7 @@ namespace FredBotNETCore
 
                 result.Add(userId);
             }
-
+            database.CloseConnection();
             return result;
         }
 
@@ -88,9 +88,9 @@ namespace FredBotNETCore
             return null;
         }
 
-        public static List<String> GetTop()
+        public static List<string> GetTop()
         {
-            var result = new List<String>();
+            var result = new List<string>();
             var database = new Database("FredBotDatabase");
 
             var str = string.Format("SELECT * FROM fredbottable ORDER BY balance desc");
@@ -108,9 +108,9 @@ namespace FredBotNETCore
             return result;
         }
 
-        public static List<String> CheckForVerified(IUser user, string pr2name)
+        public static List<string> CheckForVerified(IUser user, string pr2name)
         {
-            var result = new List<String>();
+            var result = new List<string>();
             var database = new Database("FredBotDatabase");
 
             var str = string.Format("SELECT * FROM fredbottable WHERE pr2_name = '{0}' AND user_id = '{1}'", pr2name, user.Id);
@@ -287,9 +287,9 @@ namespace FredBotNETCore
             return caseInfo;
         }
 
-        public static List<String> Modlogs(IUser user)
+        public static List<string> Modlogs(IUser user)
         {
-            List<String> modLogs = new List<String>();
+            List<string> modLogs = new List<string>();
             var database = new Database("FredBotDatabase");
             var str = string.Format("SELECT * FROM banlog WHERE user_id = '{0}'", user.Id);
             var tableName = database.FireCommand(str);
@@ -327,15 +327,15 @@ namespace FredBotNETCore
             }
         }
 
-        public static Int64 CaseCount()
+        public static long CaseCount()
         {
-            Int64 cases = 0;
+            long cases = 0;
             var database = new Database("FredBotDatabase");
             var str = string.Format("SELECT COUNT(*) FROM banlog");
             var tableName = database.FireCommand(str);
             while (tableName.Read())
             {
-                cases = (Int64)tableName["COUNT(*)"];
+                cases = (long)tableName["COUNT(*)"];
             }
             database.CloseConnection();
             return cases;
@@ -363,9 +363,9 @@ namespace FredBotNETCore
             }
         }
 
-        public static List<String> Warnings(IUser user = null)
+        public static List<string> Warnings(IUser user = null)
         {
-            List<String> warnings = new List<String>();
+            List<string> warnings = new List<string>();
             var database = new Database("FredBotDatabase");
             if (user == null)
             {
@@ -403,15 +403,15 @@ namespace FredBotNETCore
             return warnings;
         }
 
-        public static Int64 WarnCount(IUser user)
+        public static long WarnCount(IUser user)
         {
-            Int64 warnCount = 0;
+            long warnCount = 0;
             var database = new Database("FredBotDatabase");
             var str = string.Format("SELECT COUNT(*) FROM banlog WHERE type = 'Warn' AND user_id = '{0}'",user.Id);
             var tableName = database.FireCommand(str);
             while (tableName.Read())
             {
-                warnCount = (Int64)tableName["COUNT(*)"];
+                warnCount = (long)tableName["COUNT(*)"];
             }
             database.CloseConnection();
             return warnCount;

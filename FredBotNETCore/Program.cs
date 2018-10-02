@@ -16,22 +16,75 @@ namespace FredBotNETCore
 
         #region Fields
 
-        private DiscordSocketClient _client = new DiscordSocketClient(new DiscordSocketConfig
-        {
-            MessageCacheSize = 100,
-            LogLevel = LogSeverity.Verbose
-        });
-        private CommandHandler _commands = new CommandHandler();
+        private DiscordSocketClient _client;
+        private CommandHandler _commands;
+        public static IServiceProvider _provider;
+        private bool running = false;
+        private bool retryConnection = false;
+        private string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
+
         #endregion
 
         #region Startup
-
-        public static IServiceProvider _provider;
 
         // Convert sync main to an async main.
         public static void Main(string[] args)
         {
             new Program().Start().GetAwaiter().GetResult();
+        }
+
+        public async Task Start()
+        {
+            if (_client != null)
+            {
+                if (_client.ConnectionState == ConnectionState.Connecting ||
+                _client.ConnectionState == ConnectionState.Connected)
+                    return;
+            }
+
+            _client = new DiscordSocketClient(new DiscordSocketConfig
+            {
+                MessageCacheSize = 100,
+                LogLevel = LogSeverity.Verbose,
+            });
+            _client.Log += Log;
+            _commands = new CommandHandler();
+            _provider = ConfigureServices();
+            running = false;
+            retryConnection = true;
+
+            while (true)
+            {
+                try
+                {
+                    await _client.LoginAsync(tokenType: TokenType.Bot, token: new StreamReader(path: Path.Combine(downloadPath, "Token.txt")).ReadLine());
+                    await _client.StartAsync();
+
+                    Task.WaitAny(Task.Factory.StartNew(() => CheckStatus()), Task.Factory.StartNew(() => GameLoop()), Task.Factory.StartNew(async () => await _commands.Install(_client)));
+
+                    running = true;
+
+                    break;
+                }
+                catch
+                {
+                    await Log(new LogMessage(LogSeverity.Error, "RunAsync", "Failed to connect."));
+                    if (retryConnection == false)
+                    {
+                        return;
+                    }
+                    await Task.Delay(1000);
+                }
+            }
+
+            while (running) { await Task.Delay(1000); }
+
+            if (_client.ConnectionState == ConnectionState.Connecting ||
+                _client.ConnectionState == ConnectionState.Connected)
+            {
+                try { _client.StopAsync().Wait(); }
+                catch { }
+            }
         }
 
         private IServiceProvider ConfigureServices()
@@ -43,25 +96,8 @@ namespace FredBotNETCore
             var provider = new DefaultServiceProviderFactory().CreateServiceProvider(services);
 
             return provider;
-        }
-
-        public async Task Start()
-        {
-            string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
-            await _client.LoginAsync(tokenType: TokenType.Bot, token: new StreamReader(path: Path.Combine(downloadPath, "Token.txt")).ReadLine());
-            await _client.StartAsync();
-
-            _client.Log += Log;
-
-            await _commands.Install(_client);
-
-            var serviceProvider = ConfigureServices();
-            _provider = serviceProvider;
-
-            Task.WaitAny(Task.Factory.StartNew(() => CheckStatus()), Task.Factory.StartNew(() => GameLoop()));
-            await Task.Delay(-1);
-        }
-
+        }   
+        
         #endregion
 
         #region Timer Loop
@@ -69,9 +105,9 @@ namespace FredBotNETCore
         public static async Task CheckStatus()
         {
             HttpClient web = new HttpClient();
-            string hint = Modules.Public.PublicModule.GetBetween(await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt"), "{\"hint\":\"", "\",\"finder_name\":\"");
-            string finder = Modules.Public.PublicModule.GetBetween(await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt"), "\",\"finder_name\":\"", "\",\"updated_time\":");
-            string time = Modules.Public.PublicModule.GetBetween(await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt"), "\",\"updated_time\":", "}");
+            string hint = Extensions.GetBetween(await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt"), "{\"hint\":\"", "\",\"finder_name\":\"");
+            string finder = Extensions.GetBetween(await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt"), "\",\"finder_name\":\"", "\",\"updated_time\":");
+            string time = Extensions.GetBetween(await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt"), "\",\"updated_time\":", "}");
             bool valid = false;
             while (true)
             {
@@ -85,11 +121,11 @@ namespace FredBotNETCore
 
                     foreach (string server_name in servers)
                     {
-                        guildId = Modules.Public.PublicModule.GetBetween(server_name, "guild_id\":\"", "\"");
+                        guildId = Extensions.GetBetween(server_name, "guild_id\":\"", "\"");
                         if(guildId.Equals("0"))
                         {
-                            happyHour = Modules.Public.PublicModule.GetBetween(server_name, "hour\":\"", "\"");
-                            string serverName = Modules.Public.PublicModule.GetBetween(server_name, "server_name\":\"", "\"");
+                            happyHour = Extensions.GetBetween(server_name, "hour\":\"", "\"");
+                            string serverName = Extensions.GetBetween(server_name, "server_name\":\"", "\"");
                             if (!serverName.Equals("Tournament"))
                             {
                                 if (happyHour.Equals("1"))
@@ -108,12 +144,12 @@ namespace FredBotNETCore
 
                     #region Arti
                     string artifactHint = await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt");
-                    if (!hint.Equals(Modules.Public.PublicModule.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"")))
+                    if (!hint.Equals(Extensions.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"")))
                     {
-                        hint = Modules.Public.PublicModule.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"");
-                        if (!time.Equals(Modules.Public.PublicModule.GetBetween(artifactHint, "\",\"updated_time\":", "}")))
+                        hint = Extensions.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"");
+                        if (!time.Equals(Extensions.GetBetween(artifactHint, "\",\"updated_time\":", "}")))
                         {
-                            time = Modules.Public.PublicModule.GetBetween(artifactHint, "\",\"updated_time\":", "}");
+                            time = Extensions.GetBetween(artifactHint, "\",\"updated_time\":", "}");
                             valid = true;
                         }
                         if (valid)
@@ -126,9 +162,9 @@ namespace FredBotNETCore
                             await CommandHandler.AnnouceHintUpdatedAsync(hint, false);
                         }
                     }
-                    if (!finder.Equals(Modules.Public.PublicModule.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"updated_time\":")))
+                    if (!finder.Equals(Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"updated_time\":")))
                     {
-                        finder = Modules.Public.PublicModule.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"updated_time\":");
+                        finder = Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"updated_time\":");
                         if (finder.Length > 0)
                         {
                             await CommandHandler.AnnounceArtifactFoundAsync(finder);
