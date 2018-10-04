@@ -41,6 +41,7 @@ namespace FredBotNETCore.Modules.Public
                 "/addjoinablerole - Add a joinable role.\n" +
                 "/deljoinablerole - Remove a joinable role.\n" +
                 "**Moderator**\n" +
+                "/notifymacroers - Mentions macroers in pr2-dicussion about server restart.\n" +
                 "/blacklistmusic - Blacklist a user from using music commands.\n" +
                 "/unblacklistmusic - Unblacklist a user from using music commands.\n" +
                 "/listblacklistedmusic - List blacklisted users from music commands.\n" +

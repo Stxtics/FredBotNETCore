@@ -16,6 +16,28 @@ namespace FredBotNETCore.Modules
     [Summary("Module for commands of moderators and up of Platform Racing Group")]
     public class ModeratorModule : ModuleBase<SocketCommandContext>
     {
+        [Command("notifymacroers")]
+        [Alias("pingmacroers")]
+        [Summary("Mention macroers role with message specified.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        [RequireContext(ContextType.Guild)]
+        public async Task NotifyMacroers([Remainder] string message)
+        {
+            var channel = Context.Guild.GetTextChannel(249678944956055562);
+            var role = Context.Guild.GetRole(497409284615962834);
+            RequestOptions options = new RequestOptions()
+            {
+                AuditLogReason = $"Notified by {Context.User.Username}#{Context.User.Discriminator}."
+            };
+            Extensions.Purging = true;
+            await Context.Message.DeleteAsync();
+            await role.ModifyAsync(x => x.Mentionable = true, options);
+            await channel.SendMessageAsync($"Servers have just been restarted. Check your macros!! {role.Mention}");
+            Extensions.Purging = false;
+            await role.ModifyAsync(x => x.Mentionable = false, options);
+        }
+
         [Command("addrole", RunMode = RunMode.Async)]
         [Alias("+role", "createrole")]
         [Summary("Add a new role, with optional color and hoist.")]
