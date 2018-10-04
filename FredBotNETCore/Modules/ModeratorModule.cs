@@ -16,13 +16,13 @@ namespace FredBotNETCore.Modules
     [Summary("Module for commands of moderators and up of Platform Racing Group")]
     public class ModeratorModule : ModuleBase<SocketCommandContext>
     {
-        [Command("notifymacroers")]
+        [Command("notifymacroers", RunMode = RunMode.Async)]
         [Alias("pingmacroers")]
         [Summary("Mention macroers role with message specified.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.ManageRoles)]
         [RequireContext(ContextType.Guild)]
-        public async Task NotifyMacroers([Remainder] string message)
+        public async Task NotifyMacroers()
         {
             var channel = Context.Guild.GetTextChannel(249678944956055562);
             var role = Context.Guild.GetRole(497409284615962834);
