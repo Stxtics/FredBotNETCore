@@ -827,40 +827,38 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task NP()
         {
-            try
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
-                if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+                if (Blacklisted(Context.User))
                 {
-                    if (Blacklisted(Context.User))
+                    return;
+                }
+                _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                if (_voiceChannel == null)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                }
+                else if (_voiceChannel.Id != 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else
+                {
+                    if (NowPlaying.Count <= 0)
                     {
-                        return;
-                    }
-                    _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
-                    if (_voiceChannel == null)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
-                    }
-                    else if (_voiceChannel.Id != 259900874204119054)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} nothing is playing right now.");
                     }
                     else
                     {
-                        if (NowPlaying.Count <= 0)
+                        EmbedBuilder embed = new EmbedBuilder()
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} nothing is playing right now.");
-                        }
-                        else
-                        {
-                            EmbedBuilder embed = new EmbedBuilder()
+                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                            Author = new EmbedAuthorBuilder()
                             {
-                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                                Author = new EmbedAuthorBuilder()
-                                {
-                                    Name = "Now playing",
-                                    Url = NowPlaying.Peek().Item7
-                                },
-                                Fields = new List<EmbedFieldBuilder>
+                                Name = "Now playing",
+                                Url = NowPlaying.Peek().Item7
+                            },
+                            Fields = new List<EmbedFieldBuilder>
                                 {
                                 new EmbedFieldBuilder
                                 {
@@ -881,26 +879,21 @@ namespace FredBotNETCore.Modules.Public
                                     IsInline = false
                                 }
                                 },
-                                Footer = new EmbedFooterBuilder()
-                                {
-                                    IconUrl = Context.User.GetAvatarUrl(),
-                                    Text = $"Queued by {Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Username}#{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Discriminator}"
-                                },
-                                ThumbnailUrl = NowPlaying.Peek().Item6
-                            };
-                            embed.WithCurrentTimestamp();
-                            await Context.Channel.SendMessageAsync("", false, embed.Build());
-                        }
+                            Footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = Context.User.GetAvatarUrl(),
+                                Text = $"Queued by {Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Username}#{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Discriminator}"
+                            },
+                            ThumbnailUrl = NowPlaying.Peek().Item6
+                        };
+                        embed.WithCurrentTimestamp();
+                        await Context.Channel.SendMessageAsync("", false, embed.Build());
                     }
                 }
-                else
-                {
-                    return;
-                }
             }
-            catch(Exception e)
+            else
             {
-                await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                return;
             }
         }
 
@@ -938,48 +931,41 @@ namespace FredBotNETCore.Modules.Public
         [RequireOwner]
         public async Task Stop()
         {
-            try
+            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
             {
-                if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
-                {
-                    if (Blacklisted(Context.User))
-                    {
-                        return;
-                    }
-                    _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
-                    if (_voiceChannel == null)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
-                    }
-                    else if (_voiceChannel.Id != 259900874204119054)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
-                    }
-                    else
-                    {
-                        if (Queue.Count > 0)
-                        {
-                            var song = Queue.Peek();
-                            Queue.Clear();
-                            NowPlaying.Clear();
-                            PlayingUrl = song.Item7;
-                            var _ = RemoveFiles();
-                        }
-                        Playing = false;
-                        Pause = true;
-                        MusicStarted = false;
-                        await Audio.StopAsync();
-                        await ReplyAsync($"The music was successfully stopped by {Context.User.Mention} .");
-                    }
-                }
-                else
+                if (Blacklisted(Context.User))
                 {
                     return;
                 }
+                _voiceChannel = (Context.User as IGuildUser).VoiceChannel;
+                if (_voiceChannel == null)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
+                }
+                else if (_voiceChannel.Id != 259900874204119054)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else
+                {
+                    if (Queue.Count > 0)
+                    {
+                        var song = Queue.Peek();
+                        Queue.Clear();
+                        NowPlaying.Clear();
+                        PlayingUrl = song.Item7;
+                        var _ = RemoveFiles();
+                    }
+                    Playing = false;
+                    Pause = true;
+                    MusicStarted = false;
+                    await Audio.StopAsync();
+                    await ReplyAsync($"The music was successfully stopped by {Context.User.Mention} .");
+                }
             }
-            catch(Exception e)
+            else
             {
-                await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                return;
             }
         }
 
@@ -1056,7 +1042,12 @@ namespace FredBotNETCore.Modules.Public
                         }
                         catch(Exception e)
                         {
-                            await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                            var user =  Context.Client.GetUser(181853112045142016);
+                            var parts = e.ToString().SplitInParts(1990);
+                            foreach (string part in parts)
+                            {
+                                await user.SendMessageAsync("```" + part + "```");
+                            }
                             fail = true;
                         }
                     }
@@ -1085,73 +1076,71 @@ namespace FredBotNETCore.Modules.Public
             await Task.Delay(10000);
             while (true)
             {
-                try
+                bool pause = false;
+                if (!next)
                 {
-                    bool pause = false;
-                    if (!next)
-                    {
-                        pause = await _tcs.Task;
-                        _tcs = new TaskCompletionSource<bool>();
-                    }
-                    else
-                    {
-                        next = false;
-                    }
-                    if (!(Queue.Count <= 0))
-                    {
-                        if (!pause)
-                        {
-                            var song = Queue.Peek();
-                            await Context.Channel.SendMessageAsync($"Now playing: **{song.Item2}** ({song.Item3})");
-                            NowPlaying.Enqueue(song);
-                            await SendAudio(song.Item1);
-                            SkipCount = 0;
-                            try
-                            {
-                                PlayingUrl = song.Item7;
-                                var _ = RemoveFiles();
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e.Message, e.StackTrace);
-                            }
-                            finally
-                            {
-                                if (Loop)
-                                {
-                                    var item = Queue.Peek();
-                                    if (song == item)
-                                    {
-                                        Queue.Dequeue();
-                                        Queue.Enqueue(song);
-                                    }
-                                    NowPlaying.Dequeue();
-                                }
-                                else
-                                {
-                                    var item = Queue.Peek();
-                                    if (song == item)
-                                    {
-                                        Queue.Dequeue();
-                                    }
-                                    NowPlaying.Dequeue();
-                                }
-                            }
-                            var voiceChannel = Context.Guild.CurrentUser.VoiceChannel;
-                            if (voiceChannel.Users.Count < 2)
-                            {
-                                await Context.Channel.SendMessageAsync("Voice channel empty. Pausing music.");
-                                Pause = true;
-                                Playing = false;
-                                await Audio.StopAsync();
-                            }
-                            next = true;
-                        }
-                    }
+                    pause = await _tcs.Task;
+                    _tcs = new TaskCompletionSource<bool>();
                 }
-                catch (Exception e)
+                else
                 {
-                    await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                    next = false;
+                }
+                if (!(Queue.Count <= 0))
+                {
+                    if (!pause)
+                    {
+                        var song = Queue.Peek();
+                        await Context.Channel.SendMessageAsync($"Now playing: **{song.Item2}** ({song.Item3})");
+                        NowPlaying.Enqueue(song);
+                        await SendAudio(song.Item1);
+                        SkipCount = 0;
+                        try
+                        {
+                            PlayingUrl = song.Item7;
+                            var _ = RemoveFiles();
+                        }
+                        catch (Exception e)
+                        {
+                            var user = Context.Client.GetUser(181853112045142016);
+                            var parts = e.ToString().SplitInParts(1990);
+                            foreach (string part in parts)
+                            {
+                                await user.SendMessageAsync("```" + part + "```");
+                            }
+                        }
+                        finally
+                        {
+                            if (Loop)
+                            {
+                                var item = Queue.Peek();
+                                if (song == item)
+                                {
+                                    Queue.Dequeue();
+                                    Queue.Enqueue(song);
+                                }
+                                NowPlaying.Dequeue();
+                            }
+                            else
+                            {
+                                var item = Queue.Peek();
+                                if (song == item)
+                                {
+                                    Queue.Dequeue();
+                                }
+                                NowPlaying.Dequeue();
+                            }
+                        }
+                        var voiceChannel = Context.Guild.CurrentUser.VoiceChannel;
+                        if (voiceChannel.Users.Count < 2)
+                        {
+                            await Context.Channel.SendMessageAsync("Voice channel empty. Pausing music.");
+                            Pause = true;
+                            Playing = false;
+                            await Audio.StopAsync();
+                        }
+                        next = true;
+                    }
                 }
             }
         }

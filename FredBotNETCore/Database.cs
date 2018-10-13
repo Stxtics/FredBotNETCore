@@ -80,7 +80,7 @@ namespace FredBotNETCore
         {
             var database = new Database("FredBotDatabase");
 
-            var str = string.Format("INSERT INTO fredbottable (user_id, username, pr2_name, balance, last_used ) VALUES ('{0}', '{1}', 'Not verified', '{2}', '5/7/18')", user.Id, user.Username, 10);
+            var str = string.Format("INSERT INTO fredbottable (user_id, username, pr2_name, jv2_id, balance, last_used ) VALUES ('{0}', '{1}', 'Not verified', '0', '{2}', '5/7/18')", user.Id, user.Username, 10);
             var table = database.FireCommand(str);
 
             database.CloseConnection();
@@ -149,6 +149,24 @@ namespace FredBotNETCore
             try
             {
                 var str = string.Format("UPDATE fredbottable SET pr2_name = '{1}' WHERE user_id = {0}", user.Id, pr2name);
+                var reader = database.FireCommand(str);
+                reader.Close();
+                database.CloseConnection();
+                return;
+            }
+            catch(Exception)
+            {
+                database.CloseConnection();
+                return;
+            }
+        }
+
+        public static void VerifyJV2(SocketUser user, string jv2ID)
+        {
+            var database = new Database("FredBotDatabase");
+            try
+            {
+                var str = string.Format("UPDATE fredbottable SET jv2_id = '{1}' WHERE user_id = {0}", user.Id, jv2ID);
                 var reader = database.FireCommand(str);
                 reader.Close();
                 database.CloseConnection();

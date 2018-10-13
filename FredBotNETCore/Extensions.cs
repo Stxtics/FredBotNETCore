@@ -56,17 +56,6 @@ namespace FredBotNETCore
             }
         }
 
-        public static async Task ExceptionInfo(DiscordSocketClient client, string message, string stacktrace)
-        {
-            SocketUser user = client.GetUser(181853112045142016);
-            string error = message + stacktrace;
-            var parts = error.SplitInParts(2000);
-            foreach (string part in parts)
-            {
-                await user.SendMessageAsync(part);
-            }
-        }
-
         public static bool CheckStaff(string userID, string roleID)
         {
             var staff = new StreamReader(path: Path.Combine(downloadPath, "DiscordStaff.txt"));

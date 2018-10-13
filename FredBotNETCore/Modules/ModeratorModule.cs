@@ -141,7 +141,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
@@ -211,7 +211,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
                     }
-                    catch (Exception)
+                    catch (NullReferenceException)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
@@ -286,7 +286,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
                     }
-                    catch (Exception)
+                    catch (NullReferenceException)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
@@ -417,7 +417,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
                     }
-                    catch (Exception)
+                    catch (NullReferenceException)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
@@ -498,7 +498,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                         }
                     }
-                    catch (Exception)
+                    catch (NullReferenceException)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
@@ -567,194 +567,187 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ChannelInfo([Remainder] string channelName)
         {
-            try
+            if (string.IsNullOrWhiteSpace(channelName))
             {
-                if (string.IsNullOrWhiteSpace(channelName))
+                EmbedBuilder embed = new EmbedBuilder()
                 {
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 200, 220)
-                    };
-                    embed.Title = "Command: /channelinfo";
-                    embed.Description = "**Description:** Get information about a channel.\n**Usage:** /channelinfo [channel name]\n**Example:** /channelinfo rules";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    try
-                    {
-                        if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName) != null)
-                        {
-                            SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName);
-                            string type = "Text";
-                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                            {
-                                Text = "Channel Created"
-                            };
-                            EmbedBuilder embed = new EmbedBuilder()
-                            {
-                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                                Footer = footer,
-                                Timestamp = channel.CreatedAt.Date
-                            };
-                            embed.AddField(y =>
-                            {
-                                y.Name = "ID";
-                                y.Value = channel.Id;
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Name";
-                                y.Value = channel.Name;
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Position";
-                                y.Value = channel.Position;
-                                y.IsInline = true;
-                            });
-                            if (channel is SocketVoiceChannel vChannel)
-                            {
-                                type = "Voice";
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Type";
-                                    y.Value = type;
-                                    y.IsInline = true;
-                                });
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Bitrate";
-                                    y.Value = vChannel.Bitrate;
-                                    y.IsInline = true;
-                                });
-                                if (vChannel.CategoryId != null)
-                                {
-                                    embed.AddField(y =>
-                                    {
-                                        y.Name = "Category ID";
-                                        y.Value = vChannel.CategoryId;
-                                        y.IsInline = true;
-                                    });
-                                    embed.AddField(y =>
-                                    {
-                                        y.Name = "Category Name";
-                                        y.Value = vChannel.Category.Name;
-                                        y.IsInline = true;
-                                    });
-                                }
-                                if (vChannel.UserLimit != null)
-                                {
-                                    embed.AddField(y =>
-                                    {
-                                        y.Name = "User Limit";
-                                        y.Value = vChannel.UserLimit;
-                                        y.IsInline = true;
-                                    });
-                                }
-                                else
-                                {
-                                    embed.AddField(y =>
-                                    {
-                                        y.Name = "User Limit";
-                                        y.Value = "Unlimited";
-                                        y.IsInline = true;
-                                    });
-                                }
-                            }
-                            else if (channel is SocketCategoryChannel cChannel)
-                            {
-                                type = "Category";
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Type";
-                                    y.Value = type;
-                                    y.IsInline = true;
-                                });
-                                int children = 0;
-                                foreach (SocketGuildChannel gChannel in Context.Guild.Channels)
-                                {
-                                    if (gChannel is SocketTextChannel tChannel)
-                                    {
-                                        if (tChannel.CategoryId == cChannel.Id)
-                                        {
-                                            children++;
-                                        }
-                                    }
-                                    else if (gChannel is SocketVoiceChannel vChannel2)
-                                    {
-                                        if (vChannel2.CategoryId == cChannel.Id)
-                                        {
-                                            children++;
-                                        }
-                                    }
-                                }
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Children";
-                                    y.Value = children;
-                                    y.IsInline = true;
-                                });
-                            }
-                            else if (channel is SocketTextChannel tChannel)
-                            {
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Type";
-                                    y.Value = type;
-                                    y.IsInline = true;
-                                });
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Mention";
-                                    y.Value = $"`{tChannel.Mention.ToString()}`";
-                                    y.IsInline = true;
-                                });
-                                if (tChannel.CategoryId != null)
-                                {
-                                    embed.AddField(y =>
-                                    {
-                                        y.Name = "Category ID";
-                                        y.Value = tChannel.CategoryId;
-                                        y.IsInline = true;
-                                    });
-                                    embed.AddField(y =>
-                                    {
-                                        y.Name = "Category Name";
-                                        y.Value = tChannel.Category.Name;
-                                        y.IsInline = true;
-                                    });
-                                }
-                                string nsfw = "No";
-                                if (tChannel.IsNsfw)
-                                {
-                                    nsfw = "Yes";
-                                }
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "NSFW";
-                                    y.Value = nsfw;
-                                    y.IsInline = true;
-                                });
-                            }
-                            await Context.Channel.SendMessageAsync("", false, embed.Build());
-                        }
-                        else
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find channel `{channelName}`.");
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel with ID: `{channelName}` does not exist or could not be found.");
-                    }
-                }
+                    Color = new Color(220, 200, 220)
+                };
+                embed.Title = "Command: /channelinfo";
+                embed.Description = "**Description:** Get information about a channel.\n**Usage:** /channelinfo [channel name]\n**Example:** /channelinfo rules";
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
             }
-            catch (Exception e)
+            else
             {
-                await Extensions.ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                try
+                {
+                    if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName) != null)
+                    {
+                        SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName);
+                        string type = "Text";
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = "Channel Created"
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                            Footer = footer,
+                            Timestamp = channel.CreatedAt.Date
+                        };
+                        embed.AddField(y =>
+                        {
+                            y.Name = "ID";
+                            y.Value = channel.Id;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Name";
+                            y.Value = channel.Name;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Position";
+                            y.Value = channel.Position;
+                            y.IsInline = true;
+                        });
+                        if (channel is SocketVoiceChannel vChannel)
+                        {
+                            type = "Voice";
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Type";
+                                y.Value = type;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Bitrate";
+                                y.Value = vChannel.Bitrate;
+                                y.IsInline = true;
+                            });
+                            if (vChannel.CategoryId != null)
+                            {
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Category ID";
+                                    y.Value = vChannel.CategoryId;
+                                    y.IsInline = true;
+                                });
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Category Name";
+                                    y.Value = vChannel.Category.Name;
+                                    y.IsInline = true;
+                                });
+                            }
+                            if (vChannel.UserLimit != null)
+                            {
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "User Limit";
+                                    y.Value = vChannel.UserLimit;
+                                    y.IsInline = true;
+                                });
+                            }
+                            else
+                            {
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "User Limit";
+                                    y.Value = "Unlimited";
+                                    y.IsInline = true;
+                                });
+                            }
+                        }
+                        else if (channel is SocketCategoryChannel cChannel)
+                        {
+                            type = "Category";
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Type";
+                                y.Value = type;
+                                y.IsInline = true;
+                            });
+                            int children = 0;
+                            foreach (SocketGuildChannel gChannel in Context.Guild.Channels)
+                            {
+                                if (gChannel is SocketTextChannel tChannel)
+                                {
+                                    if (tChannel.CategoryId == cChannel.Id)
+                                    {
+                                        children++;
+                                    }
+                                }
+                                else if (gChannel is SocketVoiceChannel vChannel2)
+                                {
+                                    if (vChannel2.CategoryId == cChannel.Id)
+                                    {
+                                        children++;
+                                    }
+                                }
+                            }
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Children";
+                                y.Value = children;
+                                y.IsInline = true;
+                            });
+                        }
+                        else if (channel is SocketTextChannel tChannel)
+                        {
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Type";
+                                y.Value = type;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Mention";
+                                y.Value = $"`{tChannel.Mention.ToString()}`";
+                                y.IsInline = true;
+                            });
+                            if (tChannel.CategoryId != null)
+                            {
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Category ID";
+                                    y.Value = tChannel.CategoryId;
+                                    y.IsInline = true;
+                                });
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Category Name";
+                                    y.Value = tChannel.Category.Name;
+                                    y.IsInline = true;
+                                });
+                            }
+                            string nsfw = "No";
+                            if (tChannel.IsNsfw)
+                            {
+                                nsfw = "Yes";
+                            }
+                            embed.AddField(y =>
+                            {
+                                y.Name = "NSFW";
+                                y.Value = nsfw;
+                                y.IsInline = true;
+                            });
+                        }
+                        await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find channel `{channelName}`.");
+                    }
+                }
+                catch (NullReferenceException)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel with ID: `{channelName}` does not exist or could not be found.");
+                }
             }
         }
 
@@ -915,7 +908,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role `{roleName}`.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
@@ -999,7 +992,7 @@ namespace FredBotNETCore.Modules
                 return;
             }
             EmbedAuthorBuilder auth = new EmbedAuthorBuilder();
-            List<String> warnings = null;
+            List<string> warnings = null;
             if (string.IsNullOrWhiteSpace(username))
             {
                 auth.Name = $"Warnings - {Context.Guild.Name}";
@@ -1033,7 +1026,7 @@ namespace FredBotNETCore.Modules
                         return;
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
@@ -1298,7 +1291,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
@@ -1417,7 +1410,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
@@ -1523,7 +1516,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
@@ -1538,52 +1531,45 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task GetCase([Remainder] string caseN = null)
         {
-            try
+            if (Context.Guild.Id != 249657315576381450)
             {
-                if (Context.Guild.Id != 249657315576381450)
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(caseN) || !int.TryParse(caseN, out int level_))
+            {
+                EmbedBuilder embed = new EmbedBuilder()
                 {
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /getcase";
+                embed.Description = "**Description:** Get info on a case.\n**Usage:** /getcase [case number]\n**Example:** /getcase 1";
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else
+            {
+                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                {
+                    Name = $"Case Info",
+                };
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(220, 220, 220),
+                    Author = auth
+                };
+                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                {
+                    IconUrl = Context.User.GetAvatarUrl(),
+                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                };
+                embed.WithFooter(footer);
+                embed.WithCurrentTimestamp();
+                embed.Description = Database.GetCase(caseN);
+                if (embed.Description.Length <= 0)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} case could not be found.");
                     return;
                 }
-                if (string.IsNullOrWhiteSpace(caseN) || !int.TryParse(caseN, out int level_))
-                {
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 220, 220)
-                    };
-                    embed.Title = "Command: /getcase";
-                    embed.Description = "**Description:** Get info on a case.\n**Usage:** /getcase [case number]\n**Example:** /getcase 1";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                    {
-                        Name = $"Case Info",
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 220, 220),
-                        Author = auth
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    embed.Description = Database.GetCase(caseN);
-                    if (embed.Description.Length <= 0)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} case could not be found.");
-                        return;
-                    }
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-            }
-            catch (Exception e)
-            {
-                await Extensions.ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
             }
         }
 
@@ -1594,97 +1580,90 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Modlogs([Remainder] string username)
         {
-            try
+            if (Context.Guild.Id != 249657315576381450)
             {
-                if (Context.Guild.Id != 249657315576381450)
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                EmbedBuilder embed = new EmbedBuilder()
                 {
-                    return;
-                }
-                if (string.IsNullOrWhiteSpace(username))
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /getcase";
+                embed.Description = "**Description:** Get a list of mod logs for a user.\n**Usage:** /modlogs [user]\n**Example:** /modlogs @Jiggmin";
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else
+            {
+                try
                 {
-                    EmbedBuilder embed = new EmbedBuilder()
+                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        Color = new Color(220, 220, 220)
-                    };
-                    embed.Title = "Command: /getcase";
-                    embed.Description = "**Description:** Get a list of mod logs for a user.\n**Usage:** /modlogs [user]\n**Example:** /modlogs @Jiggmin";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    try
-                    {
-                        if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                        SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
+                        List<string> modlogs = Database.Modlogs(user);
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
-                            SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                            List<string> modlogs = Database.Modlogs(user);
-                            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                            Name = $"Mod Logs - {user.Username}#{user.Discriminator}",
+                            IconUrl = user.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(220, 220, 220),
+                            Author = auth
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            IconUrl = Context.User.GetAvatarUrl(),
+                            Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        if (modlogs.Count <= 0)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user has no priors.");
+                            return;
+                        }
+                        string temp = "";
+                        bool first = true, sent = false;
+                        foreach (string modlog in modlogs)
+                        {
+                            temp = temp + modlog + "\n";
+                            if (temp.Length > 2000)
                             {
-                                Name = $"Mod Logs - {user.Username}#{user.Discriminator}",
-                                IconUrl = user.GetAvatarUrl()
-                            };
-                            EmbedBuilder embed = new EmbedBuilder()
-                            {
-                                Color = new Color(220, 220, 220),
-                                Author = auth
-                            };
-                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                            {
-                                IconUrl = Context.User.GetAvatarUrl(),
-                                Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
-                            };
-                            embed.WithFooter(footer);
-                            embed.WithCurrentTimestamp();
-                            if (modlogs.Count <= 0)
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user has no priors.");
-                                return;
-                            }
-                            string temp = "";
-                            bool first = true, sent = false;
-                            foreach (string modlog in modlogs)
-                            {
-                                temp = temp + modlog + "\n";
-                                if (temp.Length > 2000)
+                                if (first)
                                 {
-                                    if (first)
-                                    {
-                                        await Context.Channel.SendMessageAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
-                                        first = false;
-                                        sent = true;
-                                    }
-                                    else
-                                    {
-                                        await Context.Channel.SendMessageAsync("", false, embed.Build());
-                                    }
-                                    temp = "";
-                                    embed.Description = "";
+                                    await Context.Channel.SendMessageAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
+                                    first = false;
+                                    sent = true;
                                 }
-                                embed.Description = embed.Description + modlog + "\n";
+                                else
+                                {
+                                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                                }
+                                temp = "";
+                                embed.Description = "";
                             }
-                            if (!sent)
-                            {
-                                await Context.Channel.SendMessageAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
-                            }
-                            else
-                            {
-                                await Context.Channel.SendMessageAsync("", false, embed.Build());
-                            }
+                            embed.Description = embed.Description + modlog + "\n";
+                        }
+                        if (!sent)
+                        {
+                            await Context.Channel.SendMessageAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                            await Context.Channel.SendMessageAsync("", false, embed.Build());
                         }
                     }
-                    catch (Exception)
+                    else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                await Extensions.ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                catch (NullReferenceException)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                }
             }
         }
 
@@ -1792,101 +1771,94 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Warn(string username = null, [Remainder] string reason = null)
         {
-            try
+            if (Context.Guild.Id != 249657315576381450)
             {
-                if (Context.Guild.Id != 249657315576381450)
-                {
-                    return;
-                }
-                if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(reason))
-                {
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 220, 220)
-                    };
-                    embed.Title = "Command: /warn";
-                    embed.Description = "**Description:** Warn a member.\n**Usage:** /warn [user] [reason]\n**Example:** /warn @Jiggmin No flooding";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    try
-                    {
-                        if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
-                        {
-                            SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
-                            if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                                return;
-                            }
-                            if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
-                                return;
-                            }
-                            SocketTextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                            {
-                                Name = $"Case {Database.CaseCount() + 1} | Warn | {user.Username}#{user.Discriminator}",
-                                IconUrl = user.GetAvatarUrl(),
-                            };
-                            EmbedBuilder embed = new EmbedBuilder()
-                            {
-                                Color = new Color(220, 220, 220),
-                                Author = auth
-                            };
-                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                            {
-                                Text = ($"ID: {user.Id}")
-                            };
-                            embed.WithFooter(footer);
-                            embed.WithCurrentTimestamp();
-                            embed.AddField(y =>
-                            {
-                                y.Name = "User";
-                                y.Value = user.Mention;
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Moderator";
-                                y.Value = Context.User.Mention;
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Reason";
-                                y.Value = reason;
-                                y.IsInline = true;
-                            });
-                            await Context.Message.DeleteAsync();
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Warn", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                            await banlog.SendMessageAsync("", false, embed.Build());
-                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was warned.");
-                            try
-                            {
-                                await user.SendMessageAsync($"You have been warned on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
-                            }
-                            catch (Discord.Net.HttpException)
-                            {
-                                //cant send message
-                            }
-                        }
-                        else
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
-                    }
-                }
+                return;
             }
-            catch (Exception e)
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(reason))
             {
-                await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /warn";
+                embed.Description = "**Description:** Warn a member.\n**Usage:** /warn [user] [reason]\n**Example:** /warn @Jiggmin No flooding";
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else
+            {
+                try
+                {
+                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    {
+                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            return;
+                        }
+                        if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            return;
+                        }
+                        SocketTextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        {
+                            Name = $"Case {Database.CaseCount() + 1} | Warn | {user.Username}#{user.Discriminator}",
+                            IconUrl = user.GetAvatarUrl(),
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(220, 220, 220),
+                            Author = auth
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = ($"ID: {user.Id}")
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.AddField(y =>
+                        {
+                            y.Name = "User";
+                            y.Value = user.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Moderator";
+                            y.Value = Context.User.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = true;
+                        });
+                        await Context.Message.DeleteAsync();
+                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Warn", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was warned.");
+                        try
+                        {
+                            await user.SendMessageAsync($"You have been warned on {Context.Guild.Name} by {Context.User.Mention} with reason {reason}");
+                        }
+                        catch (Discord.Net.HttpException)
+                        {
+                            //cant send message
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    }
+                }
+                catch (NullReferenceException)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                }
             }
         }
 
@@ -1897,91 +1869,84 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task EndGiveaway()
         {
-            try
+            var messages = await Context.Channel.GetMessagesAsync(100).FlattenAsync();
+            IUserMessage message = null;
+            IEmbed msgEmbed = null;
+            EmbedBuilder embed = new EmbedBuilder();
+            string item = null;
+            int winners = 0;
+            foreach (var msg in messages)
             {
-                var messages = await Context.Channel.GetMessagesAsync(100).FlattenAsync();
-                IUserMessage message = null;
-                IEmbed msgEmbed = null;
-                EmbedBuilder embed = new EmbedBuilder();
-                string item = null;
-                int winners = 0;
-                foreach (var msg in messages)
+                if (msg.Content.Equals(":confetti_ball: **Giveaway** :confetti_ball:") && msg.Author.Id == Context.Guild.CurrentUser.Id)
                 {
-                    if (msg.Content.Equals(":confetti_ball: **Giveaway** :confetti_ball:") && msg.Author.Id == Context.Guild.CurrentUser.Id)
+                    message = msg as IUserMessage;
+                    var msgEmbeds = msg.Embeds;
+                    msgEmbed = msgEmbeds.ElementAt(0);
+                    embed.Title = msgEmbed.Title;
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
-                        message = msg as IUserMessage;
-                        var msgEmbeds = msg.Embeds;
-                        msgEmbed = msgEmbeds.ElementAt(0);
-                        embed.Title = msgEmbed.Title;
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            IconUrl = msgEmbed.Footer.Value.IconUrl
-                        };
-                        winners = int.Parse(Extensions.GetBetween(msgEmbed.Footer.Value.Text, "Winners: ", " | Ends at"));
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        break;
-                    }
+                        IconUrl = msgEmbed.Footer.Value.IconUrl
+                    };
+                    winners = int.Parse(Extensions.GetBetween(msgEmbed.Footer.Value.Text, "Winners: ", " | Ends at"));
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    break;
                 }
-                if (message != null)
-                {
-                    embed.Footer.Text = $"Winners: {winners} | Ended at";
-                    await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
+            }
+            if (message != null)
+            {
+                embed.Footer.Text = $"Winners: {winners} | Ended at";
+                await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
 
-                    var users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
-                    if (users.Count() <= 1)
+                var users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
+                if (users.Count() <= 1)
+                {
+                    await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
+                    embed.Description = "Nobody entered the giveaway.";
+                    await message.ModifyAsync(x => x.Embed = embed.Build());
+                }
+                else if (users.Count() <= winners)
+                {
+                    await Context.Channel.SendMessageAsync("Not enough users entered the giveaway.");
+                    embed.Description = "Not enough users entered the giveaway.";
+                    await message.ModifyAsync(x => x.Embed = embed.Build());
+                }
+                else if (winners == 1)
+                {
+                    IUser randomUser = users.GetRandomElement();
+                    while (randomUser.Id == Context.Guild.CurrentUser.Id)
                     {
-                        await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
-                        embed.Description = "Nobody entered the giveaway.";
-                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                        randomUser = users.GetRandomElement();
                     }
-                    else if (users.Count() <= winners)
-                    {
-                        await Context.Channel.SendMessageAsync("Not enough users entered the giveaway.");
-                        embed.Description = "Not enough users entered the giveaway.";
-                        await message.ModifyAsync(x => x.Embed = embed.Build());
-                    }
-                    else if (winners == 1)
-                    {
-                        IUser randomUser = users.GetRandomElement();
-                        while (randomUser.Id == Context.Guild.CurrentUser.Id)
-                        {
-                            randomUser = users.GetRandomElement();
-                        }
-                        embed.Description = $"Winner: {randomUser.Mention}";
-                        await message.ModifyAsync(x => x.Embed = embed.Build());
-                        await Context.Channel.SendMessageAsync($"The winner of the {item} is {randomUser.Mention} !");
-                    }
-                    else
-                    {
-                        List<IUser> userWinners = new List<IUser>();
-                        for (int i = 0; i < winners; i++)
-                        {
-                            IUser randomUser = users.GetRandomElement();
-                            while (randomUser.Id == Context.Guild.CurrentUser.Id || userWinners.Contains(randomUser))
-                            {
-                                randomUser = users.GetRandomElement();
-                            }
-                            userWinners.Add(randomUser);
-                        }
-                        string description = "";
-                        foreach (IUser userWinner in userWinners)
-                        {
-                            description = description + userWinner.Mention + ", ";
-                        }
-                        embed.Description = $"Winners: {description}";
-                        await message.ModifyAsync(x => x.Embed = embed.Build());
-                        await Context.Channel.SendMessageAsync($"The winners of the {item} are {description.Substring(0, description.Length - 2)} !");
-                    }
+                    embed.Description = $"Winner: {randomUser.Mention}";
+                    await message.ModifyAsync(x => x.Embed = embed.Build());
+                    await Context.Channel.SendMessageAsync($"The winner of the {item} is {randomUser.Mention} !");
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
+                    List<IUser> userWinners = new List<IUser>();
+                    for (int i = 0; i < winners; i++)
+                    {
+                        IUser randomUser = users.GetRandomElement();
+                        while (randomUser.Id == Context.Guild.CurrentUser.Id || userWinners.Contains(randomUser))
+                        {
+                            randomUser = users.GetRandomElement();
+                        }
+                        userWinners.Add(randomUser);
+                    }
+                    string description = "";
+                    foreach (IUser userWinner in userWinners)
+                    {
+                        description = description + userWinner.Mention + ", ";
+                    }
+                    embed.Description = $"Winners: {description}";
+                    await message.ModifyAsync(x => x.Embed = embed.Build());
+                    await Context.Channel.SendMessageAsync($"The winners of the {item} are {description.Substring(0, description.Length - 2)} !");
                 }
             }
-            catch (Exception e)
+            else
             {
-                await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
             }
         }
 
@@ -1992,87 +1957,80 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Repick()
         {
-            try
+            var messages = await Context.Channel.GetMessagesAsync(100).FlattenAsync();
+            IUserMessage message = null;
+            IEmbed msgEmbed = null;
+            EmbedBuilder embed = new EmbedBuilder();
+            int winners = 0;
+            foreach (var msg in messages)
             {
-                var messages = await Context.Channel.GetMessagesAsync(100).FlattenAsync();
-                IUserMessage message = null;
-                IEmbed msgEmbed = null;
-                EmbedBuilder embed = new EmbedBuilder();
-                int winners = 0;
-                foreach (var msg in messages)
+                if (msg.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:") && msg.Author.Id == Context.Guild.CurrentUser.Id)
                 {
-                    if (msg.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:") && msg.Author.Id == Context.Guild.CurrentUser.Id)
-                    {
-                        message = msg as IUserMessage;
-                        msgEmbed = msg.Embeds.ElementAt(0);
-                        break;
-                    }
+                    message = msg as IUserMessage;
+                    msgEmbed = msg.Embeds.ElementAt(0);
+                    break;
                 }
-                if (message != null)
+            }
+            if (message != null)
+            {
+                var users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
+                embed = msgEmbed as EmbedBuilder;
+                winners = int.Parse(Extensions.GetBetween(embed.Footer.Text, "Winners: ", " | Ends at"));
+                if (users.Count() <= 1)
                 {
-                    var users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
-                    embed = msgEmbed as EmbedBuilder;
-                    winners = int.Parse(Extensions.GetBetween(embed.Footer.Text, "Winners: ", " | Ends at"));
-                    if (users.Count() <= 1)
+                    await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
+                    embed.Description = $"Nobody entered the giveaway.";
+                    await message.ModifyAsync(x => x.Embed = embed.Build());
+                }
+                else if (users.Count() == 2 && winners == 1)
+                {
+                    await Context.Channel.SendMessageAsync("Nobody else can win the giveaway.");
+                    embed.Description = $"Nobody else can win the giveaway.";
+                    await message.ModifyAsync(x => x.Embed = embed.Build());
+                }
+                else if (users.Count() <= winners)
+                {
+                    await Context.Channel.SendMessageAsync("Not enough users entered the giveaway.");
+                    embed.Description = "Not enough users entered the giveaway.";
+                    await message.ModifyAsync(x => x.Embed = embed.Build());
+                }
+                else if (winners == 1)
+                {
+                    IUser randomUser = users.GetRandomElement();
+                    string oldWinner = embed.Description.Substring(8, embed.Description.Length);
+                    while (randomUser.Id == Context.Guild.CurrentUser.Id || randomUser.Mention.ToString().Equals(oldWinner))
                     {
-                        await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
-                        embed.Description = $"Nobody entered the giveaway.";
-                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                        randomUser = users.GetRandomElement();
                     }
-                    else if (users.Count() == 2 && winners == 1)
-                    {
-                        await Context.Channel.SendMessageAsync("Nobody else can win the giveaway.");
-                        embed.Description = $"Nobody else can win the giveaway.";
-                        await message.ModifyAsync(x => x.Embed = embed.Build());
-                    }
-                    else if (users.Count() <= winners)
-                    {
-                        await Context.Channel.SendMessageAsync("Not enough users entered the giveaway.");
-                        embed.Description = "Not enough users entered the giveaway.";
-                        await message.ModifyAsync(x => x.Embed = embed.Build());
-                    }
-                    else if (winners == 1)
-                    {
-                        IUser randomUser = users.GetRandomElement();
-                        string oldWinner = embed.Description.Substring(8, embed.Description.Length);
-                        while (randomUser.Id == Context.Guild.CurrentUser.Id || randomUser.Mention.ToString().Equals(oldWinner))
-                        {
-                            randomUser = users.GetRandomElement();
-                        }
-                        embed.Description = $"Winner: {randomUser.Mention}";
-                        await message.ModifyAsync(x => x.Embed = embed.Build());
-                        await Context.Channel.SendMessageAsync($"The new winner of the {embed.Title} is {randomUser.Mention} !");
-                    }
-                    else
-                    {
-                        List<IUser> userWinners = new List<IUser>();
-                        for (int i = 0; i < winners; i++)
-                        {
-                            IUser randomUser = users.GetRandomElement();
-                            while (randomUser.Id == Context.Guild.CurrentUser.Id || userWinners.Contains(randomUser))
-                            {
-                                randomUser = users.GetRandomElement();
-                            }
-                            userWinners.Add(randomUser);
-                        }
-                        string description = "";
-                        foreach (IUser userWinner in userWinners)
-                        {
-                            description = description + userWinner.Mention + ", ";
-                        }
-                        embed.Description = $"Winners: {description.Substring(0, description.Length - 2)}";
-                        await message.ModifyAsync(x => x.Embed = embed.Build());
-                        await Context.Channel.SendMessageAsync($"The new winners of the {embed.Title} are {description.Substring(0, description.Length - 2)} !");
-                    }
+                    embed.Description = $"Winner: {randomUser.Mention}";
+                    await message.ModifyAsync(x => x.Embed = embed.Build());
+                    await Context.Channel.SendMessageAsync($"The new winner of the {embed.Title} is {randomUser.Mention} !");
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
+                    List<IUser> userWinners = new List<IUser>();
+                    for (int i = 0; i < winners; i++)
+                    {
+                        IUser randomUser = users.GetRandomElement();
+                        while (randomUser.Id == Context.Guild.CurrentUser.Id || userWinners.Contains(randomUser))
+                        {
+                            randomUser = users.GetRandomElement();
+                        }
+                        userWinners.Add(randomUser);
+                    }
+                    string description = "";
+                    foreach (IUser userWinner in userWinners)
+                    {
+                        description = description + userWinner.Mention + ", ";
+                    }
+                    embed.Description = $"Winners: {description.Substring(0, description.Length - 2)}";
+                    await message.ModifyAsync(x => x.Embed = embed.Build());
+                    await Context.Channel.SendMessageAsync($"The new winners of the {embed.Title} are {description.Substring(0, description.Length - 2)} !");
                 }
             }
-            catch (Exception e)
+            else
             {
-                await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
             }
         }
 
@@ -2085,145 +2043,138 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Giveaway(string channel = null, string time = null, string winnersS = null, [Remainder] string item = null)
         {
-            try
+            if (channel == null || time == null || !double.TryParse(time, out double num2) || Math.Round(Convert.ToDouble(time), 0) < 0 || !int.TryParse(winnersS, out int winners) || winners < 1 || item == null)
             {
-                if (channel == null || time == null || !double.TryParse(time, out double num2) || Math.Round(Convert.ToDouble(time), 0) < 0 || !int.TryParse(winnersS, out int winners) || winners < 1 || item == null)
+                EmbedBuilder embed = new EmbedBuilder()
                 {
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 220, 220)
-                    };
-                    embed.Title = "Command: /giveaway";
-                    embed.Description = "**Description:** Create a giveaway.\n**Usage:** /giveaway [channel] [time] [winners] [item]\n**Example:** /giveaway pr2-discussion 60 1 Cowboy Hat";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    SocketTextChannel giveawayChannel = null;
-                    try
-                    {
-                        if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channel) != null)
-                        {
-                            if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channel) is SocketTextChannel)
-                            {
-                                giveawayChannel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channel) as SocketTextChannel;
-                            }
-                            else
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel `{channel}` is not a text channel so a giveaway cannot happen there.");
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find text channel `{channel}`.");
-                            return;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a text channel with ID: `{channel}`.");
-                        return;
-                    }
-                    double minutes = Math.Round(Convert.ToDouble(time), 0);
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"Winners: {winners} | Ends at")
-                    };
-                    embed.WithFooter(footer);
-                    embed.Title = $"{item}";
-                    embed.WithTimestamp((DateTime.Now).AddMinutes(minutes));
-                    embed.Description = $"React with <:artifact:260898610734956574> to enter the giveaway.\nTime left: {minutes} minutes.";
-                    IUserMessage message = null;
-                    try
-                    {
-                        message = await giveawayChannel.SendMessageAsync(":confetti_ball: **Giveaway** :confetti_ball:", false, embed.Build());
-                    }
-                    catch (Exception)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I do not have permission to speak in that channel.");
-                        return;
-                    }
-                    await message.AddReactionAsync(Emote.Parse("<:artifact:260898610734956574>"));
-                    int temptime = Convert.ToInt32(minutes) * 60000, divide = Convert.ToInt32(minutes / (minutes / 10)), count = 1;
-                    bool ended = false;
-                    while (count < divide)
-                    {
-                        await Task.Delay(temptime / divide);
-                        if (message.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:"))
-                        {
-                            count = count + divide;
-                            ended = true;
-                        }
-                        else
-                        {
-                            embed.Description = $"React with <:artifact:260898610734956574> to enter the giveaway.\nTime left: {minutes - (minutes / 10 * count)} minutes.";
-                            await message.ModifyAsync(x => x.Embed = embed.Build());
-                            count = count + 1;
-                        }
-                    }
-                    if (!ended)
-                    {
-                        var user = message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999);
-                        var users = user.ElementAt(0).Result;
-                        if (users.Count <= 1)
-                        {
-                            await giveawayChannel.SendMessageAsync("Nobody entered the giveaway.");
-                            embed.Description = $"Nobody entered the giveaway.";
-                            embed.Footer.Text = $"Winners: {winners} | Ended at";
-                            await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
-                            await message.ModifyAsync(x => x.Embed = embed.Build());
-                            return;
-                        }
-                        if (users.Count <= winners)
-                        {
-                            await giveawayChannel.SendMessageAsync("Not enough users entered the Giveaway.");
-                            embed.Description = $"Not enough users entered the Giveaway.";
-                            embed.Footer.Text = $"Winners: {winners} | Ended at";
-                            await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
-                            await message.ModifyAsync(x => x.Embed = embed.Build());
-                            return;
-                        }
-                        List<IUser> userWinners = new List<IUser>();
-                        for (int i = 0; i < winners; i++)
-                        {
-                            IUser randomUser = users.GetRandomElement();
-                            while (randomUser.Id == 383927022583545859 || userWinners.Contains(randomUser))
-                            {
-                                randomUser = users.GetRandomElement();
-                            }
-                            userWinners.Add(randomUser);
-                        }
-                        await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
-                        embed.Footer.Text = $"Winners: {winners} | Ended at";
-                        if (winners == 1)
-                        {
-                            embed.Description = $"Winner: {userWinners.ElementAt(0).Mention}";
-                            await giveawayChannel.SendMessageAsync($"The winner of the {item} is {userWinners.ElementAt(0).Mention} !");
-                            await message.ModifyAsync(x => x.Embed = embed.Build());
-                        }
-                        else
-                        {
-                            string description = "";
-                            foreach (IUser userWinner in userWinners)
-                            {
-                                description = description + userWinner.Mention + ", ";
-                            }
-                            embed.Description = $"Winners: {description}";
-                            await giveawayChannel.SendMessageAsync($"The winners of the {item} are {description.Substring(0, description.Length - 2)} !");
-                            await message.ModifyAsync(x => x.Embed = embed.Build());
-                        }
-                    }
-                }
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /giveaway";
+                embed.Description = "**Description:** Create a giveaway.\n**Usage:** /giveaway [channel] [time] [winners] [item]\n**Example:** /giveaway pr2-discussion 60 1 Cowboy Hat";
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
             }
-            catch (Exception e)
+            else
             {
-                await Extensions.ExceptionInfo(Context.Client, e.Message, e.StackTrace);
+                SocketTextChannel giveawayChannel = null;
+                try
+                {
+                    if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channel) != null)
+                    {
+                        if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channel) is SocketTextChannel)
+                        {
+                            giveawayChannel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channel) as SocketTextChannel;
+                        }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel `{channel}` is not a text channel so a giveaway cannot happen there.");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find text channel `{channel}`.");
+                        return;
+                    }
+                }
+                catch (NullReferenceException)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a text channel with ID: `{channel}`.");
+                    return;
+                }
+                double minutes = Math.Round(Convert.ToDouble(time), 0);
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                };
+                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                {
+                    IconUrl = Context.User.GetAvatarUrl(),
+                    Text = ($"Winners: {winners} | Ends at")
+                };
+                embed.WithFooter(footer);
+                embed.Title = $"{item}";
+                embed.WithTimestamp((DateTime.Now).AddMinutes(minutes));
+                embed.Description = $"React with <:artifact:260898610734956574> to enter the giveaway.\nTime left: {minutes} minutes.";
+                IUserMessage message = null;
+                try
+                {
+                    message = await giveawayChannel.SendMessageAsync(":confetti_ball: **Giveaway** :confetti_ball:", false, embed.Build());
+                }
+                catch (Discord.Net.HttpException)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I do not have permission to speak in that channel.");
+                    return;
+                }
+                await message.AddReactionAsync(Emote.Parse("<:artifact:260898610734956574>"));
+                int temptime = Convert.ToInt32(minutes) * 60000, divide = Convert.ToInt32(minutes / (minutes / 10)), count = 1;
+                bool ended = false;
+                while (count < divide)
+                {
+                    await Task.Delay(temptime / divide);
+                    if (message.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:"))
+                    {
+                        count = count + divide;
+                        ended = true;
+                    }
+                    else
+                    {
+                        embed.Description = $"React with <:artifact:260898610734956574> to enter the giveaway.\nTime left: {minutes - (minutes / 10 * count)} minutes.";
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                        count = count + 1;
+                    }
+                }
+                if (!ended)
+                {
+                    var user = message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999);
+                    var users = user.ElementAt(0).Result;
+                    if (users.Count <= 1)
+                    {
+                        await giveawayChannel.SendMessageAsync("Nobody entered the giveaway.");
+                        embed.Description = $"Nobody entered the giveaway.";
+                        embed.Footer.Text = $"Winners: {winners} | Ended at";
+                        await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                        return;
+                    }
+                    if (users.Count <= winners)
+                    {
+                        await giveawayChannel.SendMessageAsync("Not enough users entered the Giveaway.");
+                        embed.Description = $"Not enough users entered the Giveaway.";
+                        embed.Footer.Text = $"Winners: {winners} | Ended at";
+                        await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                        return;
+                    }
+                    List<IUser> userWinners = new List<IUser>();
+                    for (int i = 0; i < winners; i++)
+                    {
+                        IUser randomUser = users.GetRandomElement();
+                        while (randomUser.Id == 383927022583545859 || userWinners.Contains(randomUser))
+                        {
+                            randomUser = users.GetRandomElement();
+                        }
+                        userWinners.Add(randomUser);
+                    }
+                    await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
+                    embed.Footer.Text = $"Winners: {winners} | Ended at";
+                    if (winners == 1)
+                    {
+                        embed.Description = $"Winner: {userWinners.ElementAt(0).Mention}";
+                        await giveawayChannel.SendMessageAsync($"The winner of the {item} is {userWinners.ElementAt(0).Mention} !");
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                    }
+                    else
+                    {
+                        string description = "";
+                        foreach (IUser userWinner in userWinners)
+                        {
+                            description = description + userWinner.Mention + ", ";
+                        }
+                        embed.Description = $"Winners: {description}";
+                        await giveawayChannel.SendMessageAsync($"The winners of the {item} are {description.Substring(0, description.Length - 2)} !");
+                        await message.ModifyAsync(x => x.Embed = embed.Build());
+                    }
+                }
             }
         }
 
@@ -2294,7 +2245,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
@@ -2348,7 +2299,7 @@ namespace FredBotNETCore.Modules
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                 }
             }
-            catch (Exception)
+            catch (NullReferenceException)
             {
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
@@ -2445,7 +2396,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
@@ -2670,7 +2621,7 @@ namespace FredBotNETCore.Modules
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                 }
             }
-            catch (Exception)
+            catch (NullReferenceException)
             {
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
@@ -2872,7 +2823,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
@@ -2887,100 +2838,93 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task KickAsync(string username = null, [Remainder] string reason = null)
         {
-            try
+            if (Context.Guild.Id != 249657315576381450)
             {
-                if (Context.Guild.Id != 249657315576381450)
-                {
-                    return;
-                }
-
-                if (username == null || reason == null)
-                {
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 220, 220)
-                    };
-                    embed.Title = "Command: /kick";
-                    embed.Description = "**Description:** Kick a member.\n**Usage:** /kick [user] [reason]\n**Example:** /kick @Jiggmin Be nice :)";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    try
-                    {
-                        if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
-                        {
-                            SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
-                            if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                                return;
-                            }
-                            if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
-                                return;
-                            }
-                            ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                            {
-                                Name = $"Case {Database.CaseCount() + 1} | Kick | {user.Username}#{user.Discriminator}",
-                                IconUrl = user.GetAvatarUrl(),
-                            };
-                            EmbedBuilder embed = new EmbedBuilder()
-                            {
-                                Color = new Color(255, 0, 0),
-                                Author = auth
-                            };
-                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                            {
-                                Text = ($"ID: {user.Id}")
-                            };
-                            embed.WithFooter(footer);
-                            embed.WithCurrentTimestamp();
-                            embed.AddField(y =>
-                            {
-                                y.Name = "User";
-                                y.Value = user.Mention;
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Moderator";
-                                y.Value = Context.User.Mention;
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Reason";
-                                y.Value = reason;
-                                y.IsInline = true;
-                            });
-                            await Context.Message.DeleteAsync();
-                            RequestOptions options = new RequestOptions()
-                            {
-                                AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                            };
-                            await user.SendMessageAsync($"You have been kicked from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
-                            await user.KickAsync(null, options);
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Kick", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was kicked.");
-                            await banlog.SendMessageAsync("", false, embed.Build());
-                        }
-                        else
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
-                    }
-                }
+                return;
             }
-            catch (Exception e)
+
+            if (username == null || reason == null)
             {
-                await Extensions.ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /kick";
+                embed.Description = "**Description:** Kick a member.\n**Usage:** /kick [user] [reason]\n**Example:** /kick @Jiggmin Be nice :)";
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else
+            {
+                try
+                {
+                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    {
+                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            return;
+                        }
+                        if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            return;
+                        }
+                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        {
+                            Name = $"Case {Database.CaseCount() + 1} | Kick | {user.Username}#{user.Discriminator}",
+                            IconUrl = user.GetAvatarUrl(),
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(255, 0, 0),
+                            Author = auth
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = ($"ID: {user.Id}")
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.AddField(y =>
+                        {
+                            y.Name = "User";
+                            y.Value = user.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Moderator";
+                            y.Value = Context.User.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = true;
+                        });
+                        await Context.Message.DeleteAsync();
+                        RequestOptions options = new RequestOptions()
+                        {
+                            AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                        };
+                        await user.SendMessageAsync($"You have been kicked from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
+                        await user.KickAsync(null, options);
+                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Kick", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was kicked.");
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    }
+                }
+                catch (NullReferenceException)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                }
             }
         }
 
@@ -2992,99 +2936,92 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Ban(string username = null, [Remainder] string reason = null)
         {
-            try
+            if (Context.Guild.Id != 249657315576381450)
             {
-                if (Context.Guild.Id != 249657315576381450)
-                {
-                    return;
-                }
-                if (username == null || string.IsNullOrWhiteSpace(reason))
-                {
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(220, 220, 220)
-                    };
-                    embed.Title = "Command: /ban";
-                    embed.Description = "**Description:** Ban a member.\n**Usage:** /ban [user] [reason]\n**Example:** /ban @Jiggmin botting";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    try
-                    {
-                        if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
-                        {
-                            SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
-                            if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                                return;
-                            }
-                            if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
-                                return;
-                            }
-                            ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
-                            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                            {
-                                Name = $"Case {Database.CaseCount() + 1} | Ban | {user.Username}#{user.Discriminator}",
-                                IconUrl = user.GetAvatarUrl(),
-                            };
-                            EmbedBuilder embed = new EmbedBuilder()
-                            {
-                                Color = new Color(220, 220, 220),
-                                Author = auth
-                            };
-                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                            {
-                                Text = ($"ID: {user.Id}")
-                            };
-                            embed.WithFooter(footer);
-                            embed.WithCurrentTimestamp();
-                            embed.AddField(y =>
-                            {
-                                y.Name = "User";
-                                y.Value = user.Mention;
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Moderator";
-                                y.Value = Context.User.Mention;
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Reason";
-                                y.Value = reason;
-                                y.IsInline = true;
-                            });
-                            await Context.Message.DeleteAsync();
-                            RequestOptions options = new RequestOptions()
-                            {
-                                AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                            };
-                            await user.SendMessageAsync($"You have been banned from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
-                            await Context.Guild.AddBanAsync(user, 1, null, options);
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Ban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was banned.");
-                            await banlog.SendMessageAsync("", false, embed.Build());
-                        }
-                        else
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
-                    }
-                }
+                return;
             }
-            catch (Exception e)
+            if (username == null || string.IsNullOrWhiteSpace(reason))
             {
-                await Extensions.ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /ban";
+                embed.Description = "**Description:** Ban a member.\n**Usage:** /ban [user] [reason]\n**Example:** /ban @Jiggmin botting";
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else
+            {
+                try
+                {
+                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    {
+                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            return;
+                        }
+                        if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            return;
+                        }
+                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                        {
+                            Name = $"Case {Database.CaseCount() + 1} | Ban | {user.Username}#{user.Discriminator}",
+                            IconUrl = user.GetAvatarUrl(),
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(220, 220, 220),
+                            Author = auth
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = ($"ID: {user.Id}")
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.AddField(y =>
+                        {
+                            y.Name = "User";
+                            y.Value = user.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Moderator";
+                            y.Value = Context.User.Mention;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = reason;
+                            y.IsInline = true;
+                        });
+                        await Context.Message.DeleteAsync();
+                        RequestOptions options = new RequestOptions()
+                        {
+                            AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                        };
+                        await user.SendMessageAsync($"You have been banned from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
+                        await Context.Guild.AddBanAsync(user, 1, null, options);
+                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Ban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was banned.");
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                    }
+                }
+                catch (NullReferenceException)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                }
             }
         }
 
@@ -3100,7 +3037,6 @@ namespace FredBotNETCore.Modules
             {
                 return;
             }
-
             if (username == null || string.IsNullOrWhiteSpace(time) || string.IsNullOrWhiteSpace(reason) || Math.Round(Convert.ToDouble(time), 0) < 1)
             {
                 EmbedBuilder embed = new EmbedBuilder()
@@ -3258,7 +3194,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
@@ -3288,16 +3224,16 @@ namespace FredBotNETCore.Modules
                 await Context.Channel.SendMessageAsync("", false, embed.Build());
                 return;
             }
-            if (username == Context.User.Username)
-            {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you cannot temp mod yourself.");
-                return;
-            }
             try
             {
                 if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
                     SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                    if (user.Id == Context.User.Id)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you cannot temp mod yourself.");
+                        return;
+                    }
                     double minutes = Math.Round(Convert.ToDouble(time), 0);
                     ITextChannel roles = user.Guild.GetChannel(260272249976782848) as ITextChannel;
 
@@ -3334,7 +3270,7 @@ namespace FredBotNETCore.Modules
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                 }
             }
-            catch (Exception)
+            catch (NullReferenceException)
             {
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }

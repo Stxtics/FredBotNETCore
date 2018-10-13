@@ -29,7 +29,7 @@ namespace FredBotNETCore.Modules
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username}` does not exist or could not be found.");
                 }
             }
-            catch (Exception)
+            catch (NullReferenceException)
             {
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }

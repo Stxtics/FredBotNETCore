@@ -5,7 +5,6 @@ using Discord.WebSocket;
 using Discord;
 using System.Linq;
 using System;
-using FredBotNETCore.Modules.Public;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -230,6 +229,7 @@ namespace FredBotNETCore
             _client = c;
             _cmds = new CommandService();
             await _cmds.AddModulesAsync(Assembly.GetEntryAssembly(), Program._provider);
+            _cmds.Log += LogException;
 
             _client.MessageReceived += OnMessageReceived;
 
@@ -255,6 +255,16 @@ namespace FredBotNETCore
                 }
                 await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
             };
+        }
+
+        public async Task LogException(LogMessage message)
+        {
+            var user = _client.GetUser(181853112045142016);
+            var parts = message.Exception.ToString().SplitInParts(1990);
+            foreach (string part in parts)
+            {
+                await user.SendMessageAsync("```" + part + "```");
+            }
         }
 
         #region Log
@@ -465,7 +475,7 @@ namespace FredBotNETCore
             SocketTextChannel log = role.Guild.GetTextChannel(327575359765610496);
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
-                Name = "Role Deleted",
+                Name = "Role Created",
                 IconUrl = role.Guild.IconUrl
             };
             EmbedFooterBuilder footer = new EmbedFooterBuilder()
@@ -1252,41 +1262,33 @@ namespace FredBotNETCore
 
         public async Task OnMessageReceived(SocketMessage m)
         {
-            try
+            if (!(m is SocketUserMessage msg)) return;
+            bool badMessage = false;
+            if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
             {
-                if (!(m is SocketUserMessage msg)) return;
-                bool badMessage = false;
-                if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
+                if (channel.Guild.Id == 249657315576381450 && channel.Id != 327575359765610496)
                 {
-                    if (channel.Guild.Id == 249657315576381450 && channel.Id != 327575359765610496)
-                    {
-
-                        //var usermessages = channel.GetMessagesAsync().Flatten().Where(x => x.Author == msg.Author).Take(4).ToEnumerable();
-                        //if (((usermessages.ElementAt(0) as SocketUserMessage).CreatedAt - (usermessages.ElementAt(3) as SocketUserMessage).CreatedAt).Seconds < 5)
-                        //{
-                        //    embed.Fields.ElementAt(0).Value = "Sent 4 messages in less than 5 seconds";
-                        //    embed.Description = $"**Messages sent by {msg.Author.Mention} deleted in {channel.Mention}**\n{msg.Content}";
-                        //    PublicModule.Purging = true;
-                        //    await channel.DeleteMessagesAsync(usermessages);
-                        //    await log.SendMessageAsync("", false, embed.Build());
-                        //    PublicModule.Purging = false;
-                        //    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no spamming!");
-                        //    await Task.Delay(5000);
-                        //    PublicModule.Purging = true;
-                        //    await message.DeleteAsync();
-                        //    PublicModule.Purging = false;
-                        //}
-                        badMessage = await FilterMessage(msg, channel);
-                    }
-                }
-                if (!badMessage)
-                {
-                    await HandleCommand(msg);
+                    //var usermessages = channel.GetMessagesAsync().Flatten().Where(x => x.Author == msg.Author).Take(4).ToEnumerable();
+                    //if (((usermessages.ElementAt(0) as SocketUserMessage).CreatedAt - (usermessages.ElementAt(3) as SocketUserMessage).CreatedAt).Seconds < 5)
+                    //{
+                    //    embed.Fields.ElementAt(0).Value = "Sent 4 messages in less than 5 seconds";
+                    //    embed.Description = $"**Messages sent by {msg.Author.Mention} deleted in {channel.Mention}**\n{msg.Content}";
+                    //    PublicModule.Purging = true;
+                    //    await channel.DeleteMessagesAsync(usermessages);
+                    //    await log.SendMessageAsync("", false, embed.Build());
+                    //    PublicModule.Purging = false;
+                    //    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no spamming!");
+                    //    await Task.Delay(5000);
+                    //    PublicModule.Purging = true;
+                    //    await message.DeleteAsync();
+                    //    PublicModule.Purging = false;
+                    //}
+                    badMessage = await FilterMessage(msg, channel);
                 }
             }
-            catch (Exception e)
+            if (!badMessage)
             {
-                await Extensions.ExceptionInfo(_client, e.Message, e.StackTrace);
+                await HandleCommand(msg);
             }
         }
 
@@ -1357,6 +1359,10 @@ namespace FredBotNETCore
             if (msg.HasStringPrefix("/", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
             {
                 IResult result = await _cmds.ExecuteAsync(context, argPos, Program._provider);
+                if (!result.IsSuccess)
+                {
+                    await context.Channel.SendMessageAsync("Oh no an error occurred. Details of this error have been sent to <@181853112045142016> so that he can fix it.");
+                }
             }
         }
     }

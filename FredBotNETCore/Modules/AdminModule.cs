@@ -51,7 +51,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID: **{username}** is not in the Discord Server. Please check that the ID you used is correct and if it is then contact **Stxtics#0001**.");
                 }
@@ -134,7 +134,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{username}**.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
@@ -186,7 +186,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
@@ -237,7 +237,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{username}**.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
@@ -329,7 +329,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
                         }
                     }
-                    catch (Exception)
+                    catch (NullReferenceException)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                     }
@@ -406,7 +406,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
@@ -478,7 +478,7 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
                     }
                 }
-                catch (Exception)
+                catch (NullReferenceException)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
                 }
@@ -492,118 +492,111 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task AddModUser([Remainder] string mod = null)
         {
-            try
+            if (Context.Guild.Id != 249657315576381450)
             {
-                if (Context.Guild.Id != 249657315576381450)
+                return;
+            }
+            if (mod == null)
+            {
+                EmbedBuilder embed = new EmbedBuilder()
                 {
-                    return;
-                }
-                if (mod == null)
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /addmod";
+                embed.Description = "**Description:** Add a bot moderator or group of moderators.\n**Usage:** /addmod [user or role]\n**Example:** /addmod Jiggmin";
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else
+            {
+                try
                 {
-                    EmbedBuilder embed = new EmbedBuilder()
+                    if (Extensions.RoleInGuild(Context.Message, Context.Guild, mod) != null)
                     {
-                        Color = new Color(220, 220, 220)
-                    };
-                    embed.Title = "Command: /addmod";
-                    embed.Description = "**Description:** Add a bot moderator or group of moderators.\n**Usage:** /addmod [user or role]\n**Example:** /addmod Jiggmin";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    try
-                    {
-                        if (Extensions.RoleInGuild(Context.Message, Context.Guild, mod) != null)
+                        SocketRole role = Extensions.RoleInGuild(Context.Message, Context.Guild, mod);
+                        string currentModRoles = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"));
+                        if (currentModRoles.Contains(role.Id.ToString()))
                         {
-                            SocketRole role = Extensions.RoleInGuild(Context.Message, Context.Guild, mod);
-                            string currentModRoles = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"));
-                            if (currentModRoles.Contains(role.Id.ToString()))
-                            {
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"), currentModRoles);
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is already a mod role.");
-                            }
-                            else
-                            {
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"), currentModRoles + role.Id.ToString() + "\n");
-                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = "Added Mod Role",
-                                    IconUrl = Context.Guild.IconUrl
-                                };
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    Text = $"ID: {Context.User.Id}",
-                                    IconUrl = Context.User.GetAvatarUrl()
-                                };
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Author = author,
-                                    Color = new Color(0, 255, 0),
-                                    Footer = footer
-                                };
-                                embed.WithCurrentTimestamp();
-                                embed.Description = $"{Context.User.Mention} added {role.Mention} to the mod roles.";
-                                await Context.Channel.SendMessageAsync($"Added mod role **{role.Name}**.");
-                                await log.SendMessageAsync("", false, embed.Build());
-                            }
-                            return;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        //ignore
-                    }
-                    try
-                    {
-                        if (Extensions.UserInGuild(Context.Message, Context.Guild, mod) != null)
-                        {
-                            SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, mod);
-                            string currentModUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"));
-                            if (currentModUsers.Contains(user.Id.ToString()))
-                            {
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"), currentModUsers);
-                                await Context.Channel.SendMessageAsync($"{ Context.User.Mention} the user `{user.Username}` is already a mod.");
-                            }
-                            else
-                            {
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"), currentModUsers + user.Id.ToString() + "\n");
-                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = "Added Mod User",
-                                    IconUrl = Context.Guild.IconUrl
-                                };
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    Text = $"ID: {Context.User.Id}",
-                                    IconUrl = Context.User.GetAvatarUrl()
-                                };
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Author = author,
-                                    Color = new Color(0, 255, 0),
-                                    Footer = footer
-                                };
-                                embed.WithCurrentTimestamp();
-                                embed.Description = $"{Context.User.Mention} added {user.Mention} to the mod users.";
-                                await Context.Channel.SendMessageAsync($"Added mod **{user.Username}#{user.Discriminator}**.");
-                                await log.SendMessageAsync("", false, embed.Build());
-                            }
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"), currentModRoles);
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is already a mod role.");
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role `{mod}`.");
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"), currentModRoles + role.Id.ToString() + "\n");
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Added Mod Role",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(0, 255, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} added {role.Mention} to the mod roles.";
+                            await Context.Channel.SendMessageAsync($"Added mod role **{role.Name}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
                         }
-                    }
-                    catch (Exception)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role with ID: **{mod}**.");
+                        return;
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                await Extensions.ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                catch (NullReferenceException)
+                {
+                    //ignore
+                }
+                try
+                {
+                    if (Extensions.UserInGuild(Context.Message, Context.Guild, mod) != null)
+                    {
+                        SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, mod);
+                        string currentModUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"));
+                        if (currentModUsers.Contains(user.Id.ToString()))
+                        {
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"), currentModUsers);
+                            await Context.Channel.SendMessageAsync($"{ Context.User.Mention} the user `{user.Username}` is already a mod.");
+                        }
+                        else
+                        {
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"), currentModUsers + user.Id.ToString() + "\n");
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Added Mod User",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(0, 255, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} added {user.Mention} to the mod users.";
+                            await Context.Channel.SendMessageAsync($"Added mod **{user.Username}#{user.Discriminator}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role `{mod}`.");
+                    }
+                }
+                catch (NullReferenceException)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role with ID: **{mod}**.");
+                }
             }
         }
 
@@ -614,117 +607,110 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task DelMod([Remainder] string mod = null)
         {
-            try
+            if (Context.Guild.Id != 249657315576381450)
             {
-                if (Context.Guild.Id != 249657315576381450)
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(mod))
+            {
+                EmbedBuilder embed = new EmbedBuilder()
                 {
-                    return;
-                }
-                if (string.IsNullOrWhiteSpace(mod))
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /delmod";
+                embed.Description = "**Description:** Remove a bot moderator or group of moderators.\n**Usage:** /delmod [user or role]\n**Example:** /delmod Jiggmin";
+                await Context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else
+            {
+                try
                 {
-                    EmbedBuilder embed = new EmbedBuilder()
+                    if (Extensions.RoleInGuild(Context.Message, Context.Guild, mod) != null)
                     {
-                        Color = new Color(220, 220, 220)
-                    };
-                    embed.Title = "Command: /delmod";
-                    embed.Description = "**Description:** Remove a bot moderator or group of moderators.\n**Usage:** /delmod [user or role]\n**Example:** /delmod Jiggmin";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    try
-                    {
-                        if (Extensions.RoleInGuild(Context.Message, Context.Guild, mod) != null)
+                        SocketRole role = (Extensions.RoleInGuild(Context.Message, Context.Guild, mod));
+                        string modRoles = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"));
+                        if (modRoles.Contains(role.Id.ToString()))
                         {
-                            SocketRole role = (Extensions.RoleInGuild(Context.Message, Context.Guild, mod));
-                            string modRoles = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"));
-                            if (modRoles.Contains(role.Id.ToString()))
+                            modRoles = modRoles.Replace(role.Id.ToString() + "\n", string.Empty);
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"), modRoles);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
-                                modRoles = modRoles.Replace(role.Id.ToString() + "\n", string.Empty);
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"), modRoles);
-                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = "Removed Mod Role",
-                                    IconUrl = Context.Guild.IconUrl
-                                };
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    Text = $"ID: {Context.User.Id}",
-                                    IconUrl = Context.User.GetAvatarUrl()
-                                };
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Author = author,
-                                    Color = new Color(255, 0, 0),
-                                    Footer = footer
-                                };
-                                embed.WithCurrentTimestamp();
-                                embed.Description = $"{Context.User.Mention} removed {role.Mention} from the mod roles.";
-                                await Context.Channel.SendMessageAsync($"Removed mod role **{mod}**.");
-                                await log.SendMessageAsync("", false, embed.Build());
-                            }
-                            else
+                                Name = "Removed Mod Role",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{mod}` is not a mod role.");
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        //ignore
-                    }
-                    try
-                    {
-                        if (Extensions.UserInGuild(Context.Message, Context.Guild, mod) != null)
-                        {
-                            SocketUser user = (Extensions.UserInGuild(Context.Message, Context.Guild, mod));
-                            string modUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"));
-                            if (modUsers.Contains(user.Id.ToString()))
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
                             {
-                                modUsers = modUsers.Replace(user.Id.ToString() + "\n", string.Empty);
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"), modUsers);
-                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = "Removed Mod User",
-                                    IconUrl = Context.Guild.IconUrl
-                                };
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    Text = $"ID: {Context.User.Id}",
-                                    IconUrl = Context.User.GetAvatarUrl()
-                                };
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Author = author,
-                                    Color = new Color(255, 0, 0),
-                                    Footer = footer
-                                };
-                                embed.WithCurrentTimestamp();
-                                embed.Description = $"{Context.User.Mention} removed {user.Mention} from the mod users.";
-                                await Context.Channel.SendMessageAsync($"Removed mod **{mod}**.");
-                                await log.SendMessageAsync("", false, embed.Build());
-                            }
-                            else
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{mod}` is not a mod.");
-                            }
+                                Author = author,
+                                Color = new Color(255, 0, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} removed {role.Mention} from the mod roles.";
+                            await Context.Channel.SendMessageAsync($"Removed mod role **{mod}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role `{mod}`.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{mod}` is not a mod role.");
                         }
                     }
-                    catch (Exception)
+                }
+                catch (NullReferenceException)
+                {
+                    //ignore
+                }
+                try
+                {
+                    if (Extensions.UserInGuild(Context.Message, Context.Guild, mod) != null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role with ID: **{mod}**.");
+                        SocketUser user = (Extensions.UserInGuild(Context.Message, Context.Guild, mod));
+                        string modUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"));
+                        if (modUsers.Contains(user.Id.ToString()))
+                        {
+                            modUsers = modUsers.Replace(user.Id.ToString() + "\n", string.Empty);
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"), modUsers);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Removed Mod User",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(255, 0, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} removed {user.Mention} from the mod users.";
+                            await Context.Channel.SendMessageAsync($"Removed mod **{mod}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
+                        }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{mod}` is not a mod.");
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role `{mod}`.");
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                await Extensions.ExceptionInfo(Context.Client as DiscordSocketClient, e.Message, e.StackTrace);
+                catch (NullReferenceException)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role with ID: **{mod}**.");
+                }
             }
         }
 
@@ -852,48 +838,51 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task UnblacklistWord([Remainder] string word = null)
         {
-            if (string.IsNullOrWhiteSpace(word))
+            if (Context.Guild.Id == 249657315576381450)
             {
-                EmbedBuilder embed = new EmbedBuilder()
+                if (string.IsNullOrWhiteSpace(word))
                 {
-                    Color = new Color(220, 200, 220)
-                };
-                embed.Title = "Command: /unblacklistword";
-                embed.Description = "**Description:** Unblacklist a word from being said in the server.\n**Usage:** /unblacklistword [word]\n**Example:** /unblacklistword freak monster";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
-            }
-            else
-            {
-                string currentBlacklistedWords = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt"));
-                if (currentBlacklistedWords.Contains(word, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    currentBlacklistedWords = currentBlacklistedWords.Replace(word + "\n", string.Empty);
-                    File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt"), currentBlacklistedWords);
-                    SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
-                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                    {
-                        Name = "Word Blacklist Remove",
-                        IconUrl = Context.Guild.IconUrl
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        Text = $"ID: {Context.User.Id}",
-                        IconUrl = Context.User.GetAvatarUrl()
-                    };
                     EmbedBuilder embed = new EmbedBuilder()
                     {
-                        Author = author,
-                        Color = new Color(0, 255, 0),
-                        Footer = footer
+                        Color = new Color(220, 200, 220)
                     };
-                    embed.WithCurrentTimestamp();
-                    embed.Description = $"{Context.User.Mention} unblacklisted the word **{word}**.";
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully unblacklisted the word **{word}**.");
-                    await log.SendMessageAsync("", false, embed.Build());
+                    embed.Title = "Command: /unblacklistword";
+                    embed.Description = "**Description:** Unblacklist a word from being said in the server.\n**Usage:** /unblacklistword [word]\n**Example:** /unblacklistword freak monster";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the word `{word.Replace("`", string.Empty)}` is not a blacklisted word.");
+                    string currentBlacklistedWords = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt"));
+                    if (currentBlacklistedWords.Contains(word, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        currentBlacklistedWords = currentBlacklistedWords.Replace(word + "\n", string.Empty);
+                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt"), currentBlacklistedWords);
+                        SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = "Word Blacklist Remove",
+                            IconUrl = Context.Guild.IconUrl
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = $"ID: {Context.User.Id}",
+                            IconUrl = Context.User.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(0, 255, 0),
+                            Footer = footer
+                        };
+                        embed.WithCurrentTimestamp();
+                        embed.Description = $"{Context.User.Mention} unblacklisted the word **{word}**.";
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully unblacklisted the word **{word}**.");
+                        await log.SendMessageAsync("", false, embed.Build());
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the word `{word.Replace("`", string.Empty)}` is not a blacklisted word.");
+                    }
                 }
             }
         }

@@ -126,11 +126,11 @@ namespace FredBotNETCore.Modules.Public
                 "/lotto - Have a go at winning the jackpot.\n" +
                 "/daily - Collect money the day.\n" +
                 "/pay - Pay a user money.\n" +
+                "/weather - Get weather for a city.\n" +
                 "**Everyone**\n" +
                 "/help - Tells you commands that you can use for me.\n" +
                 "/suggest - Lets you add a suggestion for the suggestions channel.\n" +
-                "/verify - Gives you instructions on how to get verified(if you are not).\n" +
-                "/weather - Get weather for a city.";
+                "/verify - Gives you instructions on how to get verified(if you are not).\n";
             embed.Title = "Fred the G. Cactus Commands";
             var parts = help.SplitInParts(2000);
             foreach (string part in parts)
