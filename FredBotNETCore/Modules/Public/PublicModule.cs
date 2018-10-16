@@ -1729,7 +1729,7 @@ namespace FredBotNETCore.Modules.Public
                         y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0")}";
                         y.IsInline = true;
                     });
-                    if (stats.GetValue("last").ToString().Length > 0)
+                    if (stats.GetValue("last") != null)
                     {
                         embed.AddField(y =>
                         {
