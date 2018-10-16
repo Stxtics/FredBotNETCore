@@ -538,7 +538,7 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser user = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(5).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await (channel as SocketGuildChannel).Guild.GetAuditLogsAsync(2).FlattenAsync())
             {
                 if (audit.Action == ActionType.ChannelUpdated)
                 {
@@ -802,11 +802,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceGuildMemberUpdated(SocketGuildUser user, SocketGuildUser user2)
         {
-            if (user.Guild.Id != 249657315576381450)
-            {
-                return;
-            }
-            if (user.Status != user2.Status)
+            if (user.Guild.Id != 249657315576381450 || (user.Roles.Count == user2.Roles.Count && user.Nickname == user2.Nickname))
             {
                 return;
             }
@@ -831,7 +827,7 @@ namespace FredBotNETCore
             IUser iUser = null;
             string reason = null;
             Discord.Rest.RestAuditLogEntry restAuditLog = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(5).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(2).FlattenAsync())
             {
                 if (audit.Action == ActionType.MemberUpdated || audit.Action == ActionType.MemberRoleUpdated)
                 {
@@ -890,7 +886,7 @@ namespace FredBotNETCore
             {
                 if (restAuditLog.Action == ActionType.MemberUpdated)
                 {
-                    foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(5).FlattenAsync())
+                    foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(2).FlattenAsync())
                     {
                         if (audit.Action == ActionType.MemberRoleUpdated)
                         {
@@ -982,7 +978,7 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser iUser = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await channel2.Guild.GetAuditLogsAsync(5).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await channel2.Guild.GetAuditLogsAsync(2).FlattenAsync())
             {
                 if (audit.Action == ActionType.MessageDeleted)
                 {
@@ -1359,7 +1355,7 @@ namespace FredBotNETCore
             if (msg.HasStringPrefix("/", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
             {
                 IResult result = await _cmds.ExecuteAsync(context, argPos, Program._provider);
-                if (!result.IsSuccess)
+                if (result.Error.HasValue && result.Error.Value == CommandError.Exception)
                 {
                     await context.Channel.SendMessageAsync("Oh no an error occurred. Details of this error have been sent to <@181853112045142016> so that he can fix it.");
                 }

@@ -1729,12 +1729,24 @@ namespace FredBotNETCore.Modules.Public
                         y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0")}";
                         y.IsInline = true;
                     });
-                    embed.AddField(y =>
+                    if (stats.GetValue("last").ToString().Length > 0)
                     {
-                        y.Name = "Last WU";
-                        y.Value = $"{stats.GetValue("last")}";
-                        y.IsInline = true;
-                    });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Last WU";
+                            y.Value = $"{stats.GetValue("last")}";
+                            y.IsInline = true;
+                        });
+                    }
+                    else
+                    {
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Last WU";
+                            y.Value = $"N/A";
+                            y.IsInline = true;
+                        });
+                    }
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
             }
