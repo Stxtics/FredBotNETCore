@@ -186,7 +186,7 @@ namespace FredBotNETCore
                 SocketTextChannel channel = Guild.GetTextChannel(249678944956055562);
                 RequestOptions options = new RequestOptions()
                 {
-                    AuditLogReason = "Announcing happy hour"
+                    AuditLogReason = "Announcing happy hour on " + Name
                 };
                 await RoleM.ModifyAsync(x => x.Mentionable = true, options);
                 await channel.SendMessageAsync($"{RoleM.Mention} A happy hour has just started on Server: {Name}");
@@ -1142,7 +1142,14 @@ namespace FredBotNETCore
                     Footer = footer
                 };
                 embed.WithCurrentTimestamp();
-                embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild.\nTotal members: **{user.Guild.MemberCount}**";
+                if ((DateTime.Now - user.CreatedAt).Days == 0)
+                {
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild. Account created today.\nTotal members: **{user.Guild.MemberCount}**";
+                }
+                else
+                {
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild. Account created {(DateTime.Now - user.CreatedAt).Days} days ago.\nTotal members: **{user.Guild.MemberCount}**";
+                }
                 await log.SendMessageAsync("", false, embed.Build());
                 var result = Database.CheckExistingUser(user);
                 if (result.Count() <= 0)
@@ -1235,7 +1242,7 @@ namespace FredBotNETCore
             }
             if (iUser == null)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** left the guild. Total members: **{user.Guild.MemberCount}**";
+                embed.Description = $"**{user.Username}#{user.Discriminator}** left the guild. They spent {(DateTime.Now - user.JoinedAt).Value.Days} days in the server.\nTotal members: **{user.Guild.MemberCount}**";
             }
             else
             {
@@ -1260,6 +1267,7 @@ namespace FredBotNETCore
         {
             if (!(m is SocketUserMessage msg)) return;
             bool badMessage = false;
+            if (msg.Author.IsBot) return;
             if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
             {
                 if (channel.Guild.Id == 249657315576381450 && channel.Id != 327575359765610496)

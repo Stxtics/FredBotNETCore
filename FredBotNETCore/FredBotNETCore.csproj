@@ -13,17 +13,17 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Addons.Preconditions" Version="1.2.0-alpha2" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00991" />
-    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-00991" />
-    <PackageReference Include="Google.Apis" Version="1.35.2" />
-    <PackageReference Include="Google.Apis.Auth" Version="1.35.2" />
-    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.35.2.1226" />
-    <PackageReference Include="MySql.Data.EntityFrameworkCore" Version="8.0.12" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-01018" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-01018" />
+    <PackageReference Include="Google.Apis" Version="1.36.1" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.36.1" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.36.1.1226" />
+    <PackageReference Include="MySql.Data.EntityFrameworkCore" Version="8.0.13" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="System.IO" Version="4.3.0" />
     <PackageReference Include="System.Linq" Version="4.3.0" />
-    <PackageReference Include="System.Net.Http" Version="4.3.3" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
     <PackageReference Include="System.Net.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Net.Security" Version="4.3.2" />

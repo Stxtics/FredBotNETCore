@@ -91,7 +91,7 @@ namespace FredBotNETCore
                 youtubedl.WaitForExit();
                 //Read Title
                 string[] lines = youtubedl.StandardOutput.ReadToEnd().Split('\n');
-
+                
                 if (lines.Length >= 2)
                 {
                     title = lines[0];

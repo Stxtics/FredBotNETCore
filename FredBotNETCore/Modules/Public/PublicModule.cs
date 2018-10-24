@@ -203,7 +203,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     try
                     {
-                        leaderboard = leaderboard + "**" + (i + 1).ToString() + ".**" + (Context.Client.GetUser(Convert.ToUInt64(userid)).Username + "#" + Context.Client.GetUser(Convert.ToUInt64(userid)).Discriminator + " - " + topBalance.ElementAt(i) + "\n");
+                        leaderboard = leaderboard + "**" + (i + 1).ToString() + ".** " + (Context.Client.GetUser(Convert.ToUInt64(userid)).Username + "#" + Context.Client.GetUser(Convert.ToUInt64(userid)).Discriminator + " - " + topBalance.ElementAt(i) + "\n");
                         i++;
                     }
                     catch (Exception)
@@ -1701,53 +1701,60 @@ namespace FredBotNETCore.Modules.Public
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
                     }
-                    var o = JObject.Parse(text).GetValue("teams");
-                    JArray array = JArray.Parse(o.ToString());
-                    JObject stats = new JObject();
-                    foreach (JObject jobject in array)
+                    try
                     {
-                        if (Convert.ToInt32(jobject.GetValue("team")) == 143016)
+                        var o = JObject.Parse(text).GetValue("teams");
+                        JArray array = JArray.Parse(o.ToString());
+                        JObject stats = new JObject();
+                        foreach (JObject jobject in array)
                         {
-                            stats = jobject;
-                            break;
+                            if (Convert.ToInt32(jobject.GetValue("team")) == 143016)
+                            {
+                                stats = jobject;
+                                break;
+                            }
                         }
-                    }
-                    if (stats.Count == 0)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser.Replace("`", string.Empty)}` does not exist or could not be found.");
-                        return;
-                    }
-                    embed.AddField(y =>
-                    {
-                        y.Name = $"Score";
-                        y.Value = $"{Convert.ToInt32(stats.GetValue("credit")).ToString("N0")}";
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Completed WUs";
-                        y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0")}";
-                        y.IsInline = true;
-                    });
-                    if (stats.GetValue("last") != null)
-                    {
+                        if (stats.Count == 0)
+                        {
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser.Replace("`", string.Empty)}` does not exist or could not be found.");
+                            return;
+                        }
                         embed.AddField(y =>
                         {
-                            y.Name = "Last WU";
-                            y.Value = $"{stats.GetValue("last")}";
+                            y.Name = $"Score";
+                            y.Value = $"{Convert.ToInt32(stats.GetValue("credit")).ToString("N0")}";
                             y.IsInline = true;
                         });
-                    }
-                    else
-                    {
                         embed.AddField(y =>
                         {
-                            y.Name = "Last WU";
-                            y.Value = $"N/A";
+                            y.Name = "Completed WUs";
+                            y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0")}";
                             y.IsInline = true;
                         });
+                        if (stats.GetValue("last") != null)
+                        {
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Last WU";
+                                y.Value = $"{stats.GetValue("last")}";
+                                y.IsInline = true;
+                            });
+                        }
+                        else
+                        {
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Last WU";
+                                y.Value = $"N/A";
+                                y.IsInline = true;
+                            });
+                        }
+                        await Context.Channel.SendMessageAsync("", false, embed.Build());
                     }
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    catch(JsonReaderException)
+                    {
+                        await ReplyAsync($"{Context.User.Mention} the F@H Api is currently down.");
+                    }   
                 }
             }
             else
@@ -2339,7 +2346,8 @@ namespace FredBotNETCore.Modules.Public
                     }
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
-                        Name = $"-- {title} --"
+                        Name = $"-- {title} --",
+                        Url = "https://pr2hub.com/levels/" + Extensions.GetBetween(responseString, "levelID0=", "&version0=") + ".txt?version=" + version
                     };
                     EmbedBuilder embed = new EmbedBuilder()
                     {

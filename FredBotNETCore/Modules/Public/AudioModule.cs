@@ -12,6 +12,8 @@ using Discord.Commands;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
+using System.Net;
+using Newtonsoft.Json.Linq;
 
 namespace FredBotNETCore.Modules.Public
 {
@@ -144,74 +146,68 @@ namespace FredBotNETCore.Modules.Public
                         {
                             if (url.Contains("&list="))
                             {
-                                string[] urlS = url.Split("&list=");
-                                url = urlS[0];
+                                url = url.Split("&list=").First();
                             }
-                            Tuple<string, string> info = null;
-                            try
+                            WebClient myDownloader = new WebClient
                             {
-                                info = await DownloadHelper.GetInfo(url);
+                                Encoding = System.Text.Encoding.UTF8
+                            };
+                            string[] urlS = url.Split("watch?v=");
+                            string jsonResponse = myDownloader.DownloadString(
+                            "https://www.googleapis.com/youtube/v3/videos?id=" + urlS[1] + "&key="
+                            + File.ReadAllText(Path.Combine(downloadPath, "YoutubeApiKey.txt")) + "&part=contentDetails");
+                            var duration = System.Xml.XmlConvert.ToTimeSpan(Extensions.GetBetween(jsonResponse, "\"duration\": \"", "\","));
+                            jsonResponse = myDownloader.DownloadString(
+                            "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + urlS[1] + "&key="
+                            + File.ReadAllText(Path.Combine(downloadPath, "YoutubeApiKey.txt")));
+                            string title = Extensions.GetBetween(jsonResponse, "\"title\": \"", "\",");
+                            if (duration.TotalMinutes > 10)
+                            {
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
                             }
-                            catch (Exception)
+                            else if (Queue.Any(x => x.Item1.Contains(urlS[1])))
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} this video URL is not supported.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
                             }
-                            if (info != null)
+                            else
                             {
-                                if (info.Item2.Equals("0") && info.Item1.Equals("No Title found"))
+                                var searchListRequest = youtubeService.Search.List("snippet");
+                                searchListRequest.Q = title;
+                                searchListRequest.MaxResults = 1;
+                                searchListRequest.Type = "video";
+                                var searchListResponse = await searchListRequest.ExecuteAsync();
+                                string channel = "";
+                                ThumbnailDetails thumbnails = null;
+                                foreach (var searchResult in searchListResponse.Items)
                                 {
-                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} that is not a youtube video or it is a livestream.");
-                                    return;
-                                }
-                                string[] duration = info.Item2.Split(":");
-                                string[] urlS = url.Split("watch?v=");
-                                if (Convert.ToInt32(duration[0]) >= 10 || duration.Count() > 2)
-                                {
-                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
-                                }
-                                else if (Queue.Any(x => x.Item1.Contains(urlS[1])))
-                                {
-                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
-                                }
-                                else
-                                {
-                                    var searchListRequest = youtubeService.Search.List("snippet");
-                                    searchListRequest.Q = info.Item1;
-                                    searchListRequest.MaxResults = 1;
-                                    searchListRequest.Type = "youtube#video";
-                                    var searchListResponse = await searchListRequest.ExecuteAsync();
-                                    string channel = "";
-                                    ThumbnailDetails thumbnails = null;
-                                    foreach (var searchResult in searchListResponse.Items)
+                                    switch (searchResult.Id.Kind)
                                     {
-                                        switch (searchResult.Id.Kind)
-                                        {
-                                            case "youtube#video":
-                                                channel = searchResult.Snippet.ChannelTitle;
-                                                thumbnails = searchResult.Snippet.Thumbnails;
-                                                break;
-                                        }
+                                        case "youtube#video":
+                                            channel = searchResult.Snippet.ChannelTitle;
+                                            thumbnails = searchResult.Snippet.Thumbnails;
+                                            break;
                                     }
-                                    EmbedBuilder embed = new EmbedBuilder()
+                                }
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                                    Author = new EmbedAuthorBuilder()
                                     {
-                                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                                        Author = new EmbedAuthorBuilder()
-                                        {
-                                            Name = "Add song",
-                                            Url = url
-                                        },
-                                        Fields = new List<EmbedFieldBuilder>
+                                        Name = "Add song",
+                                        Url = url
+                                    },
+                                    Fields = new List<EmbedFieldBuilder>
                                         {
                                             new EmbedFieldBuilder
                                             {
                                                 Name = "Song",
-                                                Value = info.Item1,
+                                                Value = title,
                                                 IsInline = false
                                             },
                                             new EmbedFieldBuilder
                                             {
                                                 Name = "Duration",
-                                                Value = info.Item2,
+                                                Value = duration.Minutes + ":" + duration.Seconds,
                                                 IsInline = false
                                             },
                                             new EmbedFieldBuilder
@@ -221,69 +217,69 @@ namespace FredBotNETCore.Modules.Public
                                                 IsInline = false
                                             }
                                         },
-                                        Footer = new EmbedFooterBuilder()
-                                        {
-                                            IconUrl = Context.User.GetAvatarUrl(),
-                                            Text = $"Queued by {Context.User.Username}#{Context.User.Discriminator}"
-                                        },
-                                        ThumbnailUrl = thumbnails.High.Url
-                                    };
-                                    embed.WithCurrentTimestamp();
-                                    string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp");
-                                    string location = Path.Combine(downloadPath, urlS[1] + ".webm.part");
-                                    var vidInfo = new Tuple<string, string, string, string, string, string, string>(location, info.Item1, info.Item2, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
-                                    if (Queue.Any(x => x.Item1.Contains(urlS[1])))
+                                    Footer = new EmbedFooterBuilder()
                                     {
-                                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
+                                        IconUrl = Context.User.GetAvatarUrl(),
+                                        Text = $"Queued by {Context.User.Username}#{Context.User.Discriminator}"
+                                    },
+                                    ThumbnailUrl = thumbnails.High.Url
+                                };
+                                embed.WithCurrentTimestamp();
+                                string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp");
+                                string location = Path.Combine(downloadPath, urlS[1] + ".webm.part");
+                                var vidInfo = new Tuple<string, string, string, string, string, string, string>(location, title, duration.Minutes + ":" + duration.Seconds, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
+                                if (Queue.Any(x => x.Item1.Contains(urlS[1])))
+                                {
+                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
+                                    return;
+                                }
+                                DirectoryInfo di = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Temp"));
+                                foreach (FileInfo file in di.EnumerateFiles())
+                                {
+                                    if (file.Name.Contains(urlS[1]))
+                                    {
+                                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} this song was recently added (within 10 minutes).");
                                         return;
                                     }
-                                    DirectoryInfo di = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "Temp"));
-                                    foreach (FileInfo file in di.EnumerateFiles())
-                                    {
-                                        if (file.Name.Contains(urlS[1]))
-                                        {
-                                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} this song was recently added (within 10 minutes).");
-                                            return;
-                                        }
-                                    }
-                                    Queue.Enqueue(vidInfo);
-                                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                                    if (Context.Guild.CurrentUser.VoiceChannel == null)
-                                    {
-                                        Audio = await _voiceChannel.ConnectAsync();
-                                        Discord = Audio.CreatePCMStream(AudioApplication.Mixed, 64000);
-                                    }
-                                    if (Playing)
-                                    {
-                                        Pause = false;
-                                    }
-                                    if (Pause)
-                                    {
-                                        Playing = false;
-                                    }
-                                    if (!MusicStarted)
-                                    {
-                                        Pause = false;
-                                        Playing = true;
-                                        MusicStarted = true;
-                                        Task.WaitAny(Task.Factory.StartNew(() => MusicPlay()), Task.Factory.StartNew(() => DownloadHelper.Download(url)));
-                                    }
-                                    else
-                                    {
-                                        await DownloadHelper.Download(url);
-                                    }
+                                }
+                                Queue.Enqueue(vidInfo);
+                                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                                if (Context.Guild.CurrentUser.VoiceChannel == null)
+                                {
+                                    Audio = await _voiceChannel.ConnectAsync();
+                                    Discord = Audio.CreatePCMStream(AudioApplication.Mixed, 64000);
+                                }
+                                if (Playing)
+                                {
+                                    Pause = false;
+                                }
+                                if (Pause)
+                                {
+                                    Playing = false;
+                                }
+                                if (!MusicStarted)
+                                {
+                                    Pause = false;
+                                    Playing = true;
+                                    MusicStarted = true;
+                                    Console.WriteLine(1);
+                                    Task.WaitAny(Task.Factory.StartNew(() => MusicPlay()), Task.Factory.StartNew(() => DownloadHelper.Download(url)));
+                                    Console.WriteLine(2);
+                                }
+                                else
+                                {
+                                    await DownloadHelper.Download(url);
                                 }
                             }
                         }
                         else
                         {
-                            Tuple<string, string> info = null;
                             var searchListRequest = youtubeService.Search.List("snippet");
                             searchListRequest.Q = url;
                             searchListRequest.MaxResults = 1;
                             searchListRequest.Type = "video";
                             var searchListResponse = await searchListRequest.ExecuteAsync();
-                            string channel = "";
+                            string channel = "", title = "";
                             ThumbnailDetails thumbnails = null;
                             foreach (var searchResult in searchListResponse.Items)
                             {
@@ -293,19 +289,20 @@ namespace FredBotNETCore.Modules.Public
                                         channel = searchResult.Snippet.ChannelTitle;
                                         thumbnails = searchResult.Snippet.Thumbnails;
                                         url = "https://www.youtube.com/watch?v=" + searchResult.Id.VideoId;
+                                        title = searchResult.Snippet.Title;
                                         break;
                                 }
                             }
                             string[] urlS = url.Split("watch?v=");
-                            info = await DownloadHelper.GetInfo(url);
-                            if (info.Item2.Equals("0") && info.Item1.Equals("No Title found"))
+                            WebClient myDownloader = new WebClient
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that is not a youtube video or it is a livestream.");
-                                return;
-                            }
-                            string[] duration = info.Item2.Split(":");
-
-                            if (Convert.ToInt32(duration[0]) >= 10 || duration.Count() > 2)
+                                Encoding = System.Text.Encoding.UTF8
+                            };
+                            string jsonResponse = myDownloader.DownloadString(
+                            "https://www.googleapis.com/youtube/v3/videos?id=" + urlS[1] + "&key="
+                            + File.ReadAllText(Path.Combine(downloadPath, "YoutubeApiKey.txt")) + "&part=contentDetails");
+                            var duration = System.Xml.XmlConvert.ToTimeSpan(Extensions.GetBetween(jsonResponse, "\"duration\": \"", "\","));
+                            if (duration.TotalMinutes > 10)
                             {
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
                             }
@@ -328,13 +325,13 @@ namespace FredBotNETCore.Modules.Public
                                             new EmbedFieldBuilder
                                             {
                                                 Name = "Song",
-                                                Value = info.Item1,
+                                                Value = title,
                                                 IsInline = false
                                             },
                                             new EmbedFieldBuilder
                                             {
                                                 Name = "Duration",
-                                                Value = info.Item2,
+                                                Value = duration.Minutes + ":" + duration.Seconds,
                                                 IsInline = false
                                             },
                                             new EmbedFieldBuilder
@@ -353,8 +350,8 @@ namespace FredBotNETCore.Modules.Public
                                 };
                                 embed.WithCurrentTimestamp();
                                 string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp");
-                                string location = Path.Combine(downloadPath, urlS[1] + ".webm.part");
-                                var vidInfo = new Tuple<string, string, string, string, string, string, string>(location, info.Item1, info.Item2, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
+                                string location = Path.Combine(downloadPath, urlS[1] + ".webm");
+                                var vidInfo = new Tuple<string, string, string, string, string, string, string>(location, title, duration.Minutes + ":" + duration.Seconds, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
                                 if (Queue.Any(x => x.Item1.Contains(urlS[1])))
                                 {
                                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
@@ -987,11 +984,11 @@ namespace FredBotNETCore.Modules.Public
         {
             while (!File.Exists(path))
             {
-                path = path.Replace("webm.part", "mp3");
+                path = path.Replace("webm", "mp3");
                 await Task.Delay(500);
                 if (!File.Exists(path))
                 {
-                    path = path.Replace("mp3", "webm.part");
+                    path = path.Replace("mp3", "webm");
                 }
             }
             Process ffmpeg = GetFfmpeg(path);
