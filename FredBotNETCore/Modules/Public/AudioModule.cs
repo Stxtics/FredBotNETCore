@@ -65,10 +65,15 @@ namespace FredBotNETCore.Modules.Public
         private static string PlayingUrl { get; set; }
         private async Task SendQueue(IMessageChannel channel)
         {
+            DateTime totalDuration = new DateTime();
+            foreach (Tuple<string, string, string, string, string, string, string> song in Queue)
+            {
+                totalDuration = totalDuration.Add(new TimeSpan(0, int.Parse(song.Item3.Split(":").First()), int.Parse(song.Item3.Split(":").Last())));
+            }
             EmbedBuilder builder = new EmbedBuilder()
             {
                 Author = new EmbedAuthorBuilder { Name = $"Queue ({Queue.Count}/20)" },
-                Footer = new EmbedFooterBuilder() { Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})", IconUrl = Context.User.GetAvatarUrl() },
+                Footer = new EmbedFooterBuilder() { Text = $"Length: {totalDuration.Minute}:{totalDuration.Second}", IconUrl = Context.User.GetAvatarUrl() },
                 Color = Pause ? new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)) : new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
             };
             builder.WithCurrentTimestamp();
