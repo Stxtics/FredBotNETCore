@@ -404,7 +404,7 @@ namespace FredBotNETCore.Modules.Public
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} check your DMs to verify your PR2 or JV2 account. ");
             }
             await Context.User.SendMessageAsync($"Hello {Context.User.Mention} , to verify your PR2 account please send a PM to `FredTheG.CactusBot` on PR2 " +
-                $"saying only `{(Context.User.GetOrCreateDMChannelAsync()).Id}`.\nThen once you have sent the PM type `/verifycomplete <PR2 account name>` without <> in this channel. PR2 account name = name of " +
+                $"saying only `{(await Context.User.GetOrCreateDMChannelAsync()).Id}`.\nThen once you have sent the PM type `/verifycomplete <PR2 account name>` without <> in this channel. PR2 account name = name of " +
                 $"account you sent the PM from.");
             //\n\nOr to verify your JV2 account type `/verifyjv2 <JV2 account name>` whitout <> in this channel. JV2 account name = name of your JV2 account.
         }
