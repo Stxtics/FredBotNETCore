@@ -951,10 +951,6 @@ namespace FredBotNETCore.Modules.Public
                         {
                             group = "Admin";
                         }
-                        if (guild.Length < 1)
-                        {
-                            guild = "none";
-                        }
                         if (createdat.Contains("1970"))
                         {
                             createdat = "Age of Heroes";
@@ -965,7 +961,14 @@ namespace FredBotNETCore.Modules.Public
                             Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(pr2name)
                         };
                         embed.WithAuthor(author);
-                        embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                        if (guild.Length < 1)
+                        {
+                            embed.Description = $"{status}\n**Group:** {group}\n**Guild:** none\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                        }
+                        else
+                        {
+                            embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{guild}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                        }
                         await Context.Channel.SendMessageAsync("", false, embed.Build());
                     }
                 }
@@ -1038,10 +1041,6 @@ namespace FredBotNETCore.Modules.Public
                     {
                         group = "Admin";
                     }
-                    if (guild.Length < 1)
-                    {
-                        guild = "none";
-                    }
                     if (createdat.Contains("1970"))
                     {
                         createdat = "Age of Heroes";
@@ -1052,7 +1051,14 @@ namespace FredBotNETCore.Modules.Public
                         Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(name)
                     };
                     embed.WithAuthor(author);
-                    embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                    if (guild.Length < 1)
+                    {
+                        embed.Description = $"{status}\n**Group:** {group}\n**Guild:** none\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                    }
+                    else
+                    {
+                        embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{guild}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                    }
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
             }
@@ -1129,8 +1135,8 @@ namespace FredBotNETCore.Modules.Public
                     string name = Extensions.GetBetween(pr2info, "guild_name\":\"", "\",\"creation");
                     string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
                     string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
-                    string gptotal = Int32.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0");
-                    string gptoday = Int32.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0");
+                    string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0");
+                    string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0");
                     string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
                     string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
                     string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
@@ -2138,8 +2144,8 @@ namespace FredBotNETCore.Modules.Public
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild `{guildname.Replace("`", string.Empty)}` does not exist or could not be found.");
                         return;
                     }
-                    string[] users = text.Split('}');
-                    string guildMembers = "";
+                    string[] users = Extensions.GetBetween(text, "[", "]").Split('}');
+                    List<string> guildMembers = new List<string>();
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
                         Url = "https://pr2hub.com/guild_search.php?name=" + Uri.EscapeDataString(guildname),
@@ -2153,7 +2159,7 @@ namespace FredBotNETCore.Modules.Public
                     foreach (string user_id in users)
                     {
                         string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
-                        guildMembers = guildMembers + name + ", ";
+                        guildMembers.Add($"[{name}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
                     }
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
@@ -2162,7 +2168,7 @@ namespace FredBotNETCore.Modules.Public
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
-                    embed.Description = $"{guildMembers.Substring(2).TrimEnd(new char[] { ',', ' ', ',', ' ', ',' })}";
+                    embed.Description = $"{string.Join(", ", guildMembers)}";
 
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
@@ -2201,8 +2207,8 @@ namespace FredBotNETCore.Modules.Public
                         return;
                     }
                     string gName = Extensions.GetBetween(text, "\"guild_name\":\"", "\",\"");
-                    string[] users = text.Split('}');
-                    string guildMembers = "";
+                    string[] users = Extensions.GetBetween(text, "[", "]").Split('}');
+                    List<string> guildMembers = new List<string>();
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
                         Url = "https://pr2hub.com/guild_search.php?id=" + id,
@@ -2216,7 +2222,7 @@ namespace FredBotNETCore.Modules.Public
                     foreach (string user_id in users)
                     {
                         string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
-                        guildMembers = guildMembers + name + ", ";
+                        guildMembers.Add($"[{name}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
                     }
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
@@ -2225,7 +2231,7 @@ namespace FredBotNETCore.Modules.Public
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
-                    embed.Description = $"{guildMembers.Substring(2).TrimEnd(new char[] { ',', ' ', ',', ' ', ',' })}";
+                    embed.Description = $"{string.Join(", ", guildMembers)}";
 
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
@@ -2609,7 +2615,7 @@ namespace FredBotNETCore.Modules.Public
                     {
                         status = Extensions.GetBetween(name, "</a></td><td>Playing on ", "</td><td>");
                         string pr2Name = Extensions.GetBetween(name, "; text-decoration: underline;'>", "</a></td><td>").Replace("&nbsp;", " ");
-                        embed.Description = embed.Description + pr2Name + "(" + status + "), ";
+                        embed.Description = embed.Description + "[" + pr2Name + "](https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(pr2Name) + ")(" + status + "), ";
                     }
                 };
                 if (embed.Description.Length <= 0)

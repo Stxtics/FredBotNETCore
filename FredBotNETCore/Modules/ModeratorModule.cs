@@ -2597,6 +2597,12 @@ namespace FredBotNETCore.Modules
                     });
                     embed.AddField(y =>
                     {
+                        y.Name = "JV2 Name";
+                        y.Value = "N/A";
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
                         y.Name = $"Roles [{user.Roles.Count - 1}]";
                         y.Value = roleList;
                         y.IsInline = false;

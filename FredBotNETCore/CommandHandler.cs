@@ -1142,13 +1142,17 @@ namespace FredBotNETCore
                     Footer = footer
                 };
                 embed.WithCurrentTimestamp();
-                if ((DateTime.Now - user.CreatedAt).Days == 0)
+                if ((DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days == 0)
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild. Account created today.\nTotal members: **{user.Guild.MemberCount}**";
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild. Account created **today**.\nTotal members: **{user.Guild.MemberCount}**";
+                }
+                else if ((DateTime.Now - user.CreatedAt).Days == 1)
+                {
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild. Account created **{(DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days}** day ago.\nTotal members: **{user.Guild.MemberCount}**";
                 }
                 else
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild. Account created {(DateTime.Now - user.CreatedAt).Days} days ago.\nTotal members: **{user.Guild.MemberCount}**";
+                    embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild. Account created **{(DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days}** days ago.\nTotal members: **{user.Guild.MemberCount}**";
                 }
                 await log.SendMessageAsync("", false, embed.Build());
                 var result = Database.CheckExistingUser(user);
@@ -1240,9 +1244,17 @@ namespace FredBotNETCore
                     break;
                 }
             }
-            if (iUser == null)
+            if (iUser == null && (DateTime.Now.ToUniversalTime() - user.JoinedAt.Value.ToUniversalTime()).Days == 0)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** left the guild. They spent {(DateTime.Now - user.JoinedAt).Value.Days} days in the server.\nTotal members: **{user.Guild.MemberCount}**";
+                embed.Description = $"**{user.Username}#{user.Discriminator}** left the guild. They spent less than a day in the server.\nTotal members: **{user.Guild.MemberCount}**";
+            }
+            else if (iUser == null && (DateTime.Now.ToUniversalTime() - user.JoinedAt.Value.ToUniversalTime()).Days == 1)
+            {
+                embed.Description = $"**{user.Username}#{user.Discriminator}** left the guild. They spent **{(DateTime.Now.ToUniversalTime() - user.JoinedAt.Value.ToUniversalTime()).Days}** day in the server.\nTotal members: **{user.Guild.MemberCount}**";
+            }
+            else if (iUser == null)
+            {
+                embed.Description = $"**{user.Username}#{user.Discriminator}** left the guild. They spent **{(DateTime.Now.ToUniversalTime() - user.JoinedAt.Value.ToUniversalTime()).Days}** days in the server.\nTotal members: **{user.Guild.MemberCount}**";
             }
             else
             {
