@@ -206,12 +206,12 @@ namespace FredBotNETCore
             {
                 await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = true, options);
                 await channel.SendMessageAsync($"{Guild.GetRole(347312071618330626).Mention} Hmm... I seem to have misplaced the artifact. Maybe you can help me find it?\n" +
-                        $"Here's what I remember: `{hint}`. Maybe I can remember more later!!");
+                        $"Here's what I remember: ``{Uri.UnescapeDataString(hint)}``. Maybe I can remember more later!!");
                 await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = false, options);
             }
             else
             {
-                await channel.SendMessageAsync($"Artifact hint updated. New hint: `{hint}`");
+                await channel.SendMessageAsync($"Artifact hint updated. New hint: ``{Uri.UnescapeDataString(hint)}``");
             }
         }
 
