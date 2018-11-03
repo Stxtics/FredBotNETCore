@@ -1136,9 +1136,18 @@ namespace FredBotNETCore.Modules.Public
                         var voiceChannel = Context.Guild.CurrentUser.VoiceChannel;
                         if (voiceChannel.Users.Count < 2)
                         {
-                            await Context.Channel.SendMessageAsync("Voice channel empty. Pausing music.");
-                            Pause = true;
+                            await Context.Channel.SendMessageAsync("Voice channel empty. Stopping music.");
+                            if (Queue.Count > 0)
+                            {
+                                var song1 = Queue.Peek();
+                                Queue.Clear();
+                                NowPlaying.Clear();
+                                PlayingUrl = song.Item7;
+                                var _ = RemoveFiles();
+                            }
                             Playing = false;
+                            Pause = true;
+                            MusicStarted = false;
                             await Audio.StopAsync();
                         }
                         next = true;
