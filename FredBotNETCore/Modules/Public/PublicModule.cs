@@ -760,7 +760,7 @@ namespace FredBotNETCore.Modules.Public
                 string person = Extensions.GetBetween(text, "finder_name\":\"", "\"");
                 if (person.Length < 1)
                 {
-                    await Context.Channel.SendMessageAsync($"Here's what I remember: `{levelname}`. Maybe I can remember more later!!");
+                    await Context.Channel.SendMessageAsync($"Here's what I remember: ``{Uri.UnescapeDataString(levelname)}``. Maybe I can remember more later!!");
                 }
                 else
                 {
@@ -771,16 +771,16 @@ namespace FredBotNETCore.Modules.Public
                         try
                         {
                             IUser user = guild.GetUser(userID);
-                            await Context.Channel.SendMessageAsync($"Here's what I remember: `{Uri.UnescapeDataString(levelname)}`. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)} ({user.Username}#{user.Discriminator})!!");
+                            await Context.Channel.SendMessageAsync($"Here's what I remember: ``{Uri.UnescapeDataString(levelname)}``. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)} ({user.Username}#{user.Discriminator})!!");
                         }
                         catch(NullReferenceException)
                         {
-                            await Context.Channel.SendMessageAsync($"Here's what I remember: `{Uri.UnescapeDataString(levelname)}`. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)}!!");
+                            await Context.Channel.SendMessageAsync($"Here's what I remember: ``{Uri.UnescapeDataString(levelname)}``. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)}!!");
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"Here's what I remember: `{Uri.UnescapeDataString(levelname)}`. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)}!!");
+                        await Context.Channel.SendMessageAsync($"Here's what I remember: ``{Uri.UnescapeDataString(levelname)}``. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)}!!");
                     }
                 }
             }
