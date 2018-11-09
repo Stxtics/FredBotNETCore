@@ -397,11 +397,11 @@ namespace FredBotNETCore.Modules.Public
         [Command("verify", RunMode = RunMode.Async)]
         [Alias("verifyme")]
         [Summary("Verifies a user on the server.")]
-        public async Task Verify()
+        public async Task Verify([Remainder] string s1)
         {
             if (!(Context.Channel is SocketDMChannel))
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} check your DMs to verify your PR2 or JV2 account. ");
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} check your DMs to verify your PR2 account. ");
             }
             await Context.User.SendMessageAsync($"Hello {Context.User.Mention} , to verify your PR2 account please send a PM to `FredTheG.CactusBot` on PR2 " +
                 $"saying only `{(await Context.User.GetOrCreateDMChannelAsync()).Id}`.\nThen once you have sent the PM type `/verifycomplete <PR2 account name>` without <> in this channel. PR2 account name = name of " +

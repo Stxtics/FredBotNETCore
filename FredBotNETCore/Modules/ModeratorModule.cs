@@ -2916,7 +2916,14 @@ namespace FredBotNETCore.Modules
                         {
                             AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
                         };
-                        await user.SendMessageAsync($"You have been kicked from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
+                        try
+                        {
+                            await user.SendMessageAsync($"You have been kicked from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
+                        }
+                        catch (Discord.Net.HttpException)
+                        {
+                            //cant send message
+                        }
                         await user.KickAsync(null, options);
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Kick", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                         await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was kicked.");
@@ -3013,7 +3020,14 @@ namespace FredBotNETCore.Modules
                         {
                             AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
                         };
-                        await user.SendMessageAsync($"You have been banned from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
+                        try
+                        {
+                            await user.SendMessageAsync($"You have been banned from {Context.Guild.Name} by {Context.User.Mention} with reason {reason}.");
+                        }
+                        catch (Discord.Net.HttpException)
+                        {
+                            //cant send message
+                        }
                         await Context.Guild.AddBanAsync(user, 1, null, options);
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Ban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                         await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was banned.");
@@ -3134,13 +3148,20 @@ namespace FredBotNETCore.Modules
                         await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was muted.");
                         await banlog.SendMessageAsync("", false, embed.Build());
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        if (minutes == 1)
+                        try
                         {
-                            await user.SendMessageAsync($"You have been muted in {Context.Guild.Name} by {Context.User.Mention} for {reason} and for a length of {minutes} minute.");
+                            if (minutes == 1)
+                            {
+                                await user.SendMessageAsync($"You have been muted in {Context.Guild.Name} by {Context.User.Mention} for {reason} and for a length of {minutes} minute.");
+                            }
+                            else
+                            {
+                                await user.SendMessageAsync($"You have been muted in {Context.Guild.Name} by {Context.User.Mention} for {reason} and for a length of {minutes} minutes.");
+                            }
                         }
-                        else
+                        catch (Discord.Net.HttpException)
                         {
-                            await user.SendMessageAsync($"You have been muted in {Context.Guild.Name} by {Context.User.Mention} for {reason} and for a length of {minutes} minutes.");
+                            //cant send message
                         }
                         int mutetime = Convert.ToInt32(minutes) * 60000;
                         Task task = Task.Run(async () =>
@@ -3186,7 +3207,14 @@ namespace FredBotNETCore.Modules
                                     y.IsInline = true;
                                 });
                                 await banlog.SendMessageAsync("", false, embed2.Build());
-                                await user.SendMessageAsync($"You are now unmuted.");
+                                try
+                                {
+                                    await user.SendMessageAsync($"You are now unmuted.");
+                                }
+                                catch (Discord.Net.HttpException)
+                                {
+                                    //cant send message
+                                }
                                 Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: "Fred the G. Cactus#1000", reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             }
                             else

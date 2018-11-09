@@ -38,6 +38,9 @@ namespace FredBotNETCore.Modules.Public
                 "/blacklistword - Blacklists a word from being said.\n" +
                 "/unblacklistword - Unblacklists a word from being said.\n" +
                 "/listblacklistedwords - Lists blacklisted words.\n" +
+                "/blacklisturl - Blacklists a URL from being said.\n" +
+                "/unblacklisturl - Unblacklists a URL from being said.\n" +
+                "/listblacklistedurls - Lists blacklisted URLs.\n" +
                 "/addjoinablerole - Add a joinable role.\n" +
                 "/deljoinablerole - Remove a joinable role.\n" +
                 "**Moderator**\n" +

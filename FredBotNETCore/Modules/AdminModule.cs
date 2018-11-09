@@ -776,7 +776,7 @@ namespace FredBotNETCore.Modules
         }
 
         [Command("blacklistword", RunMode = RunMode.Async)]
-        [Alias("wordblacklist")]
+        [Alias("wordblacklist", "addblacklistedword")]
         [Summary("Blacklist a word from being said in the server")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireContext(ContextType.Guild)]
@@ -832,7 +832,7 @@ namespace FredBotNETCore.Modules
         }
 
         [Command("unblacklistword", RunMode = RunMode.Async)]
-        [Alias("wordunblacklist")]
+        [Alias("wordunblacklist", "removeblacklistedword")]
         [Summary("Unblacklist a word from being said on the server")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireContext(ContextType.Guild)]
@@ -925,6 +925,167 @@ namespace FredBotNETCore.Modules
                     {
                         y.Name = "Blacklisted Words";
                         y.Value = currentBlacklistedWords;
+                        y.IsInline = false;
+                    });
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        [Command("blacklisturl", RunMode = RunMode.Async)]
+        [Alias("urlblacklist", "addblacklistedurl")]
+        [Summary("Blacklist a URL from being said in the server")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireContext(ContextType.Guild)]
+        public async Task BlacklistUrl([Remainder] string url = null)
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                if (string.IsNullOrWhiteSpace(url))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /blacklisturl";
+                    embed.Description = "**Description:** Blacklist a URL from being said in the server.\n**Usage:** /blacklisturl [url]\n**Example:** /blacklisturl pr2hub.com";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    string currentBlacklistedUrls = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt"));
+                    if (currentBlacklistedUrls.Contains(url, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt"), currentBlacklistedUrls);
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the URL `{url.Replace("`", string.Empty)}` is already a blacklisted URL.");
+                    }
+                    else
+                    {
+                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt"), currentBlacklistedUrls + url + "\n");
+                        SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = "URL Blacklist Add",
+                            IconUrl = Context.Guild.IconUrl
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = $"ID: {Context.User.Id}",
+                            IconUrl = Context.User.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(255, 0, 0),
+                            Footer = footer
+                        };
+                        embed.WithCurrentTimestamp();
+                        embed.Description = $"{Context.User.Mention} blacklisted the URL **{url}**.";
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted the URL **{url}**.");
+                        await log.SendMessageAsync("", false, embed.Build());
+                    }
+                }
+            }
+        }
+
+        [Command("unblacklisturl", RunMode = RunMode.Async)]
+        [Alias("urlunblacklist", "removeblacklistedurl")]
+        [Summary("Unblacklist a URL from being said on the server")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireContext(ContextType.Guild)]
+        public async Task UnblacklistUrl([Remainder] string url = null)
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                if (string.IsNullOrWhiteSpace(url))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /unblacklisturl";
+                    embed.Description = "**Description:** Unblacklist a URL from being said in the server.\n**Usage:** /unblacklisturl [url]\n**Example:** /unblacklisturl pr2hub.com";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    string currentBlacklistedUrls = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt"));
+                    if (currentBlacklistedUrls.Contains(url, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        currentBlacklistedUrls = currentBlacklistedUrls.Replace(url + "\n", string.Empty);
+                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "Blacklistedurls.txt"), currentBlacklistedUrls);
+                        SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = "URL Blacklist Remove",
+                            IconUrl = Context.Guild.IconUrl
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = $"ID: {Context.User.Id}",
+                            IconUrl = Context.User.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(0, 255, 0),
+                            Footer = footer
+                        };
+                        embed.WithCurrentTimestamp();
+                        embed.Description = $"{Context.User.Mention} unblacklisted the URL **{url}**.";
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully unblacklisted the URL **{url}**.");
+                        await log.SendMessageAsync("", false, embed.Build());
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the url `{url.Replace("`", string.Empty)}` is not a blacklisted URL.");
+                    }
+                }
+            }
+        }
+
+        [Command("listblacklistedurls", RunMode = RunMode.Async)]
+        [Alias("lbw", "blacklistedurls")]
+        [Summary("Lists all the URLs that are blacklisted from being said on the server.")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireContext(ContextType.Guild)]
+        public async Task ListBlacklistedUrls()
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                var blacklistedUrls = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt"));
+                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                {
+                    IconUrl = Context.Guild.IconUrl,
+                    Name = "List Blacklisted URLs"
+                };
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)),
+                    Author = auth
+                };
+                string currentBlacklistedUrls = "";
+                string url = blacklistedUrls.ReadLine();
+                while (url != null)
+                {
+                    currentBlacklistedUrls = currentBlacklistedUrls + url + "\n";
+                    url = blacklistedUrls.ReadLine();
+                }
+                blacklistedUrls.Close();
+                if (currentBlacklistedUrls.Length <= 0)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} there are no blacklisted urls.");
+                }
+                else
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Blacklisted Urls";
+                        y.Value = currentBlacklistedUrls;
                         y.IsInline = false;
                     });
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
