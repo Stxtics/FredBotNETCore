@@ -397,7 +397,7 @@ namespace FredBotNETCore.Modules.Public
         [Command("verify", RunMode = RunMode.Async)]
         [Alias("verifyme")]
         [Summary("Verifies a user on the server.")]
-        public async Task Verify([Remainder] string s1)
+        public async Task Verify([Remainder] string s1 = null)
         {
             if (!(Context.Channel is SocketDMChannel))
             {
