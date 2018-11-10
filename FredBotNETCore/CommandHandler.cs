@@ -3,11 +3,9 @@ using System.Reflection;
 using Discord.Commands;
 using Discord.WebSocket;
 using Discord;
-using System.Linq;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using System.Linq;
 
 namespace FredBotNETCore
 {
@@ -206,19 +204,19 @@ namespace FredBotNETCore
             {
                 await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = true, options);
                 await channel.SendMessageAsync($"{Guild.GetRole(347312071618330626).Mention} Hmm... I seem to have misplaced the artifact. Maybe you can help me find it?\n" +
-                        $"Here's what I remember: ``{Uri.UnescapeDataString(hint)}``. Maybe I can remember more later!!");
+                        $"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**. Maybe I can remember more later!!");
                 await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = false, options);
             }
             else
             {
-                await channel.SendMessageAsync($"Artifact hint updated. New hint: ``{Uri.UnescapeDataString(hint)}``");
+                await channel.SendMessageAsync($"Artifact hint updated. New hint: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**");
             }
         }
 
         public static async Task AnnounceArtifactFoundAsync(string finder = null)
         {
             SocketTextChannel channel = _client.GetChannel(249678944956055562) as SocketTextChannel;
-            await channel.SendMessageAsync($"{finder} has found the artifact!");
+            await channel.SendMessageAsync($"**{finder}** has found the artifact!");
         }
 
         public async Task Install(DiscordSocketClient c)
@@ -248,11 +246,7 @@ namespace FredBotNETCore
             _client.RoleUpdated += log.AnnounceRoleUpdated;
             _client.Ready += async () =>
             {
-                int users = 0;
-                foreach (SocketGuild guild in _client.Guilds)
-                {
-                    users = users + guild.MemberCount;
-                }
+                int users = _client.Guilds.Sum(g => g.Users.Count);
                 await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
             };
         }
@@ -276,8 +270,11 @@ namespace FredBotNETCore
             {
                 if (channel.Guild.Id == 249657315576381450 && channel.Id != 327575359765610496)
                 {
-                    AutoMod mod = new AutoMod(_client);
-                    badMessage = await mod.FilterMessage(msg, channel);
+                    if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.ElementAt(1).Id.ToString()))
+                    {
+                        AutoMod mod = new AutoMod(_client);
+                        badMessage = await mod.FilterMessage(msg, channel);
+                    }
                 }
             }
             if (!badMessage)

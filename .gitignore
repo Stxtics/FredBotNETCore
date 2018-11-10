@@ -273,3 +273,5 @@ __pycache__/
 /FredBotNETCore/TextFiles/LottoBalance.txt
 /FredBotNETCore/TextFiles/BlacklistedWords.txt
 /FredBotNETCore/TextFiles/JV2ApiKey.txt
+/FredBotNETCore/TextFiles/BlacklistedUrls.txt
+/FredBotNETCore/TextFiles/UnicodeRegex.txt

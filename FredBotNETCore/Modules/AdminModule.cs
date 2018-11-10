@@ -44,11 +44,11 @@ namespace FredBotNETCore.Modules
                         };
                         await user.RemoveRoleAsync(Context.Guild.GetRole(255513962798514177), options);
                         await user.AddRoleAsync(Context.Guild.GetRole(253265134393229312), options);
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully reset **{user.Username}#{user.Discriminator}'s** PR2 Name.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully reset **{Format.Sanitize(user.Username)}#{user.Discriminator}'s** PR2 Name.");
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user `{username}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
@@ -93,7 +93,7 @@ namespace FredBotNETCore.Modules
                         int warnCount = Convert.ToInt32(Database.WarnCount(user));
                         if (warnCount == 0)
                         {
-                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** has no warnings.");
+                            await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** has no warnings.");
                         }
                         else
                         {
@@ -118,12 +118,12 @@ namespace FredBotNETCore.Modules
                             embed.WithCurrentTimestamp();
                             if (warnCount == 1)
                             {
-                                await Context.Channel.SendMessageAsync($"Cleared **{warnCount}** warning for **{user.Username}#{user.Discriminator}**.");
+                                await Context.Channel.SendMessageAsync($"Cleared **{warnCount}** warning for **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
                                 embed.Description = $"{Context.User.Mention} cleared **{warnCount}** warning for {user.Mention}.";
                             }
                             else
                             {
-                                await Context.Channel.SendMessageAsync($"Cleared **{warnCount}** warnings for **{user.Username}#{user.Discriminator}**.");
+                                await Context.Channel.SendMessageAsync($"Cleared **{warnCount}** warnings for **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
                                 embed.Description = $"{Context.User.Mention} cleared **{warnCount}** warnings for {user.Mention}.";
                             }
                             await log.SendMessageAsync("", false, embed.Build());
@@ -131,7 +131,7 @@ namespace FredBotNETCore.Modules
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{username}**.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
@@ -173,22 +173,22 @@ namespace FredBotNETCore.Modules
                         if (role.IsMentionable)
                         {
                             await role.ModifyAsync(x => x.Mentionable = false, options);
-                            await Context.Channel.SendMessageAsync($"The role **{role.Name}** is no longer mentionable");
+                            await Context.Channel.SendMessageAsync($"The role **{Format.Sanitize(role.Name)}** is no longer mentionable");
                         }
                         else
                         {
                             await role.ModifyAsync(x => x.Mentionable = true, options);
-                            await Context.Channel.SendMessageAsync($"The role **{role.Name}** is now mentionable");
+                            await Context.Channel.SendMessageAsync($"The role **{Format.Sanitize(role.Name)}** is now mentionable");
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{Format.Sanitize(roleName)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: **{roleName}**.");
                 }
             }
         }
@@ -229,12 +229,12 @@ namespace FredBotNETCore.Modules
                                 AuditLogReason = $"Changed by: {Context.User.Username}#{Context.User.Discriminator}"
                             };
                             await user.ModifyAsync(x => x.Nickname = nickname, options);
-                            await Context.Channel.SendMessageAsync($"Successfully set the nickname of **{user.Username}#{user.Discriminator}** to **{nickname}**.");
+                            await Context.Channel.SendMessageAsync($"Successfully set the nickname of **{Format.Sanitize(user.Username)}#{user.Discriminator}** to **{Format.Sanitize(nickname)}**.");
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{username}**.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
@@ -275,7 +275,7 @@ namespace FredBotNETCore.Modules
                         AuditLogReason = $"Changed by: {Context.User.Mention}#{Context.User.Discriminator}"
                     };
                     await Context.Guild.GetUser(383927022583545859).ModifyAsync(x => x.Nickname = nickname, options);
-                    await Context.Channel.SendMessageAsync($"Successfully set my nickname to **{nickname}**.");
+                    await Context.Channel.SendMessageAsync($"Successfully set my nickname to **{Format.Sanitize(nickname)}**.");
                 }
             }
         }
@@ -317,21 +317,21 @@ namespace FredBotNETCore.Modules
                                     AuditLogReason = $"Changed by: {Context.User.Mention}#{Context.User.Discriminator}"
                                 };
                                 await role.ModifyAsync(x => x.Color = new Color(color.R, color.G, color.B), options);
-                                await Context.Channel.SendMessageAsync($"Successfully changed the color of **{role.Name}** to **#{split[1]}**.");
+                                await Context.Channel.SendMessageAsync($"Successfully changed the color of **{Format.Sanitize(role.Name)}** to **#{split[1]}**.");
                             }
                             catch (FormatException)
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the hex color **#{split[1]}** is not a valid hex color.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the hex color **#{Format.Sanitize(split[1])}** is not a valid hex color.");
                             }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{roleName}**.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{Format.Sanitize(roleName)}**.");
                         }
                     }
                     catch (NullReferenceException)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: **{roleName}**.");
                     }
                 }
                 else
@@ -373,7 +373,7 @@ namespace FredBotNETCore.Modules
                         if (currentJoinableRoles.Contains(role.Id.ToString()))
                         {
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"), currentJoinableRoles);
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is already a joinable role.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role **{Format.Sanitize(role.Name)}** is already a joinable role.");
                         }
                         else
                         {
@@ -397,18 +397,18 @@ namespace FredBotNETCore.Modules
                             };
                             embed.WithCurrentTimestamp();
                             embed.Description = $"{Context.User.Mention} added {role.Mention} to the joinable roles.";
-                            await Context.Channel.SendMessageAsync($"Added joinable role **{role.Name}**.");
+                            await Context.Channel.SendMessageAsync($"Added joinable role **{Format.Sanitize(role.Name)}**.");
                             await log.SendMessageAsync("", false, embed.Build());
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role **{Format.Sanitize(roleName)}** does not exist or could not be found.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: **{roleName}**.");
                 }
             }
         }
@@ -465,22 +465,22 @@ namespace FredBotNETCore.Modules
                             };
                             embed.WithCurrentTimestamp();
                             embed.Description = $"{Context.User.Mention} removed {role.Mention} from the joinable roles.";
-                            await Context.Channel.SendMessageAsync($"Removed joinable role **{role.Name}**.");
+                            await Context.Channel.SendMessageAsync($"Removed joinable role **{Format.Sanitize(role.Name)}**.");
                             await log.SendMessageAsync("", false, embed.Build());
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is not a joinable role.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role **{Format.Sanitize(role.Name)}** is not a joinable role.");
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role **{Format.Sanitize(roleName)}** does not exist or could not be found.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: `{roleName}`.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: **{roleName}**.");
                 }
             }
         }
@@ -517,7 +517,7 @@ namespace FredBotNETCore.Modules
                         if (currentModRoles.Contains(role.Id.ToString()))
                         {
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"), currentModRoles);
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is already a mod role.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role **{Format.Sanitize(role.Name)}** is already a mod role.");
                         }
                         else
                         {
@@ -541,7 +541,7 @@ namespace FredBotNETCore.Modules
                             };
                             embed.WithCurrentTimestamp();
                             embed.Description = $"{Context.User.Mention} added {role.Mention} to the mod roles.";
-                            await Context.Channel.SendMessageAsync($"Added mod role **{role.Name}**.");
+                            await Context.Channel.SendMessageAsync($"Added mod role **{Format.Sanitize(role.Name)}**.");
                             await log.SendMessageAsync("", false, embed.Build());
                         }
                         return;
@@ -560,7 +560,7 @@ namespace FredBotNETCore.Modules
                         if (currentModUsers.Contains(user.Id.ToString()))
                         {
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"), currentModUsers);
-                            await Context.Channel.SendMessageAsync($"{ Context.User.Mention} the user `{user.Username}` is already a mod.");
+                            await Context.Channel.SendMessageAsync($"{ Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is already a mod.");
                         }
                         else
                         {
@@ -584,13 +584,13 @@ namespace FredBotNETCore.Modules
                             };
                             embed.WithCurrentTimestamp();
                             embed.Description = $"{Context.User.Mention} added {user.Mention} to the mod users.";
-                            await Context.Channel.SendMessageAsync($"Added mod **{user.Username}#{user.Discriminator}**.");
+                            await Context.Channel.SendMessageAsync($"Added mod **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
                             await log.SendMessageAsync("", false, embed.Build());
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role `{mod}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role **{Format.Sanitize(mod)}**.");
                     }
                 }
                 catch (NullReferenceException)
@@ -652,12 +652,12 @@ namespace FredBotNETCore.Modules
                             };
                             embed.WithCurrentTimestamp();
                             embed.Description = $"{Context.User.Mention} removed {role.Mention} from the mod roles.";
-                            await Context.Channel.SendMessageAsync($"Removed mod role **{mod}**.");
+                            await Context.Channel.SendMessageAsync($"Removed mod role **{Format.Sanitize(mod)}**.");
                             await log.SendMessageAsync("", false, embed.Build());
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{mod}` is not a mod role.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role **{Format.Sanitize(mod)}** is not a mod role.");
                         }
                     }
                 }
@@ -694,17 +694,17 @@ namespace FredBotNETCore.Modules
                             };
                             embed.WithCurrentTimestamp();
                             embed.Description = $"{Context.User.Mention} removed {user.Mention} from the mod users.";
-                            await Context.Channel.SendMessageAsync($"Removed mod **{mod}**.");
+                            await Context.Channel.SendMessageAsync($"Removed mod **{Format.Sanitize(mod)}**.");
                             await log.SendMessageAsync("", false, embed.Build());
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{mod}` is not a mod.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(mod)}** is not a mod.");
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role `{mod}`.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user or role **{Format.Sanitize(mod)}**.");
                     }
                 }
                 catch (NullReferenceException)
@@ -742,7 +742,7 @@ namespace FredBotNETCore.Modules
             while (line != null)
             {
                 string user = (Context.Guild.GetUser(Convert.ToUInt64(line))).Username + "#" + (Context.Guild.GetUser(Convert.ToUInt64(line))).Discriminator;
-                modU = modU + user + "\n";
+                modU = modU + Format.Sanitize(user) + "\n";
                 line = modUsers.ReadLine();
             }
             modUsers.Close();
@@ -750,7 +750,7 @@ namespace FredBotNETCore.Modules
             while (line != null)
             {
                 string role = (Context.Guild.GetRole(Convert.ToUInt64(line))).Name;
-                modR = modR + role + "\n";
+                modR = modR + Format.Sanitize(role) + "\n";
                 line = modRoles.ReadLine();
             }
             modRoles.Close();
@@ -800,7 +800,7 @@ namespace FredBotNETCore.Modules
                     if (currentBlacklistedWords.Contains(word, StringComparison.InvariantCultureIgnoreCase))
                     {
                         File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt"), currentBlacklistedWords);
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the word `{word.Replace("`", string.Empty)}` is already a blacklisted word.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the word **{Format.Sanitize(word)}** is already a blacklisted word.");
                     }
                     else
                     {
@@ -823,8 +823,8 @@ namespace FredBotNETCore.Modules
                             Footer = footer
                         };
                         embed.WithCurrentTimestamp();
-                        embed.Description = $"{Context.User.Mention} blacklisted the word **{word}**.";
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted the word **{word}**.");
+                        embed.Description = $"{Context.User.Mention} blacklisted the word **{Format.Sanitize(word)}**.";
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted the word **{Format.Sanitize(word)}**.");
                         await log.SendMessageAsync("", false, embed.Build());
                     }
                 }
@@ -875,13 +875,13 @@ namespace FredBotNETCore.Modules
                             Footer = footer
                         };
                         embed.WithCurrentTimestamp();
-                        embed.Description = $"{Context.User.Mention} unblacklisted the word **{word}**.";
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully unblacklisted the word **{word}**.");
+                        embed.Description = $"{Context.User.Mention} unblacklisted the word **{Format.Sanitize(word)}**.";
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully unblacklisted the word **{Format.Sanitize(word)}**.");
                         await log.SendMessageAsync("", false, embed.Build());
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the word `{word.Replace("`", string.Empty)}` is not a blacklisted word.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the word **{Format.Sanitize(word)}** is not a blacklisted word.");
                     }
                 }
             }
@@ -911,7 +911,7 @@ namespace FredBotNETCore.Modules
                 string word = blacklistedWords.ReadLine();
                 while (word != null)
                 {
-                    currentBlacklistedWords = currentBlacklistedWords + word + "\n";
+                    currentBlacklistedWords = currentBlacklistedWords + Format.Sanitize(word) + "\n";
                     word = blacklistedWords.ReadLine();
                 }
                 blacklistedWords.Close();
@@ -961,7 +961,7 @@ namespace FredBotNETCore.Modules
                     if (currentBlacklistedUrls.Contains(url, StringComparison.InvariantCultureIgnoreCase))
                     {
                         File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt"), currentBlacklistedUrls);
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the URL `{url.Replace("`", string.Empty)}` is already a blacklisted URL.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the URL **{Format.Sanitize(url)}** is already a blacklisted URL.");
                     }
                     else
                     {
@@ -984,8 +984,8 @@ namespace FredBotNETCore.Modules
                             Footer = footer
                         };
                         embed.WithCurrentTimestamp();
-                        embed.Description = $"{Context.User.Mention} blacklisted the URL **{url}**.";
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted the URL **{url}**.");
+                        embed.Description = $"{Context.User.Mention} blacklisted the URL **{Format.Sanitize(url)}**.";
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted the URL **{Format.Sanitize(url)}**.");
                         await log.SendMessageAsync("", false, embed.Build());
                     }
                 }
@@ -1036,13 +1036,13 @@ namespace FredBotNETCore.Modules
                             Footer = footer
                         };
                         embed.WithCurrentTimestamp();
-                        embed.Description = $"{Context.User.Mention} unblacklisted the URL **{url}**.";
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully unblacklisted the URL **{url}**.");
+                        embed.Description = $"{Context.User.Mention} unblacklisted the URL **{Format.Sanitize(url)}**.";
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully unblacklisted the URL **{Format.Sanitize(url)}**.");
                         await log.SendMessageAsync("", false, embed.Build());
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the url `{url.Replace("`", string.Empty)}` is not a blacklisted URL.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the url **{Format.Sanitize(url)}** is not a blacklisted URL.");
                     }
                 }
             }
@@ -1072,7 +1072,7 @@ namespace FredBotNETCore.Modules
                 string url = blacklistedUrls.ReadLine();
                 while (url != null)
                 {
-                    currentBlacklistedUrls = currentBlacklistedUrls + url + "\n";
+                    currentBlacklistedUrls = currentBlacklistedUrls + Format.Sanitize(url) + "\n";
                     url = blacklistedUrls.ReadLine();
                 }
                 blacklistedUrls.Close();

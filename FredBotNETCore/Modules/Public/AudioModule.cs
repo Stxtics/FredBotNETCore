@@ -13,7 +13,6 @@ using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using System.Net;
-using Newtonsoft.Json.Linq;
 
 namespace FredBotNETCore.Modules.Public
 {
@@ -86,7 +85,7 @@ namespace FredBotNETCore.Modules.Public
                 int count = 1;
                 foreach (Tuple<string, string, string, string, string, string, string> song in Queue)
                 {
-                    builder.AddField($"{count}. {song.Item2} ({song.Item3})", $"by {Context.Guild.GetUser(Convert.ToUInt64(song.Item4)).Username}#{Context.Guild.GetUser(Convert.ToUInt64(song.Item4)).Discriminator}");
+                    builder.AddField($"{count}. {Format.Sanitize(song.Item2)} ({song.Item3})", $"by {Format.Sanitize(Context.Guild.GetUser(Convert.ToUInt64(song.Item4)).Username)}#{Context.Guild.GetUser(Convert.ToUInt64(song.Item4)).Discriminator}");
                     count++;
                 }
 
@@ -206,7 +205,7 @@ namespace FredBotNETCore.Modules.Public
                                             new EmbedFieldBuilder
                                             {
                                                 Name = "Song",
-                                                Value = title,
+                                                Value = Format.Sanitize(title),
                                                 IsInline = false
                                             },
                                             new EmbedFieldBuilder
@@ -218,7 +217,7 @@ namespace FredBotNETCore.Modules.Public
                                             new EmbedFieldBuilder
                                             {
                                                 Name = "Channel",
-                                                Value = channel,
+                                                Value = Format.Sanitize(channel),
                                                 IsInline = false
                                             }
                                         },
@@ -330,7 +329,7 @@ namespace FredBotNETCore.Modules.Public
                                             new EmbedFieldBuilder
                                             {
                                                 Name = "Song",
-                                                Value = title,
+                                                Value = Format.Sanitize(title),
                                                 IsInline = false
                                             },
                                             new EmbedFieldBuilder
@@ -342,7 +341,7 @@ namespace FredBotNETCore.Modules.Public
                                             new EmbedFieldBuilder
                                             {
                                                 Name = "Channel",
-                                                Value = channel,
+                                                Value = Format.Sanitize(channel),
                                                 IsInline = false
                                             }
                                         },
@@ -627,7 +626,7 @@ namespace FredBotNETCore.Modules.Public
                     {
                         var item = Queue.ElementAt(pos-1);
                         Queue = new Queue<Tuple<string, string, string, string, string, string, string>>(Queue.Where(s => s != item));
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} removed **{item.Item2}** from the queue.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} removed **{Format.Sanitize(item.Item2)}** from the queue.");
                     }
                 }
             }
@@ -707,7 +706,7 @@ namespace FredBotNETCore.Modules.Public
                 else
                 {
                     Audio?.Dispose();
-                    await Context.Channel.SendMessageAsync($"Joined voice channel `{_voiceChannel.Name}`.");
+                    await Context.Channel.SendMessageAsync($"Joined voice channel **{Format.Sanitize(_voiceChannel.Name)}**.");
                     Audio = await _voiceChannel.ConnectAsync();
                     Discord = Audio.CreatePCMStream(AudioApplication.Mixed, 64000);
                     return;
@@ -759,17 +758,17 @@ namespace FredBotNETCore.Modules.Public
                         {
                             Skip = true;
                             Pause = false;
-                            await Context.Channel.SendMessageAsync($"**{NowPlaying.Peek().Item2}** requested by **{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Username}#{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Discriminator}** was skipped.");
+                            await Context.Channel.SendMessageAsync($"**{Format.Sanitize(NowPlaying.Peek().Item2)}** requested by **{Format.Sanitize(Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Username)}#{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Discriminator}** was skipped.");
                         }
                         else
                         {
                             if (votesNeeded - SkipCount == 1)
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} voted to skip **{NowPlaying.Peek().Item2}**. {votesNeeded - SkipCount} more vote needed to skip.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} voted to skip **{Format.Sanitize(NowPlaying.Peek().Item2)}**. {votesNeeded - SkipCount} more vote needed to skip.");
                             }
                             else
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} voted to skip **{NowPlaying.Peek().Item2}**. {votesNeeded - SkipCount} more votes needed to skip.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} voted to skip **{Format.Sanitize(NowPlaying.Peek().Item2)}**. {votesNeeded - SkipCount} more votes needed to skip.");
                             }
                         }
                     }
@@ -813,7 +812,7 @@ namespace FredBotNETCore.Modules.Public
                     {
                         Skip = true;
                         Pause = false;
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} force skipped **{NowPlaying.Peek().Item2}** requested by **{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Username}#{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Discriminator}**.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} force skipped **{Format.Sanitize(NowPlaying.Peek().Item2)}** requested by **{Format.Sanitize(Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Username)}#{Context.Guild.GetUser(Convert.ToUInt64(NowPlaying.Peek().Item4)).Discriminator}**.");
                     }
                 }
             }
@@ -865,7 +864,7 @@ namespace FredBotNETCore.Modules.Public
                                 new EmbedFieldBuilder
                                 {
                                     Name = "Song",
-                                    Value = NowPlaying.Peek().Item2,
+                                    Value = Format.Sanitize(NowPlaying.Peek().Item2),
                                     IsInline = false
                                 },
                                 new EmbedFieldBuilder
@@ -877,7 +876,7 @@ namespace FredBotNETCore.Modules.Public
                                 new EmbedFieldBuilder
                                 {
                                     Name = "Channel",
-                                    Value = NowPlaying.Peek().Item5,
+                                    Value = Format.Sanitize(NowPlaying.Peek().Item5),
                                     IsInline = false
                                 }
                                 },
@@ -1093,7 +1092,7 @@ namespace FredBotNETCore.Modules.Public
                     if (!pause)
                     {
                         var song = Queue.Peek();
-                        await Context.Channel.SendMessageAsync($"Now playing: **{song.Item2}** ({song.Item3})");
+                        await Context.Channel.SendMessageAsync($"Now playing: **{Format.Sanitize(song.Item2)}** ({song.Item3})");
                         NowPlaying.Enqueue(song);
                         await SendAudio(song.Item1);
                         SkipCount = 0;

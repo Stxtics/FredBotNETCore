@@ -22,11 +22,11 @@ namespace FredBotNETCore.Modules
                 {
                     SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
                     Database.SetBalance(user, bal);
-                    await Context.Channel.SendMessageAsync($"Successfully set **{user.Username}#{user.Discriminator}'s** balance to **${bal}**.");
+                    await Context.Channel.SendMessageAsync($"Successfully set **{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance to **${bal}**.");
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username}` does not exist or could not be found.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(username)}** does not exist or could not be found.");
                 }
             }
             catch (NullReferenceException)
@@ -115,7 +115,7 @@ namespace FredBotNETCore.Modules
         public async Task UpdateToken(string newToken)
         {
             var pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
-            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token was successfully changed from `{pr2token.ReadLine()}` to `{newToken}`.");
+            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token was successfully changed from `{Format.Sanitize(pr2token.ReadLine())}` to `{Format.Sanitize(newToken)}`.");
             pr2token.Close();
             File.WriteAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"), newToken);
         }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -80,6 +81,15 @@ namespace FredBotNETCore
                     y.Value = "Auto - Mass mention";
                     y.IsInline = true;
                 });
+                string content = Format.Sanitize(msg.Content).Length > 252
+                    ? Format.Sanitize(msg.Content).SplitInParts(252).ElementAt(0) + "..."
+                    : Format.Sanitize(msg.Content);
+                embed.AddField(y =>
+                {
+                    y.Name = "Message";
+                    y.Value = $"**{content}**";
+                    y.IsInline = true;
+                });
                 await channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was muted.");
                 await banlog.SendMessageAsync("", false, embed.Build());
                 Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", Client.CurrentUser.Username + "#" + Client.CurrentUser.Discriminator, "Auto - Mass mention - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
@@ -134,7 +144,14 @@ namespace FredBotNETCore
                             y.IsInline = true;
                         });
                         await banlog.SendMessageAsync("", false, embed2.Build());
-                        await user.SendMessageAsync($"You are now unmuted.");
+                        try
+                        {
+                            await user.SendMessageAsync($"You are now unmuted.");
+                        }
+                        catch (Discord.Net.HttpException)
+                        {
+                            //cant send message
+                        }
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: "Fred the G. Cactus#1000", reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                     }
                     else
@@ -145,6 +162,16 @@ namespace FredBotNETCore
                 return true;
             }
             else if (msg.MentionedUsers.Distinct().Count() + msg.MentionedRoles.Distinct().Where(x => x.IsMentionable == true).Count() >= 5)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public bool EmojiSpam(SocketUserMessage msg)
+        {
+            Regex rx = new Regex(File.ReadAllText(Path.Combine(Extensions.downloadPath, "UnicodeRegex.txt")));
+            if (msg.Tags.Count(x => x.Type == TagType.Emoji) + rx.Matches(msg.Content).Count >= 5)
             {
                 return true;
             }
@@ -256,6 +283,22 @@ namespace FredBotNETCore
                 await log.SendMessageAsync("", false, embed.Build());
                 Extensions.Purging = false;
                 message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no inappropriate links.");
+                await Task.Delay(5000);
+                Extensions.Purging = true;
+                await message.DeleteAsync();
+                await Task.Delay(100);
+                Extensions.Purging = false;
+                return true;
+            }
+            badMessage = EmojiSpam(msg);
+            if (badMessage)
+            {
+                Extensions.Purging = true;
+                await msg.DeleteAsync();
+                embed.Fields.ElementAt(0).Value = "Too many emojis";
+                await log.SendMessageAsync("", false, embed.Build());
+                Extensions.Purging = false;
+                message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no emoji spamming.");
                 await Task.Delay(5000);
                 Extensions.Purging = true;
                 await message.DeleteAsync();

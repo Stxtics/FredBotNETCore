@@ -60,12 +60,19 @@ namespace FredBotNETCore.Modules.Public
                                 SocketUser user = Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(249657315576381450), username);
                                 Database.SetBalance(Context.User, Database.GetBalance(Context.User) - money);
                                 Database.SetBalance(user, Database.GetBalance(user) + money);
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully paid **{user.Username}#{user.Discriminator} ${money.ToString("N0")}**.\nYour new balance is ${Database.GetBalance(Context.User).ToString("N0")}.");
-                                await user.SendMessageAsync($"{user.Mention} you have been paid **${money}** by **{Context.User.Username}#{Context.User.Discriminator}**");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully paid **{Format.Sanitize(user.Username)}#{user.Discriminator} ${money.ToString("N0")}**.\nYour new balance is ${Database.GetBalance(Context.User).ToString("N0")}.");
+                                try
+                                {
+                                    await user.SendMessageAsync($"{user.Mention} you have been paid **${money}** by **{Format.Sanitize(Context.User.Username)}#{Context.User.Discriminator}**");
+                                }
+                                catch(Discord.Net.HttpException)
+                                {
+                                    await ReplyAsync($"{Context.User.Mention} I could not DM **{Format.Sanitize(user.Username)}#{user.Discriminator}** to notify them of your payment.");
+                                }
                             }
                             else
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username.Replace("`", string.Empty)}` does not exist or could not be found.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(username)}** does not exist or could not be found.");
                             }
                         }
                         else
@@ -117,11 +124,11 @@ namespace FredBotNETCore.Modules.Public
                                 Database.EnterUser(user);
                             }
                             int bal = Database.GetBalance(user);
-                            await Context.Channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}'s** balance is **${bal.ToString("N0")}**.");
+                            await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance is **${bal.ToString("N0")}**.");
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{username.Replace("`", string.Empty)}` does not exist or could not be found.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(username)}** does not exist or could not be found.");
                         }
                     }
                     catch (NullReferenceException)
@@ -203,7 +210,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     try
                     {
-                        leaderboard = leaderboard + "**" + (i + 1).ToString() + ".** " + (Context.Client.GetUser(Convert.ToUInt64(userid)).Username + "#" + Context.Client.GetUser(Convert.ToUInt64(userid)).Discriminator + " - " + topBalance.ElementAt(i) + "\n");
+                        leaderboard = leaderboard + "**" + (i + 1).ToString() + ".** " + (Format.Sanitize(Context.Client.GetUser(Convert.ToUInt64(userid)).Username) + "#" + Context.Client.GetUser(Convert.ToUInt64(userid)).Discriminator + " - " + topBalance.ElementAt(i) + "\n");
                         i++;
                     }
                     catch (Exception)
@@ -271,7 +278,7 @@ namespace FredBotNETCore.Modules.Public
                         await Task.Delay(500);
                         if (chance >= 100)
                         {
-                            embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0")}!";
+                            embed.Description = $"{Format.Sanitize(Context.User.Username)}#{Context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0")}!";
                             await message.ModifyAsync(x => x.Embed = embed.Build());
                             Database.SetBalance(Context.User, Database.GetBalance(Context.User) + lottobal);
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt"), "100");
@@ -281,14 +288,14 @@ namespace FredBotNETCore.Modules.Public
                             int random = Extensions.random.Next(100);
                             if (random <= chance)
                             {
-                                embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0")}!";
+                                embed.Description = $"{Format.Sanitize(Context.User.Username)}#{Context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0")}!";
                                 await message.ModifyAsync(x => x.Embed = embed.Build());
                                 Database.SetBalance(Context.User, Database.GetBalance(Context.User) + lottobal);
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt"), "100");
                             }
                             else
                             {
-                                embed.Description = $"{Context.User.Username}#{Context.User.Discriminator} did not win the jackpot of ${lottobal.ToString("N0")}.";
+                                embed.Description = $"{Format.Sanitize(Context.User.Username)}#{Context.User.Discriminator} did not win the jackpot of ${lottobal.ToString("N0")}.";
                                 int newbal = lottobal + tickets;
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt"), newbal.ToString());
                                 await message.ModifyAsync(x => x.Embed = embed.Build());
@@ -401,7 +408,7 @@ namespace FredBotNETCore.Modules.Public
         {
             if (!(Context.Channel is SocketDMChannel))
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} check your DMs to verify your PR2 account. ");
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} check your DMs to verify your PR2 account.");
             }
             await Context.User.SendMessageAsync($"Hello {Context.User.Mention} , to verify your PR2 account please send a PM to `FredTheG.CactusBot` on PR2 " +
                 $"saying only `{(await Context.User.GetOrCreateDMChannelAsync()).Id}`.\nThen once you have sent the PM type `/verifycomplete <PR2 account name>` without <> in this channel. PR2 account name = name of " +
@@ -502,12 +509,12 @@ namespace FredBotNETCore.Modules.Public
                             ulong id = Database.GetDiscordID(username);
                             if (id != 0)
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{username}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{Format.Sanitize(username)}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
                                 return;
                             }
                             Database.VerifyUser(user, username);
                             SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
-                            embed.Description = $"{Context.User.Mention} changed their verified account from **{pr2name}** to **{username}**.";
+                            embed.Description = $"{Context.User.Mention} changed their verified account from **{Format.Sanitize(pr2name)}** to **{Format.Sanitize(username)}**.";
                             await channel.SendMessageAsync("", false, embed.Build());
                             if (!user.Username.Equals(username))
                             {
@@ -517,19 +524,19 @@ namespace FredBotNETCore.Modules.Public
                                 };
                                 await user.ModifyAsync(x => x.Nickname = username, options);
                             }
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully changed your verified account from {pr2name} to {username}.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully changed your verified account from **{Format.Sanitize(pr2name)}** to **{Format.Sanitize(username)}**.");
                         }
                         else
                         {
                             ulong id = Database.GetDiscordID(username);
                             if (id != 0)
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{username}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
+                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{Format.Sanitize(username)}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
                                 return;
                             }
                             Database.VerifyUser(user, username);
                             SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
-                            embed.Description = $"Verified {Context.User.Mention} who is **{username}** on PR2.";
+                            embed.Description = $"Verified {Context.User.Mention} who is **{Format.Sanitize(username)}** on PR2.";
                             await channel.SendMessageAsync("", false, embed.Build());
                             IEnumerable<SocketRole> role = guild.Roles.Where(input => input.Name.ToUpper() == "Verified".ToUpper());
                             IEnumerable<SocketRole> role2 = guild.Roles.Where(input => input.Name.ToUpper() == "Members".ToUpper());
@@ -568,7 +575,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I found a PM from {username} but it did not say what I was " +
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I found a PM from {Format.Sanitize(username)} but it did not say what I was " +
                             $"expecting it to say ({Context.Channel.Id}).\nPlease send resend the PM and then do /verifycomplete with your PR2 " +
                             $"name after.");
                         break;
@@ -631,7 +638,7 @@ namespace FredBotNETCore.Modules.Public
                     Author = auth
                 };
                 embed.WithCurrentTimestamp();
-                embed.Description = $"**Suggestion:** {suggestion}";
+                embed.Description = $"**Suggestion:** {Format.Sanitize(suggestion)}";
                 IUserMessage msg = await channel.SendMessageAsync("", false, embed.Build());
                 await msg.AddReactionAsync(new Emoji("👍"));
                 await msg.AddReactionAsync(new Emoji("👎"));
@@ -665,7 +672,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the city `{city.Replace("`", string.Empty)}` does not exist or could not be found.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the city `{Format.Sanitize(city)}` does not exist or could not be found.");
                     return;
                 }
                 double lat = weather.Coord.Lat;
@@ -703,7 +710,7 @@ namespace FredBotNETCore.Modules.Public
                 };
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
-                    Name = $"{city}, {country}"
+                    Name = $"{Format.Sanitize(city)}, {country}"
                 };
                 embed.WithFooter(footer);
                 embed.WithAuthor(author);
@@ -760,7 +767,7 @@ namespace FredBotNETCore.Modules.Public
                 string person = Extensions.GetBetween(text, "finder_name\":\"", "\"");
                 if (person.Length < 1)
                 {
-                    await Context.Channel.SendMessageAsync($"Here's what I remember: ``{Uri.UnescapeDataString(levelname)}``. Maybe I can remember more later!!");
+                    await Context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!");
                 }
                 else
                 {
@@ -771,16 +778,16 @@ namespace FredBotNETCore.Modules.Public
                         try
                         {
                             IUser user = guild.GetUser(userID);
-                            await Context.Channel.SendMessageAsync($"Here's what I remember: ``{Uri.UnescapeDataString(levelname)}``. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)} ({user.Username}#{user.Discriminator})!!");
+                            await Context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!!");
                         }
                         catch(NullReferenceException)
                         {
-                            await Context.Channel.SendMessageAsync($"Here's what I remember: ``{Uri.UnescapeDataString(levelname)}``. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)}!!");
+                            await Context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))}**!!");
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"Here's what I remember: ``{Uri.UnescapeDataString(levelname)}``. Maybe I can remember more later!!\nThe first person to find this artifact was {Uri.UnescapeDataString(person)}!!");
+                        await Context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))}**!!");
                     }
                 }
             }
@@ -887,10 +894,6 @@ namespace FredBotNETCore.Modules.Public
                                 {
                                     group = "Admin";
                                 }
-                                if (guild.Length < 1)
-                                {
-                                    guild = "none";
-                                }
                                 if (createdat.Contains("1970"))
                                 {
                                     createdat = "Age of Heroes";
@@ -901,10 +904,17 @@ namespace FredBotNETCore.Modules.Public
                                     Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(name)
                                 };
                                 embed.WithAuthor(author);
-                                embed.Description = $"{status}\n**Group:** {group}\n**Guild:** {guild}\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                                if (guild.Length < 1)
+                                {
+                                    embed.Description = $"{status}\n**Group:** {group}\n**Guild:** none\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                                }
+                                else
+                                {
+                                    embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(guild))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                                }
                                 if (pr2info.Contains(value: "{\"error\":\""))
                                 {
-                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{Uri.UnescapeDataString(pr2user.Replace("`", string.Empty))}` does not exist or could not be found.");
+                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(Uri.UnescapeDataString(pr2user))}** does not exist or could not be found.");
                                 }
                                 else
                                 {
@@ -924,7 +934,7 @@ namespace FredBotNETCore.Modules.Public
                         string pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
                         if (pr2info.Contains(value: "{\"error\":\""))
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{Uri.UnescapeDataString(pr2name).Replace("`", string.Empty)}` does not exist or could not be found.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(Uri.UnescapeDataString(pr2name))}** does not exist or could not be found.");
                             return;
                         }
                         string rank = Extensions.GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
@@ -967,7 +977,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         else
                         {
-                            embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{guild}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                            embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(guild))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
                         }
                         await Context.Channel.SendMessageAsync("", false, embed.Build());
                     }
@@ -1014,7 +1024,7 @@ namespace FredBotNETCore.Modules.Public
                     string pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + id);
                     if (pr2info.Contains(value: "{\"error\":\""))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID `{id}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID **{id}** does not exist or could not be found.");
                         return;
                     }
                     string rank = Extensions.GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
@@ -1057,7 +1067,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
-                        embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{guild}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                        embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(guild))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
                     }
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
@@ -1129,7 +1139,7 @@ namespace FredBotNETCore.Modules.Public
 
                     if (pr2info.Contains(value: "{\"error\":\""))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild `{guildname.Replace("`", string.Empty)}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild **{Format.Sanitize(guildname)}** does not exist or could not be found.");
                         return;
                     }
                     string name = Extensions.GetBetween(pr2info, "guild_name\":\"", "\",\"creation");
@@ -1158,7 +1168,7 @@ namespace FredBotNETCore.Modules.Public
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
                     embed.ThumbnailUrl = "https://pr2hub.com/emblems/" + guildpic;
-                    embed.Description = $"**Created At:** {createdat}\n**Members:** {members} ({active} active)\n**GP Total:** {gptotal}\n**GP Today:** {gptoday}\n**Description:** {note}";
+                    embed.Description = $"**Created At:** {createdat}\n**Members:** {members} ({active} active)\n**GP Total:** {gptotal}\n**GP Today:** {gptoday}\n**Description:** {Format.Sanitize(note)}";
 
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
@@ -1192,7 +1202,7 @@ namespace FredBotNETCore.Modules.Public
                     string pr2info = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&id=" + id);
                     if (pr2info.Contains(value: "{\"error\":\""))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild with ID `{id.Replace("`", string.Empty)}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild with ID **{id}** does not exist or could not be found.");
                         return;
                     }
                     string name = Extensions.GetBetween(pr2info, "\"guild_name\":\"", "\",\"");
@@ -1221,7 +1231,7 @@ namespace FredBotNETCore.Modules.Public
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
                     embed.ThumbnailUrl = "https://pr2hub.com/emblems/" + guildpic;
-                    embed.Description = $"**Created At:** {createdat}\n**Members:** {members} ({active} active)\n**GP Total:** {gptotal}\n**GP Today:** {gptoday}\n**Description:** {note}";
+                    embed.Description = $"**Created At:** {createdat}\n**Members:** {members} ({active} active)\n**GP Total:** {gptotal}\n**GP Today:** {gptoday}\n**Description:** {Format.Sanitize(note)}";
 
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
@@ -1429,11 +1439,11 @@ namespace FredBotNETCore.Modules.Public
                                 embed.WithCurrentTimestamp();
                                 if (Context.Channel is IDMChannel)
                                 {
-                                    embed.Description = $"**You have been removed from the {role.Name} role.**";
+                                    embed.Description = $"**You have been removed from the {Format.Sanitize(role.Name)} role.**";
                                 }
                                 else
                                 {
-                                    embed.Description = $"**{Context.User.Mention} has been removed from the {role.Name} role({role.Mention}).**";
+                                    embed.Description = $"**{Context.User.Mention} has been removed from the {Format.Sanitize(role.Name)} role({role.Mention}).**";
                                 }
                                 await Context.Channel.SendMessageAsync("", false, embed.Build());
                             }
@@ -1463,28 +1473,28 @@ namespace FredBotNETCore.Modules.Public
                                 embed.WithCurrentTimestamp();
                                 if (Context.Channel is IDMChannel)
                                 {
-                                    embed.Description = $"**You have been added to the {role.Name} role.**";
+                                    embed.Description = $"**You have been added to the {Format.Sanitize(role.Name)} role.**";
                                 }
                                 else
                                 {
-                                    embed.Description = $"**{Context.User.Mention} has been added to the {role.Name} role({role.Mention}).**";
+                                    embed.Description = $"**{Context.User.Mention} has been added to the {Format.Sanitize(role.Name)} role({role.Mention}).**";
                                 }
                                 await Context.Channel.SendMessageAsync("", false, embed.Build());
                             }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{role.Name}` is not a joinable role.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role **{Format.Sanitize(role.Name)}** is not a joinable role.");
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role `{roleName.Replace("`", string.Empty)}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role **{Format.Sanitize(roleName)}** does not exist or could not be found.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role with ID: `{roleName}` does not exist or could not be found.");
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the role with ID: **{roleName}** does not exist or could not be found.");
                 }
             }
         }
@@ -1523,7 +1533,7 @@ namespace FredBotNETCore.Modules.Public
             while (line != null)
             {
                 string role = (guild.GetRole(Convert.ToUInt64(line))).Name;
-                jRoles = jRoles + role + "\n";
+                jRoles = jRoles + Format.Sanitize(role) + "\n";
                 line = joinableRoles.ReadLine();
             }
             joinableRoles.Close();
@@ -1580,7 +1590,7 @@ namespace FredBotNETCore.Modules.Public
                 embed.AddField(y =>
                 {
                     y.Name = "Guild";
-                    y.Value = $"{guild1name}\n" +
+                    y.Value = Format.Sanitize($"{guild1name}\n" +
                               $"{guild2name}\n" +
                               $"{guild3name}\n" +
                               $"{guild4name}\n" +
@@ -1589,7 +1599,7 @@ namespace FredBotNETCore.Modules.Public
                               $"{guild7name}\n" +
                               $"{guild8name}\n" +
                               $"{guild9name}\n" +
-                              $"{guild10name}";
+                              $"{guild10name}");
                     y.IsInline = true;
                 });
                 embed.AddField(y =>
@@ -1704,7 +1714,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     catch (HttpRequestException)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser.Replace("`", string.Empty)}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(fahuser)}** does not exist or could not be found.");
                         return;
                     }
                     try
@@ -1722,7 +1732,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         if (stats.Count == 0)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user `{fahuser.Replace("`", string.Empty)}` does not exist or could not be found.");
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(fahuser)}** does not exist or could not be found.");
                             return;
                         }
                         embed.AddField(y =>
@@ -1792,7 +1802,7 @@ namespace FredBotNETCore.Modules.Public
                     string text = await web.GetStringAsync("https://pr2hub.com/bans/show_record.php?ban_id=" + id);
                     if (text.Contains("banned for 0 seconds on Jan 1, 1970 12:00 AM."))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the ban with the Id `{id}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the ban with the ID **{id}** does not exist or could not be found.");
                         return;
                     }
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -1827,25 +1837,25 @@ namespace FredBotNETCore.Modules.Public
                         embed.AddField(y =>
                         {
                             y.Name = "Lifted Ban";
-                            y.Value = $"{lifted}";
+                            y.Value = $"{Format.Sanitize(lifted)}";
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
                         {
                             y.Name = "Reason";
-                            y.Value = $"{reason}";
+                            y.Value = $"{Format.Sanitize(reason)}";
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
                         {
                             y.Name = "Ban Info";
-                            y.Value = $"{bantext}";
+                            y.Value = $"{Format.Sanitize(bantext)}";
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
                         {
                             y.Name = "Reason";
-                            y.Value = $"{reason1}";
+                            y.Value = $"{Format.Sanitize(reason1)}";
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
@@ -1865,13 +1875,13 @@ namespace FredBotNETCore.Modules.Public
                         embed.AddField(y =>
                         {
                             y.Name = "Ban Info";
-                            y.Value = $"{bantext}";
+                            y.Value = $"{Format.Sanitize(bantext)}";
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
                         {
                             y.Name = "Reason";
-                            y.Value = $"{reason}";
+                            y.Value = $"{Format.Sanitize(reason)}";
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
@@ -1894,10 +1904,15 @@ namespace FredBotNETCore.Modules.Public
         [Command("Pop", RunMode = RunMode.Async)]
         [Alias("population")]
         [Summary("Tells you the number of users on pr2. Does not include private servers.")]
-        public async Task Pop()
+        public async Task Pop([Remainder] string s = null)
         {
             if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
+                if (s != null)
+                {
+                    await Stats(s);
+                    return;
+                }
                 HttpClient web = new HttpClient();
                 string text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
 
@@ -2069,7 +2084,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the server `{server.Replace("`", string.Empty)}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the server **{Format.Sanitize(server)}** does not exist or could not be found.");
                         return;
                     }
                 }
@@ -2141,7 +2156,7 @@ namespace FredBotNETCore.Modules.Public
                     string text = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
                     if (text.Contains(value: "{\"error\":\""))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild `{guildname.Replace("`", string.Empty)}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild **{Format.Sanitize(guildname)}** does not exist or could not be found.");
                         return;
                     }
                     string[] users = Extensions.GetBetween(text, "[", "]").Split('}');
@@ -2159,7 +2174,7 @@ namespace FredBotNETCore.Modules.Public
                     foreach (string user_id in users)
                     {
                         string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
-                        guildMembers.Add($"[{name}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                        guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
                     }
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
@@ -2203,7 +2218,7 @@ namespace FredBotNETCore.Modules.Public
 
                     if (text.Contains(value: "{\"error\":\""))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild with ID `{id}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the guild with ID **{id}** does not exist or could not be found.");
                         return;
                     }
                     string gName = Extensions.GetBetween(text, "\"guild_name\":\"", "\",\"");
@@ -2222,7 +2237,7 @@ namespace FredBotNETCore.Modules.Public
                     foreach (string user_id in users)
                     {
                         string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
-                        guildMembers.Add($"[{name}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                        guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
                     }
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
@@ -2288,12 +2303,12 @@ namespace FredBotNETCore.Modules.Public
                 if (count == 0)
                 {
                     author.Name = $"Happy Hour Server";
-                    embed.Description = $"This server currently has a happy hour on it: {hhServers.TrimEnd(new char[] { ' ', ',' })}";
+                    embed.Description = $"This server currently has a happy hour on it: {Format.Sanitize(hhServers.TrimEnd(new char[] { ' ', ',' }))}";
                 }
                 else
                 {
                     author.Name = $"Happy Hour Servers";
-                    embed.Description = $"These are the current servers with happy hour on them: {hhServers}";
+                    embed.Description = $"These are the current servers with happy hour on them: {Format.Sanitize(hhServers)}";
                 }
 
                 await Context.Channel.SendMessageAsync("", false, embed.Build());
@@ -2347,7 +2362,7 @@ namespace FredBotNETCore.Modules.Public
                     string user = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
                     if (title.Length <= 0)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the level `{level.Replace("`", string.Empty)}` does not exist or could not be found.");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the level **{Format.Sanitize(level)}** does not exist or could not be found.");
                         return;
                     }
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -2367,13 +2382,10 @@ namespace FredBotNETCore.Modules.Public
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
-                    if (note.Length <= 0)
+                    embed.Description = $"**By:** {Format.Sanitize(user)}\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n-----";
+                    if (note.Length > 0)
                     {
-                        embed.Description = $"**By:** {user}\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n-----";
-                    }
-                    else
-                    {
-                        embed.Description = $"**By:** {user}\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n-----\n{note}";
+                        embed.Description = embed.Description + $"\n{Format.Sanitize(note)}";
                     }
                     await Context.Channel.SendMessageAsync("", false, embed.Build());
                 }
@@ -2494,7 +2506,7 @@ namespace FredBotNETCore.Modules.Public
                             AuditLogReason = "Adding Guild Role"
                         };
                         await user.AddRoleAsync(role, options);
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have been added to the guild role `{guild}`");
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have been added to the guild role **{Format.Sanitize(guild)}**.");
                         break;
                     }
                 }
@@ -2509,12 +2521,17 @@ namespace FredBotNETCore.Modules.Public
         [Command("servers", RunMode = RunMode.Async)]
         [Alias("sl", "status", "serverstatus", "ss")]
         [Summary("Shows all servers and population")]
-        public async Task Servers()
+        public async Task Servers([Remainder] string s1 = null)
         {
             if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
+                if (s1 != null)
+                {
+                    await Stats(s1);
+                    return;
+                }
                 HttpClient web = new HttpClient();
-                String text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
+                string text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
                 string[] serversinfo = text.Split('}');
                 string pop = "", name = "", status = "", happyHour = "";
                 int serverId = 0;
@@ -2546,7 +2563,7 @@ namespace FredBotNETCore.Modules.Public
                     pop = Extensions.GetBetween(server_id, "\",\"population\":\"", "\",\"status\":\"");
                     status = Extensions.GetBetween(server_id, "\",\"status\":\"", "\",\"guild_id\":\"");
                     happyHour = Extensions.GetBetween(server_id, "\",\"happy_hour\":\"", "\"");
-                    serverId = Int32.Parse(Extensions.GetBetween(server_id, "\"server_id\":\"", "\",\"server_name\":\""));
+                    serverId = int.Parse(Extensions.GetBetween(server_id, "\"server_id\":\"", "\",\"server_name\":\""));
                     if (status.Equals("down", StringComparison.InvariantCultureIgnoreCase) && serverId < 11)
                     {
                         embed.Description = embed.Description + name + " (down)\n";
@@ -2557,15 +2574,15 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else if (happyHour.Equals("1") && serverId > 10)
                     {
-                        embed.Description = embed.Description + "* !! " + name + " (" + pop + " online)\n";
+                        embed.Description = embed.Description + "* !! " + Format.Sanitize(name) + " (" + pop + " online)\n";
                     }
                     else if (status.Equals("down", StringComparison.InvariantCultureIgnoreCase) && serverId > 10)
                     {
-                        embed.Description = embed.Description + "* " + name + " (down)\n";
+                        embed.Description = embed.Description + "* " + Format.Sanitize(name) + " (down)\n";
                     }
                     else if (serverId > 10)
                     {
-                        embed.Description = embed.Description + "* " + name + " (" + pop + " online)\n";
+                        embed.Description = embed.Description + "* " + Format.Sanitize(name) + " (" + pop + " online)\n";
                     }
                     else
                     {
@@ -2615,7 +2632,7 @@ namespace FredBotNETCore.Modules.Public
                     {
                         status = Extensions.GetBetween(name, "</a></td><td>Playing on ", "</td><td>");
                         string pr2Name = Extensions.GetBetween(name, "; text-decoration: underline;'>", "</a></td><td>").Replace("&nbsp;", " ");
-                        embed.Description = embed.Description + "[" + pr2Name + "](https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(pr2Name) + ")(" + status + "), ";
+                        embed.Description = embed.Description + "[" + Format.Sanitize(pr2Name) + "](https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(pr2Name) + ")(" + status + "), ";
                     }
                 };
                 if (embed.Description.Length <= 0)

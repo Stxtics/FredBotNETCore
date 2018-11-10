@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using System.Diagnostics;
 using System.Text;
+using System.Linq;
 
 namespace FredBotNETCore
 {
@@ -21,7 +22,7 @@ namespace FredBotNETCore
         public static IServiceProvider _provider;
         private bool running = false;
         private bool retryConnection = false;
-        private string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
+        private readonly string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
 
         #endregion
 
@@ -204,11 +205,7 @@ namespace FredBotNETCore
                 await Task.Delay(new Random().Next(300000, 600000));
                 await _client.SetGameAsync($"/help in {_client.Guilds.Count} servers", null, type: ActivityType.Watching);
                 await Task.Delay(new Random().Next(300000, 600000));
-                int users = 0;
-                foreach (SocketGuild guild in _client.Guilds)
-                {
-                    users = users + guild.MemberCount;
-                }
+                int users = _client.Guilds.Sum(g => g.Users.Count);
                 await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
             }
         }

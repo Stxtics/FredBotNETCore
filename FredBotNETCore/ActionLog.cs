@@ -40,12 +40,12 @@ namespace FredBotNETCore
                 embed.WithCurrentTimestamp();
                 if (user.Username != user2.Username && user.Discriminator != user2.Discriminator)
                 {
-                    embed.Description = $"{user.Mention} changed their username from **{user.Username}#{user.Discriminator}** to **{user2.Username}#{user2.Discriminator}**.";
+                    embed.Description = $"{user.Mention} changed their username from **{Format.Sanitize(user.Username)}#{user.Discriminator}** to **{Format.Sanitize(user2.Username)}#{user2.Discriminator}**.";
                     await log.SendMessageAsync("", false, embed.Build());
                 }
                 else if (user.Username != user2.Username)
                 {
-                    embed.Description = $"{user.Mention} changed their username from **{user.Username}** to **{user2.Username}**.";
+                    embed.Description = $"{user.Mention} changed their username from **{Format.Sanitize(user.Username)}** to **{Format.Sanitize(user2.Username)}**.";
                     await log.SendMessageAsync("", false, embed.Build());
                 }
                 else if (user.Discriminator != user2.Discriminator)
@@ -96,13 +96,13 @@ namespace FredBotNETCore
             }
             if (role.Name != role2.Name)
             {
-                embed.Description = $"{user.Mention} renamed the role **{role.Name}** to {role2.Mention}.";
+                embed.Description = $"{user.Mention} renamed the role **{Format.Sanitize(role.Name)}** to {role2.Mention}.";
                 if (reason != null)
                 {
                     embed.AddField(y =>
                     {
                         y.Name = "Reason";
-                        y.Value = reason;
+                        y.Value = Format.Sanitize(reason);
                         y.IsInline = false;
                     });
                 }
@@ -123,7 +123,7 @@ namespace FredBotNETCore
                     embed.AddField(y =>
                     {
                         y.Name = "Reason";
-                        y.Value = reason;
+                        y.Value = Format.Sanitize(reason);
                         y.IsInline = false;
                     });
                 }
@@ -144,7 +144,7 @@ namespace FredBotNETCore
                     embed.AddField(y =>
                     {
                         y.Name = "Reason";
-                        y.Value = reason;
+                        y.Value = Format.Sanitize(reason);
                         y.IsInline = false;
                     });
                 }
@@ -158,7 +158,7 @@ namespace FredBotNETCore
                     embed.AddField(y =>
                     {
                         y.Name = "Reason";
-                        y.Value = reason;
+                        y.Value = Format.Sanitize(reason);
                         y.IsInline = false;
                     });
                 }
@@ -200,13 +200,13 @@ namespace FredBotNETCore
                     break;
                 }
             }
-            embed.Description = $"{user.Mention} deleted the role **{role.Name}**.";
+            embed.Description = $"{user.Mention} deleted the role **{Format.Sanitize(role.Name)}**.";
             if (reason != null)
             {
                 embed.AddField(y =>
                 {
                     y.Name = "Reason";
-                    y.Value = reason;
+                    y.Value = Format.Sanitize(reason);
                     y.IsInline = false;
                 });
             }
@@ -253,7 +253,7 @@ namespace FredBotNETCore
                 embed.AddField(y =>
                 {
                     y.Name = "Reason";
-                    y.Value = reason;
+                    y.Value = Format.Sanitize(reason);
                     y.IsInline = false;
                 });
             }
@@ -298,13 +298,13 @@ namespace FredBotNETCore
             {
                 if ((channel as SocketTextChannel).Name != (channel2 as SocketTextChannel).Name)
                 {
-                    embed.Description = $"{user.Mention} renamed the text channel **{(channel as SocketTextChannel).Name}** to {(channel2 as SocketTextChannel).Mention}.";
+                    embed.Description = $"{user.Mention} renamed the text channel **{Format.Sanitize((channel as SocketTextChannel).Name)}** to {(channel2 as SocketTextChannel).Mention}.";
                     if (reason != null)
                     {
                         embed.AddField(y =>
                         {
                             y.Name = "Reason";
-                            y.Value = reason;
+                            y.Value = Format.Sanitize(reason);
                             y.IsInline = false;
                         });
                     }
@@ -312,15 +312,15 @@ namespace FredBotNETCore
                 }
                 else if ((channel as SocketTextChannel).Topic != (channel2 as SocketTextChannel).Topic)
                 {
-                    string topic1 = (channel as SocketTextChannel).Topic;
-                    string topic2 = (channel2 as SocketTextChannel).Topic;
+                    string topic1 = Format.Sanitize((channel as SocketTextChannel).Topic);
+                    string topic2 = Format.Sanitize((channel2 as SocketTextChannel).Topic);
                     if (topic1.Length > 100)
                     {
-                        topic1 = (channel as SocketTextChannel).Topic.Replace("`", string.Empty).SplitInParts(100).ElementAt(0) + "...";
+                        topic1 = (channel as SocketTextChannel).Topic.SplitInParts(100).ElementAt(0) + "...";
                     }
                     if (topic2.Length > 100)
                     {
-                        topic2 = (channel2 as SocketTextChannel).Topic.Replace("`", string.Empty).SplitInParts(100).ElementAt(0) + "...";
+                        topic2 = (channel2 as SocketTextChannel).Topic.SplitInParts(100).ElementAt(0) + "...";
                     }
                     embed.Description = $"{user.Mention} changed the topic of {(channel as SocketTextChannel).Mention} from **{topic1}** to **{topic2}**.";
                     if (reason != null)
@@ -328,7 +328,7 @@ namespace FredBotNETCore
                         embed.AddField(y =>
                         {
                             y.Name = "Reason";
-                            y.Value = reason;
+                            y.Value = Format.Sanitize(reason);
                             y.IsInline = false;
                         });
                     }
@@ -349,7 +349,7 @@ namespace FredBotNETCore
                         embed.AddField(y =>
                         {
                             y.Name = "Reason";
-                            y.Value = reason;
+                            y.Value = Format.Sanitize(reason);
                             y.IsInline = false;
                         });
                     }
@@ -360,13 +360,13 @@ namespace FredBotNETCore
             {
                 if ((channel as SocketVoiceChannel).Name != (channel2 as SocketVoiceChannel).Name)
                 {
-                    embed.Description = $"{user.Mention} renamed the voice channel **{(channel as SocketVoiceChannel).Name}** to **{(channel2 as SocketVoiceChannel).Name}**.";
+                    embed.Description = $"{user.Mention} renamed the voice channel **{Format.Sanitize((channel as SocketVoiceChannel).Name)}** to **{Format.Sanitize((channel2 as SocketVoiceChannel).Name)}**.";
                     if (reason != null)
                     {
                         embed.AddField(y =>
                         {
                             y.Name = "Reason";
-                            y.Value = reason;
+                            y.Value = Format.Sanitize(reason);
                             y.IsInline = false;
                         });
                     }
@@ -374,13 +374,13 @@ namespace FredBotNETCore
                 }
                 else if ((channel as SocketVoiceChannel).Bitrate != (channel2 as SocketVoiceChannel).Bitrate)
                 {
-                    embed.Description = $"{user.Mention} changed **{(channel as SocketVoiceChannel).Name}'s** birate from **{(channel as SocketVoiceChannel).Bitrate}** to **{(channel2 as SocketVoiceChannel).Bitrate}**.";
+                    embed.Description = $"{user.Mention} changed **{Format.Sanitize((channel as SocketVoiceChannel).Name)}'s** birate from **{(channel as SocketVoiceChannel).Bitrate}** to **{(channel2 as SocketVoiceChannel).Bitrate}**.";
                     if (reason != null)
                     {
                         embed.AddField(y =>
                         {
                             y.Name = "Reason";
-                            y.Value = reason;
+                            y.Value = Format.Sanitize(reason);
                             y.IsInline = false;
                         });
                     }
@@ -390,22 +390,22 @@ namespace FredBotNETCore
                 {
                     if ((channel as SocketVoiceChannel).UserLimit == null)
                     {
-                        embed.Description = $"{user.Mention} changed **{(channel as SocketVoiceChannel).Name}'s** user limit from **unlimited** to **{(channel2 as SocketVoiceChannel).UserLimit}**.";
+                        embed.Description = $"{user.Mention} changed **{Format.Sanitize((channel as SocketVoiceChannel).Name)}'s** user limit from **unlimited** to **{(channel2 as SocketVoiceChannel).UserLimit}**.";
                     }
                     else if ((channel2 as SocketVoiceChannel).UserLimit == null)
                     {
-                        embed.Description = $"{user.Mention} changed **{(channel as SocketVoiceChannel).Name}'s** user limit from **{(channel as SocketVoiceChannel).UserLimit}** to **unlimited**.";
+                        embed.Description = $"{user.Mention} changed **{Format.Sanitize((channel as SocketVoiceChannel).Name)}'s** user limit from **{(channel as SocketVoiceChannel).UserLimit}** to **unlimited**.";
                     }
                     else
                     {
-                        embed.Description = $"{user.Mention} changed **{(channel as SocketVoiceChannel).Name}'s** user limit from **{(channel as SocketVoiceChannel).UserLimit}** to **{(channel2 as SocketVoiceChannel).UserLimit}**.";
+                        embed.Description = $"{user.Mention} changed **{Format.Sanitize((channel as SocketVoiceChannel).Name)}'s** user limit from **{(channel as SocketVoiceChannel).UserLimit}** to **{(channel2 as SocketVoiceChannel).UserLimit}**.";
                     }
                     if (reason != null)
                     {
                         embed.AddField(y =>
                         {
                             y.Name = "Reason";
-                            y.Value = reason;
+                            y.Value = Format.Sanitize(reason);
                             y.IsInline = false;
                         });
                     }
@@ -416,13 +416,13 @@ namespace FredBotNETCore
             {
                 if ((channel as SocketCategoryChannel).Name != (channel2 as SocketCategoryChannel).Name)
                 {
-                    embed.Description = $"{user.Mention} renamed the category channel **{(channel as SocketCategoryChannel).Name}** to **{(channel2 as SocketCategoryChannel).Name}**.";
+                    embed.Description = $"{user.Mention} renamed the category channel **{Format.Sanitize((channel as SocketCategoryChannel).Name)}** to **{Format.Sanitize((channel2 as SocketCategoryChannel).Name)}**.";
                     if (reason != null)
                     {
                         embed.AddField(y =>
                         {
                             y.Name = "Reason";
-                            y.Value = reason;
+                            y.Value = Format.Sanitize(reason);
                             y.IsInline = false;
                         });
                     }
@@ -467,22 +467,22 @@ namespace FredBotNETCore
             }
             if (channel is SocketTextChannel)
             {
-                embed.Description = $"{user.Mention} deleted the text channel: **{(channel as SocketGuildChannel).Name}**.";
+                embed.Description = $"{user.Mention} deleted the text channel: **{Format.Sanitize((channel as SocketGuildChannel).Name)}**.";
             }
             else if (channel is SocketVoiceChannel)
             {
-                embed.Description = $"{user.Mention} deleted the voice channel: **{(channel as SocketGuildChannel).Name}**.";
+                embed.Description = $"{user.Mention} deleted the voice channel: **{Format.Sanitize((channel as SocketGuildChannel).Name)}**.";
             }
             else if (channel is SocketCategoryChannel)
             {
-                embed.Description = $"{user.Mention} deleted the category channel: **{(channel as SocketGuildChannel).Name}**.";
+                embed.Description = $"{user.Mention} deleted the category channel: **{Format.Sanitize((channel as SocketGuildChannel).Name)}**.";
             }
             if (reason != null)
             {
                 embed.AddField(y =>
                 {
                     y.Name = "Reason";
-                    y.Value = reason;
+                    y.Value = Format.Sanitize(reason);
                     y.IsInline = false;
                 });
             }
@@ -529,18 +529,18 @@ namespace FredBotNETCore
             }
             else if (channel is SocketVoiceChannel)
             {
-                embed.Description = $"{user.Mention} created the voice channel: **{(channel as SocketGuildChannel).Name}**.";
+                embed.Description = $"{user.Mention} created the voice channel: **{Format.Sanitize((channel as SocketGuildChannel).Name)}**.";
             }
             else if (channel is SocketCategoryChannel)
             {
-                embed.Description = $"{user.Mention} created the category channel: **{(channel as SocketGuildChannel).Name}**.";
+                embed.Description = $"{user.Mention} created the category channel: **{Format.Sanitize((channel as SocketGuildChannel).Name)}**.";
             }
             if (reason != null)
             {
                 embed.AddField(y =>
                 {
                     y.Name = "Reason";
-                    y.Value = reason;
+                    y.Value = Format.Sanitize(reason);
                     y.IsInline = false;
                 });
             }
@@ -592,30 +592,30 @@ namespace FredBotNETCore
                 {
                     if (nickname == null)
                     {
-                        embed.Description = $"{user.Mention} set their nickname to **{nickname2}**.";
+                        embed.Description = $"{user.Mention} set their nickname to **{Format.Sanitize(nickname2)}**.";
                     }
                     else if (nickname2 == null)
                     {
-                        embed.Description = $"{user.Mention} removed their nickname of **{nickname}**.";
+                        embed.Description = $"{user.Mention} removed their nickname of **{Format.Sanitize(nickname)}**.";
                     }
                     else
                     {
-                        embed.Description = $"{user.Mention} has changed their nickname from **{nickname}** to **{nickname2}**.";
+                        embed.Description = $"{user.Mention} has changed their nickname from **{Format.Sanitize(nickname)}** to **{Format.Sanitize(nickname2)}**.";
                     }
                 }
                 else
                 {
                     if (nickname == null)
                     {
-                        embed.Description = $"{iUser.Mention} set **{user.Mention}'s** nickname to **{nickname2}**.";
+                        embed.Description = $"{iUser.Mention} set **{user.Mention}'s** nickname to **{Format.Sanitize(nickname2)}**.";
                     }
                     else if (nickname2 == null)
                     {
-                        embed.Description = $"{iUser.Mention} removed **{user.Mention}'s** nickname of **{nickname}**.";
+                        embed.Description = $"{iUser.Mention} removed **{user.Mention}'s** nickname of **{Format.Sanitize(nickname)}**.";
                     }
                     else
                     {
-                        embed.Description = $"{iUser.Mention} changed **{user.Mention}'s** nickname from **{nickname}** to **{nickname2}**.";
+                        embed.Description = $"{iUser.Mention} changed **{user.Mention}'s** nickname from **{Format.Sanitize(nickname)}** to **{Format.Sanitize(nickname2)}**.";
                     }
                 }
                 if (reason != null)
@@ -623,7 +623,7 @@ namespace FredBotNETCore
                     embed.AddField(y =>
                     {
                         y.Name = "Reason";
-                        y.Value = reason;
+                        y.Value = Format.Sanitize(reason);
                         y.IsInline = false;
                     });
                 }
@@ -678,7 +678,7 @@ namespace FredBotNETCore
                     embed.AddField(y =>
                     {
                         y.Name = "Reason";
-                        y.Value = reason;
+                        y.Value = Format.Sanitize(reason);
                         y.IsInline = false;
                     });
                 }
@@ -739,22 +739,22 @@ namespace FredBotNETCore
             {
                 if (message2.Content.Length > 252)
                 {
-                    embed.Description = $"{iUser.Mention} deleted a message by {message2.Author.Mention} in {channel2.Mention}.\nContent: **{message2.Content.Replace("`", string.Empty).SplitInParts(252).ElementAt(0)}...**";
+                    embed.Description = $"{iUser.Mention} deleted a message by {message2.Author.Mention} in {channel2.Mention}.\nContent: **{Format.Sanitize(message2.Content).SplitInParts(252).ElementAt(0)}...**";
                 }
                 else
                 {
-                    embed.Description = $"{iUser.Mention} deleted a message by {message2.Author.Mention} in {channel2.Mention}.\nContent: **{message2.Content.Replace("`", string.Empty)}**";
+                    embed.Description = $"{iUser.Mention} deleted a message by {message2.Author.Mention} in {channel2.Mention}.\nContent: **{Format.Sanitize(message2.Content)}**";
                 }
             }
             else
             {
                 if (message2.Content.Length > 252)
                 {
-                    embed.Description = $"{message2.Author.Mention} deleted their message in {channel2.Mention}.\nContent: **{message2.Content.Replace("`", string.Empty).SplitInParts(252).ElementAt(0)}...**";
+                    embed.Description = $"{message2.Author.Mention} deleted their message in {channel2.Mention}.\nContent: **{Format.Sanitize(message2.Content).SplitInParts(252).ElementAt(0)}...**";
                 }
                 else
                 {
-                    embed.Description = $"{message2.Author.Mention} deleted their message in {channel2.Mention}.\nContent: **{message2.Content.Replace("`", string.Empty)}**";
+                    embed.Description = $"{message2.Author.Mention} deleted their message in {channel2.Mention}.\nContent: **{Format.Sanitize(message2.Content)}**";
                 }
             }
             if (reason != null)
@@ -762,7 +762,7 @@ namespace FredBotNETCore
                 embed.AddField(y =>
                 {
                     y.Name = "Reason";
-                    y.Value = reason;
+                    y.Value = Format.Sanitize(reason);
                     y.IsInline = false;
                 });
             }
@@ -804,13 +804,13 @@ namespace FredBotNETCore
                     break;
                 }
             }
-            embed.Description = $"{iUser.Mention} unbanned **{user.Username}#{user.Discriminator}** from the guild.";
+            embed.Description = $"{iUser.Mention} unbanned **{Format.Sanitize(user.Username)}#{user.Discriminator}** from the guild.";
             if (reason != null)
             {
                 embed.AddField(y =>
                 {
                     y.Name = "Reason";
-                    y.Value = reason;
+                    y.Value = Format.Sanitize(reason);
                     y.IsInline = false;
                 });
             }
@@ -852,13 +852,13 @@ namespace FredBotNETCore
                     break;
                 }
             }
-            embed.Description = $"{iUser.Mention} banned **{user.Username}#{user.Discriminator}** from the guild.\nTotal members: **{guild.MemberCount - 1}**";
+            embed.Description = $"{iUser.Mention} banned **{Format.Sanitize(user.Username)}#{user.Discriminator}** from the guild.\nTotal members: **{guild.MemberCount - 1}**";
             if (reason != null)
             {
                 embed.AddField(y =>
                 {
                     y.Name = "Reason";
-                    y.Value = reason;
+                    y.Value = Format.Sanitize(reason);
                     y.IsInline = false;
                 });
             }
@@ -891,15 +891,15 @@ namespace FredBotNETCore
                 embed.WithCurrentTimestamp();
                 if ((DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days == 0)
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild. Account created **today**.\nTotal members: **{user.Guild.MemberCount}**";
+                    embed.Description = $"**{Format.Sanitize(user.Username)}#{user.Discriminator}** joined the guild. Account created **today**.\nTotal members: **{user.Guild.MemberCount}**";
                 }
                 else if ((DateTime.Now - user.CreatedAt).Days == 1)
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild. Account created **{(DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days}** day ago.\nTotal members: **{user.Guild.MemberCount}**";
+                    embed.Description = $"**{Format.Sanitize(user.Username)}#{user.Discriminator}** joined the guild. Account created **{(DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days}** day ago.\nTotal members: **{user.Guild.MemberCount}**";
                 }
                 else
                 {
-                    embed.Description = $"**{user.Username}#{user.Discriminator}** joined the guild. Account created **{(DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days}** days ago.\nTotal members: **{user.Guild.MemberCount}**";
+                    embed.Description = $"**{Format.Sanitize(user.Username)}#{user.Discriminator}** joined the guild. Account created **{(DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days}** days ago.\nTotal members: **{user.Guild.MemberCount}**";
                 }
                 await log.SendMessageAsync("", false, embed.Build());
                 var result = Database.CheckExistingUser(user);
@@ -930,7 +930,7 @@ namespace FredBotNETCore
                         options.AuditLogReason = "Setting nickname to PR2 name.";
                         await user.ModifyAsync(x => x.Nickname = pr2name, options);
                     }
-                    await user.SendMessageAsync($"Hello {user.Username} ! Welcome back to the Platform Racing Group.\nYou have been added to the verified role as you verified yourself the last time you were here.");
+                    await user.SendMessageAsync($"Hello {Format.Sanitize(user.Username)} ! Welcome back to the Platform Racing Group.\nYou have been added to the verified role as you verified yourself the last time you were here.");
                 }
                 else
                 {
@@ -982,9 +982,9 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser iUser = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(5).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await user.Guild.GetAuditLogsAsync(2).FlattenAsync())
             {
-                if (audit.Action == ActionType.Kick && audit.Data.ToString().Contains(user.Username))
+                if (audit.Action == ActionType.Kick)
                 {
                     iUser = audit.User;
                     reason = audit.Reason;
@@ -993,26 +993,26 @@ namespace FredBotNETCore
             }
             if (iUser == null && (DateTime.Now.ToUniversalTime() - user.JoinedAt.Value.ToUniversalTime()).Days == 0)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** left the guild. They spent less than a day in the server.\nTotal members: **{user.Guild.MemberCount}**";
+                embed.Description = $"**{Format.Sanitize(user.Username)}#{user.Discriminator}** left the guild. They spent less than a day in the server.\nTotal members: **{user.Guild.MemberCount}**";
             }
             else if (iUser == null && (DateTime.Now.ToUniversalTime() - user.JoinedAt.Value.ToUniversalTime()).Days == 1)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** left the guild. They spent **{(DateTime.Now.ToUniversalTime() - user.JoinedAt.Value.ToUniversalTime()).Days}** day in the server.\nTotal members: **{user.Guild.MemberCount}**";
+                embed.Description = $"**{Format.Sanitize(user.Username)}#{user.Discriminator}** left the guild. They spent **{(DateTime.Now.ToUniversalTime() - user.JoinedAt.Value.ToUniversalTime()).Days}** day in the server.\nTotal members: **{user.Guild.MemberCount}**";
             }
             else if (iUser == null)
             {
-                embed.Description = $"**{user.Username}#{user.Discriminator}** left the guild. They spent **{(DateTime.Now.ToUniversalTime() - user.JoinedAt.Value.ToUniversalTime()).Days}** days in the server.\nTotal members: **{user.Guild.MemberCount}**";
+                embed.Description = $"**{Format.Sanitize(user.Username)}#{user.Discriminator}** left the guild. They spent **{(DateTime.Now.ToUniversalTime() - user.JoinedAt.Value.ToUniversalTime()).Days}** days in the server.\nTotal members: **{user.Guild.MemberCount}**";
             }
             else
             {
                 embed.Author.Name = "User Kicked";
-                embed.Description = $"{iUser.Mention} kicked **{user.Username}#{user.Discriminator}** from the guild.\nTotal members: **{user.Guild.MemberCount}**";
+                embed.Description = $"{iUser.Mention} kicked **{Format.Sanitize(user.Username)}#{user.Discriminator}** from the guild.\nTotal members: **{user.Guild.MemberCount}**";
                 if (reason != null)
                 {
                     embed.AddField(y =>
                     {
                         y.Name = "Reason";
-                        y.Value = reason;
+                        y.Value = Format.Sanitize(reason);
                         y.IsInline = false;
                     });
                 }
