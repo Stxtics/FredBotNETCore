@@ -95,7 +95,7 @@ namespace FredBotNETCore
                 Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", Client.CurrentUser.Username + "#" + Client.CurrentUser.Discriminator, "Auto - Mass mention - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                 try
                 {
-                    await user.SendMessageAsync($"You have been muted in {channel.Guild.Name} by {Client.CurrentUser.Mention} for mass mentioning and for a length of 10 minutes.");
+                    await user.SendMessageAsync($"You have been muted in **{Format.Sanitize(channel.Guild.Name)}** by {Client.CurrentUser.Mention} for **mass mentioning** and for a length of **10** minutes.");
                 }
                 catch (Discord.Net.HttpException)
                 {
@@ -146,7 +146,7 @@ namespace FredBotNETCore
                         await banlog.SendMessageAsync("", false, embed2.Build());
                         try
                         {
-                            await user.SendMessageAsync($"You are now unmuted.");
+                            await user.SendMessageAsync($"You are now unmuted in **{Format.Sanitize(channel.Guild.Name)}**.");
                         }
                         catch (Discord.Net.HttpException)
                         {
