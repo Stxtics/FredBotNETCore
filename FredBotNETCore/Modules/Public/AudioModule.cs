@@ -1152,6 +1152,13 @@ namespace FredBotNETCore.Modules.Public
                         next = true;
                     }
                 }
+                else
+                {
+                    Playing = false;
+                    Pause = true;
+                    MusicStarted = false;
+                    await Audio.StopAsync();
+                }
             }
         }
 

@@ -1214,7 +1214,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
-                        if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= (Context.Client.GetUser(383927022583545859) as SocketGuildUser).Roles.ElementAt(1).Position)
+                        if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
@@ -1333,7 +1333,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
-                        if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
@@ -1452,7 +1452,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
-                        if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
@@ -1797,7 +1797,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
-                        if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
@@ -2887,7 +2887,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
-                        if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
@@ -2991,7 +2991,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
-                        if (user.Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
@@ -3095,7 +3095,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
-                        if ((user as SocketGuildUser).Roles.ElementAt(1).Position >= Context.Guild.GetUser(383927022583545859).Roles.ElementAt(1).Position)
+                        if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
