@@ -16,50 +16,6 @@ namespace FredBotNETCore
             Client = client;
         }
 
-        public async Task AnnounceUserUpdated(SocketUser user, SocketUser user2)
-        {
-            if (Extensions.UserInGuild(null, Client.GetGuild(249657315576381450), user.Id.ToString()) != null)
-            {
-                SocketTextChannel log = Client.GetGuild(249657315576381450).GetTextChannel(327575359765610496);
-                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                {
-                    Name = "Member Updated",
-                    IconUrl = Client.GetGuild(249657315576381450).IconUrl
-                };
-                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                {
-                    Text = $"ID: {user.Id}",
-                    IconUrl = user.GetAvatarUrl()
-                };
-                EmbedBuilder embed = new EmbedBuilder()
-                {
-                    Author = author,
-                    Color = new Color(0, 0, 255),
-                    Footer = footer
-                };
-                embed.WithCurrentTimestamp();
-                if (user.Username != user2.Username && user.Discriminator != user2.Discriminator)
-                {
-                    embed.Description = $"{user.Mention} changed their username from **{Format.Sanitize(user.Username)}#{user.Discriminator}** to **{Format.Sanitize(user2.Username)}#{user2.Discriminator}**.";
-                    await log.SendMessageAsync("", false, embed.Build());
-                }
-                else if (user.Username != user2.Username)
-                {
-                    embed.Description = $"{user.Mention} changed their username from **{Format.Sanitize(user.Username)}** to **{Format.Sanitize(user2.Username)}**.";
-                    await log.SendMessageAsync("", false, embed.Build());
-                }
-                else if (user.Discriminator != user2.Discriminator)
-                {
-                    embed.Description = $"{user.Mention} changed their discriminator from **#{user.Discriminator}** to **#{user2.Discriminator}**.";
-                    await log.SendMessageAsync("", false, embed.Build());
-                }
-            }
-            else
-            {
-                return;
-            }
-        }
-
         public async Task AnnounceRoleUpdated(SocketRole role, SocketRole role2)
         {
             if (role.Guild.Id != 249657315576381450)
@@ -727,7 +683,7 @@ namespace FredBotNETCore
             string reason = null;
             foreach (Discord.Rest.RestAuditLogEntry audit in await channel2.Guild.GetAuditLogsAsync(2).FlattenAsync())
             {
-                if (audit.Action == ActionType.MessageDeleted)
+                if (audit.Action == ActionType.MessageDeleted && DateTime.Now.ToUniversalTime().AddSeconds(-5) > audit.CreatedAt.ToUniversalTime())
                 {
                     iUser = audit.User;
                     reason = audit.Reason;

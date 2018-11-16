@@ -235,7 +235,6 @@ namespace FredBotNETCore
             _client.UserLeft += log.AnnounceUserLeft;
             _client.UserBanned += log.AnnounceUserBanned;
             _client.UserUnbanned += log.AnnounceUserUnbanned;
-            _client.UserUpdated += log.AnnounceUserUpdated;
             _client.MessageDeleted += log.AnnounceMessageDeleted;
             _client.GuildMemberUpdated += log.AnnounceGuildMemberUpdated;
             _client.ChannelCreated += log.AnnounceChannelCreated;
