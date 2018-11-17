@@ -117,12 +117,29 @@ namespace FredBotNETCore
             {
                 username = guild.GetUser(userid).Username;
             }
+            string discriminator = null;
+            if (username.Contains("#"))
+            {
+                discriminator = username.Split("#").Last();
+                username = username.Split("#").First();
+            }
             foreach (SocketGuildUser gUser in guild.Users)
             {
-                if (gUser.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase))
+                if (discriminator == null)
                 {
-                    user = gUser;
-                    break;
+                    if (gUser.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        user = gUser;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (gUser.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase) && gUser.Discriminator.Equals(discriminator))
+                    {
+                        user = gUser;
+                        break;
+                    }
                 }
             }
             return user;
