@@ -681,7 +681,7 @@ namespace FredBotNETCore
             embed.WithCurrentTimestamp();
             IUser iUser = null;
             string reason = null;
-            foreach (Discord.Rest.RestAuditLogEntry audit in await channel2.Guild.GetAuditLogsAsync(2).FlattenAsync())
+            foreach (Discord.Rest.RestAuditLogEntry audit in await channel2.Guild.GetAuditLogsAsync(1).FlattenAsync())
             {
                 if (audit.Action == ActionType.MessageDeleted && DateTime.Now.ToUniversalTime().AddSeconds(-5) > audit.CreatedAt.ToUniversalTime())
                 {

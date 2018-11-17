@@ -1327,7 +1327,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
@@ -1446,7 +1446,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
@@ -1791,7 +1791,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
@@ -2201,7 +2201,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (type.Equals("temp", StringComparison.InvariantCultureIgnoreCase) || type.Equals("temporary", StringComparison.InvariantCultureIgnoreCase))
                         {
                             await Context.Message.DeleteAsync();
@@ -2279,7 +2279,7 @@ namespace FredBotNETCore.Modules
             {
                 if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                     if (!user.Roles.Any(e => e.Name == "Temp Mod"))
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user is not a temp mod.");
@@ -2333,7 +2333,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (!user.Roles.Any(e => e.Name == "Muted"))
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user is not muted.");
@@ -2535,7 +2535,7 @@ namespace FredBotNETCore.Modules
             {
                 if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                     string createdMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.CreatedAt.Month);
                     string createdDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.CreatedAt.DayOfWeek);
                     string date = $"{createdDay}, {createdMonth} {user.CreatedAt.Day}, {user.CreatedAt.Year} {user.CreatedAt.DateTime.ToString("h:mm tt")}"; // Shows the date the account was made
@@ -2820,7 +2820,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         await Context.Message.DeleteAsync();
                         var usermessages = (Context.Channel.GetMessagesAsync().Flatten()).Where(x => x.Author == user).Take(delete);
                         if (delete == 1)
@@ -2881,7 +2881,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
@@ -2985,7 +2985,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
@@ -3089,7 +3089,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.ElementAt(1).Id.ToString()) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
@@ -3278,7 +3278,7 @@ namespace FredBotNETCore.Modules
             {
                 if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                     if (user.Id == Context.User.Id)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} you cannot temp mod yourself.");
