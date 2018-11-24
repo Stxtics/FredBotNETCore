@@ -37,6 +37,7 @@ namespace FredBotNETCore.Modules
                     {
                         SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
                         await Context.Message.DeleteAsync();
+                        string pr2name = Database.GetPR2Name(user);
                         Database.VerifyUser(user, "Not verified");
                         RequestOptions options = new RequestOptions()
                         {
@@ -44,6 +45,11 @@ namespace FredBotNETCore.Modules
                         };
                         await user.RemoveRoleAsync(Context.Guild.GetRole(255513962798514177), options);
                         await user.AddRoleAsync(Context.Guild.GetRole(253265134393229312), options);
+                        if (user.Nickname.Equals(pr2name, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            options.AuditLogReason = "Resetting nickname";
+                            await user.ModifyAsync(x => x.Nickname = null, options);
+                        }
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully reset **{Format.Sanitize(user.Username)}#{user.Discriminator}'s** PR2 Name.");
                     }
                     else
