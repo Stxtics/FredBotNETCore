@@ -3297,12 +3297,17 @@ namespace FredBotNETCore.Modules
                     if (time.Equals("1"))
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minute. " +
-                                    $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}");
+                                    $"May they reign in a minute of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
+                    }
+                    else if (minutes <= 60)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
+                                    $"May they reign in minutes of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
                     }
                     else
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
-                                    $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}");
+                                    $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
                     }
                     int temptime = Convert.ToInt32(minutes) * 60000;
                     Task task = Task.Run(async () =>
