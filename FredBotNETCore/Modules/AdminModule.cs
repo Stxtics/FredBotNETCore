@@ -40,7 +40,7 @@ namespace FredBotNETCore.Modules
                         Database.VerifyUser(user, "Not verified");
                         RequestOptions options = new RequestOptions()
                         {
-                            AuditLogReason = $"PR2 Name reset by: {Context.User.Username}#{Context.User.Id}"
+                            AuditLogReason = $"PR2 Name reset by: {Context.User.Username}#{Context.User.Discriminator}"
                         };
                         await user.RemoveRoleAsync(Context.Guild.GetRole(255513962798514177), options);
                         await user.AddRoleAsync(Context.Guild.GetRole(253265134393229312), options);
