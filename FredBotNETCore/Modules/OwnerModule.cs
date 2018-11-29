@@ -107,17 +107,5 @@ namespace FredBotNETCore.Modules
                 }
             }
         }
-
-        [Command("updatetoken", RunMode = RunMode.Async)]
-        [Alias("utoken", "changetoken")]
-        [Summary("Updates token used in some commands")]
-        [RequireOwner]
-        public async Task UpdateToken(string newToken)
-        {
-            var pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
-            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token was successfully changed from `{Format.Sanitize(pr2token.ReadLine())}` to `{Format.Sanitize(newToken)}`.");
-            pr2token.Close();
-            File.WriteAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"), newToken);
-        }
     }
 }

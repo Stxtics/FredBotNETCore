@@ -16,6 +16,21 @@ namespace FredBotNETCore.Modules
     [Summary("Module for commands of moderators and up of Platform Racing Group")]
     public class ModeratorModule : ModuleBase<SocketCommandContext>
     {
+        [Command("updatetoken", RunMode = RunMode.Async)]
+        [Alias("utoken", "changetoken")]
+        [Summary("Updates token used in some commands")]
+        public async Task UpdateToken(string newToken)
+        {
+            var guild = Context.Client.GetGuild(356602194037964801);
+            if (guild.GetUser(Context.User.Id) != null)
+            {
+                var pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token was successfully changed from `{Format.Sanitize(pr2token.ReadLine())}` to `{Format.Sanitize(newToken)}`.");
+                pr2token.Close();
+                File.WriteAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"), newToken);
+            }
+        }
+
         [Command("notifymacroers", RunMode = RunMode.Async)]
         [Alias("pingmacroers")]
         [Summary("Mention macroers role with message specified.")]
