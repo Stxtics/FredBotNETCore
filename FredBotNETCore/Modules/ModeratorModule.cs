@@ -24,9 +24,29 @@ namespace FredBotNETCore.Modules
             var guild = Context.Client.GetGuild(356602194037964801);
             if (guild.GetUser(Context.User.Id) != null)
             {
-                var pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token was successfully changed from `{Format.Sanitize(pr2token.ReadLine())}` to `{Format.Sanitize(newToken)}`.");
-                pr2token.Close();
+                string currentToken = File.ReadAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
+                
+                SocketTextChannel log = Context.Client.GetGuild(249657315576381450).GetTextChannel(327575359765610496);
+                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                {
+                    Name = "Token Changed",
+                    IconUrl = Context.Client.GetGuild(249657315576381450).IconUrl
+                };
+                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                {
+                    Text = $"ID: {Context.User.Id}",
+                    IconUrl = Context.User.GetAvatarUrl()
+                };
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Author = author,
+                    Color = new Color(0, 0, 255),
+                    Footer = footer
+                };
+                embed.WithCurrentTimestamp();
+                embed.Description = $"{Context.User.Mention} changed the token of FredTheG.CactusBot on PR2.";
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token was successfully changed from **{Format.Sanitize(currentToken)}** to **{Format.Sanitize(newToken)}**.");
+                await log.SendMessageAsync("", false, embed.Build());
                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"), newToken);
             }
         }
