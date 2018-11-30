@@ -86,7 +86,8 @@ namespace FredBotNETCore.Modules.Public
                 "/kick - Kicks the user mentioned.Reason needed.\n" +
                 "/ban - Bans the user mentioned.Reason needed.\n" +
                 "**PR2 Staff Member Only**\n" +
-                "/promote - Says about a PR2 Promotion. PR2 Admins only\n" +
+                "/promote - Says about a PR2 Promotion. PR2 Admins only.\n" +
+                "/updatetoken - Updates token of FredtheG.CactusBot.\n" +
                 "**PR2 Discussion Only**\n" +
                 "/hint - Tell you the current hint for the artifact location.\n" +
                 "/view - Gives you info of a PR2 user, or multiple if each name seperated by | .\n" +
