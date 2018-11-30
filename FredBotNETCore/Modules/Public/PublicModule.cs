@@ -591,7 +591,7 @@ namespace FredBotNETCore.Modules.Public
             }
             if (responseString.Equals("{\"error\":\"Could not find a valid login token. Please log in again.\"}"))
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token of FredTheG.CactusBot has expired. Please mention Stxtics#0001 in Platform Racing Group and tell him this so that he can fix it.");
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token of FredTheG.CactusBot has expired. Please contact a PR2 Staff Member so that they can update it.");
             }
         }
 
