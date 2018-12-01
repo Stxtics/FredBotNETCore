@@ -19,13 +19,13 @@ namespace FredBotNETCore.Modules
         [Command("updatetoken", RunMode = RunMode.Async)]
         [Alias("utoken", "changetoken")]
         [Summary("Updates token used in some commands")]
+        [RequireContext(ContextType.Guild)]
         public async Task UpdateToken(string newToken)
         {
-            var guild = Context.Client.GetGuild(356602194037964801);
-            if (guild.GetUser(Context.User.Id) != null)
+            if (Context.Guild.Id == 356602194037964801)
             {
                 string currentToken = File.ReadAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
-                
+
                 SocketTextChannel log = Context.Client.GetGuild(249657315576381450).GetTextChannel(327575359765610496);
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
