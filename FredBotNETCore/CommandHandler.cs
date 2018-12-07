@@ -291,7 +291,7 @@ namespace FredBotNETCore
                 IResult result = await _cmds.ExecuteAsync(context, argPos, Program._provider);
                 if (result.Error.HasValue && result.Error.Value == CommandError.Exception)
                 {
-                    await context.Channel.SendMessageAsync("Oh no an error occurred. Details of this error have been sent to <@181853112045142016> so that he can fix it.");
+                    await context.Channel.SendMessageAsync($"Oh no an error occurred. Details of this error have been sent to {(await _client.GetApplicationInfoAsync()).Owner.Mention} so that he can fix it.");
                 }
             }
         }
