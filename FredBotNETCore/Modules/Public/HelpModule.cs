@@ -21,9 +21,10 @@ namespace FredBotNETCore.Modules.Public
         [Summary("List of commands for the bot.")]
         public async Task Help()
         {
+            Discord.Rest.RestUserMessage msg = null;
             if (!(Context.Channel is IDMChannel))
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I've just sent my commands to your DMs. :grinning:");
+                msg = await Context.Channel.SendMessageAsync($"{Context.User.Mention} I've just sent my commands to your DMs. :grinning:");
             }
             EmbedBuilder embed = new EmbedBuilder()
             {
@@ -137,11 +138,21 @@ namespace FredBotNETCore.Modules.Public
                 "/verify - Gives you instructions on how to get verified(if you are not).\n";
             embed.Title = "Fred the G. Cactus Commands";
             var parts = help.SplitInParts(2000);
-            foreach (string part in parts)
+            try
             {
-                embed.Description = part;
-                await Context.User.SendMessageAsync("", false, embed.Build());
-                embed.Title = "";
+                foreach (string part in parts)
+                {
+                    embed.Description = part;
+                    await Context.User.SendMessageAsync("", false, embed.Build());
+                    embed.Title = "";
+                }
+            }
+            catch(Discord.Net.HttpException)
+            {
+                if (msg != null)
+                {
+                    await msg.ModifyAsync(x => x.Content = $"{Context.User.Mention} I was unable to send you my commands. To fix this goto Settings --> Privacy & Safety --> And allow direct messages from server members.");
+                }
             }
         }
     }
