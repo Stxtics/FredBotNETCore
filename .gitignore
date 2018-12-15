@@ -276,3 +276,4 @@ __pycache__/
 /FredBotNETCore/TextFiles/BlacklistedUrls.txt
 /FredBotNETCore/TextFiles/UnicodeRegex.txt
 /FredBotNETCore/TextFiles/AllowedChannels.txt
+/FredBotNETCore/TextFiles/LogChannel.txt

@@ -1375,5 +1375,45 @@ namespace FredBotNETCore.Modules
                 return;
             }
         }
+
+        [Command("logchannel", RunMode = RunMode.Async)]
+        [Alias("updatelogchannel", "setlogchannel")]
+        [Summary("Sets the log channel for PRG")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        public async Task SetLogChannel([Remainder] string text = null)
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                if (Extensions.ChannelInGuild(Context.Message, Context.Guild, text) != null)
+                {
+                    var channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, text);
+                    string currentLogChannel = File.ReadAllText(Path.Combine(Extensions.downloadPath, "LogChannel.txt"));
+
+                    SocketTextChannel log = Context.Guild.GetTextChannel(channel.Id);
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = "Log Channel Changed",
+                        IconUrl = Context.Guild.IconUrl
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {Context.User.Id}",
+                        IconUrl = Context.User.GetAvatarUrl()
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Author = author,
+                        Color = new Color(0, 0, 255),
+                        Footer = footer
+                    };
+                    embed.WithCurrentTimestamp();
+                    embed.Description = $"{Context.User.Mention} changed the log channel from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.";
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the log channel was successfully changed from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.");
+                    await log.SendMessageAsync("", false, embed.Build());
+                    File.WriteAllText(Path.Combine(Extensions.downloadPath, "LogChannel.txt"), channel.Id.ToString());
+                }
+            }
+        }
     }
 }
