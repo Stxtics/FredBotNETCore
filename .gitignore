@@ -275,3 +275,4 @@ __pycache__/
 /FredBotNETCore/TextFiles/JV2ApiKey.txt
 /FredBotNETCore/TextFiles/BlacklistedUrls.txt
 /FredBotNETCore/TextFiles/UnicodeRegex.txt
+/FredBotNETCore/TextFiles/AllowedChannels.txt

@@ -1158,5 +1158,222 @@ namespace FredBotNETCore.Modules
                 return;
             }
         }
+
+        [Command("addallowedchannel", RunMode = RunMode.Async)]
+        [Alias("allowedchanneladd", "addpr2channel")]
+        [Summary("Add a channel that PR2 commands can be done in.")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireContext(ContextType.Guild)]
+        public async Task AddAllowedChannel([Remainder] string text = null)
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /addallowedchannel";
+                    embed.Description = "**Description:** Add a channel that PR2 commands can be done in.\n**Usage:** /addallowedchannel [name, id, mention]\n**Example:** /addallowedchannel pr2-discussion";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    string[] channels = text.Split(", ", StringSplitOptions.RemoveEmptyEntries);
+                    int count = 0;
+                    try
+                    {
+                        foreach (string channelName in channels)
+                        {
+                            if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName) != null)
+                            {
+                                var channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName);
+                                string currentAllowedChannels = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"));
+                                if (currentAllowedChannels.Contains(channel.Id.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    File.WriteAllText(Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"), currentAllowedChannels);
+                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel **{Format.Sanitize(channel.Name)}** is already an allowed channel.");
+                                }
+                                else
+                                {
+                                    File.WriteAllText(Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"), currentAllowedChannels + channel.Id.ToString() + "\n");
+                                    count++;
+                                }
+                            }
+                        }
+                    }
+                    catch (NullReferenceException)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find 1 or more channels with an ID you entered.");
+                    }
+                    if (count > 0)
+                    {
+                        SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = "Allowed Channel Add",
+                            IconUrl = Context.Guild.IconUrl
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = $"ID: {Context.User.Id}",
+                            IconUrl = Context.User.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(255, 0, 0),
+                            Footer = footer
+                        };
+                        embed.WithCurrentTimestamp();
+                        if (count == 1)
+                        {
+                            embed.Description = $"{Context.User.Mention} allowed the channel **{Format.Sanitize(text)}** for PR2 commands.";
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully allowed the channel **{Format.Sanitize(text)}** for PR2 commands.");
+                        }
+                        else
+                        {
+                            embed.Description = $"{Context.User.Mention} allowed **{count}** channels for PR2 commands.";
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully allowed **{count}** channels for PR2 commands.");
+                        }
+                        await log.SendMessageAsync("", false, embed.Build());
+                    }
+                }
+            }
+        }
+
+        [Command("removeallowedchannel", RunMode = RunMode.Async)]
+        [Alias("delallowedchannel", "allowedchanneldel", "allowedchannelremove", "removepr2channel")]
+        [Summary("Unblacklist a URL from being said on the server")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireContext(ContextType.Guild)]
+        public async Task RemoveAllowedChannel([Remainder] string text = null)
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /removeallowedchannel";
+                    embed.Description = "**Description:** Remove a channel that PR2 commands can be done in.\n**Usage:** /removeallowedchannel [name, id, mention]\n**Example:** /removeallowedchannel announcements";
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    string[] channels = text.Split(", ", StringSplitOptions.RemoveEmptyEntries);
+                    int count = 0;
+                    try
+                    {
+                        foreach (string channelName in channels)
+                        {
+                            if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName) != null)
+                            {
+                                var channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName);
+                                string currentAllowedChannels = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"));
+                                if (currentAllowedChannels.Contains(channel.Id.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    currentAllowedChannels = currentAllowedChannels.Replace(channel.Id.ToString() + "\n", string.Empty);
+                                    File.WriteAllText(Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"), currentAllowedChannels);
+                                    count++;
+                                }
+                                else
+                                {
+                                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel **{Format.Sanitize(channel.Name)}** is not an allowed channel for PR2 commands.");
+                                }
+                            }
+                        }
+                    }
+                    catch (NullReferenceException)
+                    {
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find 1 or more channels with an ID you entered.");
+                    }
+                    if (count > 0)
+                    {
+                        SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = "Allowed Channel Remove",
+                            IconUrl = Context.Guild.IconUrl
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = $"ID: {Context.User.Id}",
+                            IconUrl = Context.User.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(0, 255, 0),
+                            Footer = footer
+                        };
+                        embed.WithCurrentTimestamp();
+                        if (count == 1)
+                        {
+                            embed.Description = $"{Context.User.Mention} disallowed the channel **{Format.Sanitize(text)}** for PR2 commands.";
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully disallowed the channel **{Format.Sanitize(text)}** for PR2 commands.");
+                        }
+                        else
+                        {
+                            embed.Description = $"{Context.User.Mention} disallowed **{count}** channels for PR2 commands.";
+                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully disallowed **{count}** channels for PR2 commands.");
+                        }
+                        await log.SendMessageAsync("", false, embed.Build());
+                    }
+                }
+            }
+        }
+
+        [Command("listallowedchannels", RunMode = RunMode.Async)]
+        [Alias("allowedchannelslist", "listpr2channels")]
+        [Summary("Lists all the channels that PR2 commands can be done in.")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireContext(ContextType.Guild)]
+        public async Task ListAllowedChannels()
+        {
+            if (Context.Guild.Id == 249657315576381450)
+            {
+                var allowedChannels = new StreamReader(path: Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"));
+                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                {
+                    IconUrl = Context.Guild.IconUrl,
+                    Name = "List Allowed Channels"
+                };
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)),
+                    Author = auth
+                };
+                string currentAllowedChannels = "";
+                string channel = allowedChannels.ReadLine();
+                while (channel != null)
+                {
+                    currentAllowedChannels = currentAllowedChannels + Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(channel)).Name) + "\n";
+                    channel = allowedChannels.ReadLine();
+                }
+                allowedChannels.Close();
+                if (currentAllowedChannels.Length <= 0)
+                {
+                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} there are no allowedChannels.");
+                }
+                else
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Allowed Channels";
+                        y.Value = currentAllowedChannels;
+                        y.IsInline = false;
+                    });
+                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
     }
 }
