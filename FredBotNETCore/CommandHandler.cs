@@ -267,7 +267,7 @@ namespace FredBotNETCore
             if (msg.Author.IsBot) return;
             if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
             {
-                if (channel.Guild.Id == 249657315576381450 && channel.Id != 327575359765610496)
+                if (channel.Guild.Id == 249657315576381450 && channel.Id != Extensions.GetLogChannel())
                 {
                     if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.ElementAt(1).Id.ToString()))
                     {

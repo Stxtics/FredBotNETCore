@@ -2,7 +2,6 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace FredBotNETCore.Modules

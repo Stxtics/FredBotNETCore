@@ -26,7 +26,7 @@ namespace FredBotNETCore.Modules
             {
                 string currentToken = File.ReadAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
 
-                SocketTextChannel log = Context.Client.GetGuild(249657315576381450).GetTextChannel(327575359765610496);
+                SocketTextChannel log = Context.Client.GetGuild(249657315576381450).GetTextChannel(Extensions.GetLogChannel());
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
                     Name = "Token Changed",
@@ -218,7 +218,7 @@ namespace FredBotNETCore.Modules
                             else
                             {
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
-                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                 {
                                     Name = "Music Blacklist Add",
@@ -289,7 +289,7 @@ namespace FredBotNETCore.Modules
                             {
                                 currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
-                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                 {
                                     Name = "Music Blacklist Remove",
@@ -424,7 +424,7 @@ namespace FredBotNETCore.Modules
                                     AuditLogReason = $"Blacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
                                 };
                                 await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny), options);
-                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                 {
                                     Name = "Suggestions Blacklist Add",
@@ -501,7 +501,7 @@ namespace FredBotNETCore.Modules
                                     AuditLogReason = $"Unblacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
                                 };
                                 await suggestions.RemovePermissionOverwriteAsync(user, options);
-                                SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                                SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                 {
                                     Name = "Suggestions Blacklist Remove",
@@ -1795,7 +1795,7 @@ namespace FredBotNETCore.Modules
                 embed.Color = new Color(0, 0, 255);
                 embed.Fields.Clear();
                 embed.Description = $"{Context.User.Mention} updated case **{caseN}**.";
-                await Context.Guild.GetTextChannel(327575359765610496).SendMessageAsync("", false, embed.Build());
+                await Context.Guild.GetTextChannel(Extensions.GetLogChannel()).SendMessageAsync("", false, embed.Build());
             }
         }
 
@@ -2810,7 +2810,7 @@ namespace FredBotNETCore.Modules
                 await Context.Channel.SendMessageAsync("", false, embed.Build());
                 return;
             }
-            ITextChannel channel = Context.Channel as ITextChannel, log = Context.Guild.GetTextChannel(327575359765610496);
+            ITextChannel channel = Context.Channel as ITextChannel, log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "Purge Messages",

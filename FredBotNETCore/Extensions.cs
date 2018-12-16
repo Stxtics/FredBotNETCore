@@ -200,5 +200,24 @@ namespace FredBotNETCore
             var result = await response.Content.ReadAsStringAsync();
             return result;
         }
+
+        public static ulong GetLogChannel()
+        {
+            return ulong.Parse(File.ReadAllText(Path.Combine(downloadPath, "LogChannel.txt")));
+        }
+
+        public static List<ulong> AllowedChannels()
+        {
+            var channels = new List<ulong>();
+            var allowedChannels = new StreamReader(path: Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"));
+            string channel = allowedChannels.ReadLine();
+            while (channel != null)
+            {
+                channels.Add(ulong.Parse(channel));
+                channel = allowedChannels.ReadLine();
+            }
+            allowedChannels.Close();
+            return channels;
+        }
     }
 }

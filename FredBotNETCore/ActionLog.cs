@@ -22,7 +22,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = role.Guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = role.Guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "Role Updated",
@@ -128,7 +128,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = role.Guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = role.Guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "Role Deleted",
@@ -175,7 +175,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = role.Guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = role.Guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "Role Created",
@@ -222,7 +222,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "Channel Updated",
@@ -393,7 +393,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "Channel Deleted",
@@ -451,7 +451,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = (channel as SocketGuildChannel).Guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "Channel Created",
@@ -509,7 +509,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = user.Guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = user.Guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "Member Updated",
@@ -650,7 +650,7 @@ namespace FredBotNETCore
             }
             IMessage message2 = await message.GetOrDownloadAsync();
             SocketTextChannel channel2 = channel as SocketTextChannel;
-            SocketTextChannel log = Client.GetChannel(327575359765610496) as SocketTextChannel;
+            SocketTextChannel log = Client.GetChannel(Extensions.GetLogChannel()) as SocketTextChannel;
             if (channel2.Id == log.Id || channel2.Guild.Id != 249657315576381450)
             {
                 return;
@@ -731,7 +731,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "User Unbanned",
@@ -779,7 +779,7 @@ namespace FredBotNETCore
             {
                 return;
             }
-            SocketTextChannel log = guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "User Banned",
@@ -825,7 +825,7 @@ namespace FredBotNETCore
         {
             if (user.Guild.Id == 249657315576381450)
             {
-                SocketTextChannel log = user.Guild.GetTextChannel(327575359765610496), channel = user.Guild.GetTextChannel(249657315576381450);
+                SocketTextChannel log = user.Guild.GetTextChannel(Extensions.GetLogChannel()), channel = user.Guild.GetTextChannel(249657315576381450);
                 IEnumerable<SocketRole> members = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Members".ToUpper()), verified = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Verified".ToUpper()), muted = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Muted".ToUpper());
                 SocketTextChannel rules = user.Guild.GetTextChannel(249682754407497728), roles = user.Guild.GetTextChannel(260272249976782848);
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -918,7 +918,7 @@ namespace FredBotNETCore
                     return;
                 }
             }
-            SocketTextChannel log = user.Guild.GetTextChannel(327575359765610496);
+            SocketTextChannel log = user.Guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "User Left",

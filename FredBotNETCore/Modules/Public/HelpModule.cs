@@ -31,6 +31,10 @@ namespace FredBotNETCore.Modules.Public
                 Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
             };
             string help = "**Manager**\n" +
+                "/logchannel - Set the log channel for the server.\n" +
+                "/addallowedchannel - Add an allowed channel for PR2 commands.\n" +
+                "/removeallowedchannel - Removes an allowed channel for PR2 commands.\n" +
+                "/listallowedchannels - Lists allowed channels for PR2 commands.\n" +
                 "/resetpr2name - Used to reset a users PR2 Name.\n" +
                 "/clearwarn - Clear warnings for a user.\n" +
                 "/addmod - Add a server mod or role.\n" +

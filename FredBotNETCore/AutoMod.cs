@@ -232,7 +232,7 @@ namespace FredBotNETCore
                 }
             };
             embed.WithCurrentTimestamp();
-            var log = channel.Guild.GetTextChannel(327575359765610496);
+            var log = channel.Guild.GetTextChannel(Extensions.GetLogChannel());
             Discord.Rest.RestUserMessage message = null;
             if (msg.Content.Length > 252)
             {

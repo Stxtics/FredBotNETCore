@@ -104,7 +104,7 @@ namespace FredBotNETCore.Modules
                         else
                         {
                             Database.ClearWarn(user);
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Warnings Cleared",
@@ -384,7 +384,7 @@ namespace FredBotNETCore.Modules
                         else
                         {
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"), currentJoinableRoles + role.Id.ToString() + "\n");
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Added Joinable Role",
@@ -452,7 +452,7 @@ namespace FredBotNETCore.Modules
                         {
                             joinableRoles = joinableRoles.Replace(role.Id.ToString() + "\n", string.Empty);
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"), joinableRoles);
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Removed Joinable Role",
@@ -528,7 +528,7 @@ namespace FredBotNETCore.Modules
                         else
                         {
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"), currentModRoles + role.Id.ToString() + "\n");
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Added Mod Role",
@@ -571,7 +571,7 @@ namespace FredBotNETCore.Modules
                         else
                         {
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"), currentModUsers + user.Id.ToString() + "\n");
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Added Mod User",
@@ -639,7 +639,7 @@ namespace FredBotNETCore.Modules
                         {
                             modRoles = modRoles.Replace(role.Id.ToString() + "\n", string.Empty);
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"), modRoles);
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Removed Mod Role",
@@ -681,7 +681,7 @@ namespace FredBotNETCore.Modules
                         {
                             modUsers = modUsers.Replace(user.Id.ToString() + "\n", string.Empty);
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"), modUsers);
-                            SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Removed Mod User",
@@ -818,7 +818,7 @@ namespace FredBotNETCore.Modules
                             count++;
                         }
                     }
-                    SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                    SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
                         Name = "Word Blacklist Add",
@@ -888,7 +888,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} the word **{Format.Sanitize(word)}** is not a blacklisted word.");
                         }
                     }
-                    SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                    SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
                         Name = "Word Blacklist Remove",
@@ -1007,7 +1007,7 @@ namespace FredBotNETCore.Modules
                             count++;
                         }
                     }
-                    SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                    SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
                         Name = "URL Blacklist Add",
@@ -1077,7 +1077,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} the url **{Format.Sanitize(url)}** is not a blacklisted URL.");
                         }
                     }
-                    SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                    SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                     {
                         Name = "URL Blacklist Remove",
@@ -1209,7 +1209,7 @@ namespace FredBotNETCore.Modules
                     }
                     if (count > 0)
                     {
-                        SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                        SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
                             Name = "Allowed Channel Add",
@@ -1293,7 +1293,7 @@ namespace FredBotNETCore.Modules
                     }
                     if (count > 0)
                     {
-                        SocketTextChannel log = Context.Guild.GetTextChannel(327575359765610496);
+                        SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
                             Name = "Allowed Channel Remove",
@@ -1385,33 +1385,44 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 249657315576381450)
             {
-                if (Extensions.ChannelInGuild(Context.Message, Context.Guild, text) != null)
+                try
                 {
-                    var channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, text);
-                    string currentLogChannel = File.ReadAllText(Path.Combine(Extensions.downloadPath, "LogChannel.txt"));
+                    if (Extensions.ChannelInGuild(Context.Message, Context.Guild, text) != null)
+                    {
+                        var channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, text);
+                        string currentLogChannel = File.ReadAllText(Path.Combine(Extensions.downloadPath, "LogChannel.txt"));
 
-                    SocketTextChannel log = Context.Guild.GetTextChannel(channel.Id);
-                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        SocketTextChannel log = Context.Guild.GetTextChannel(channel.Id);
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = "Log Channel Changed",
+                            IconUrl = Context.Guild.IconUrl
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = $"ID: {Context.User.Id}",
+                            IconUrl = Context.User.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(0, 0, 255),
+                            Footer = footer
+                        };
+                        embed.WithCurrentTimestamp();
+                        embed.Description = $"{Context.User.Mention} changed the log channel from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.";
+                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the log channel was successfully changed from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.");
+                        await log.SendMessageAsync("", false, embed.Build());
+                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "LogChannel.txt"), channel.Id.ToString());
+                    }
+                    else
                     {
-                        Name = "Log Channel Changed",
-                        IconUrl = Context.Guild.IconUrl
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        Text = $"ID: {Context.User.Id}",
-                        IconUrl = Context.User.GetAvatarUrl()
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Author = author,
-                        Color = new Color(0, 0, 255),
-                        Footer = footer
-                    };
-                    embed.WithCurrentTimestamp();
-                    embed.Description = $"{Context.User.Mention} changed the log channel from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.";
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the log channel was successfully changed from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.");
-                    await log.SendMessageAsync("", false, embed.Build());
-                    File.WriteAllText(Path.Combine(Extensions.downloadPath, "LogChannel.txt"), channel.Id.ToString());
+                        await ReplyAsync($"{Context.User.Mention} the channel **{Format.Sanitize(text)}** does not exist or could not be found.");
+                    }
+                }
+                catch(NullReferenceException)
+                {
+                    await ReplyAsync($"{Context.User.Mention} the channel with ID: **{Format.Sanitize(text)}** does not exist or could not be found.");
                 }
             }
         }

@@ -513,7 +513,7 @@ namespace FredBotNETCore.Modules.Public
                                 return;
                             }
                             Database.VerifyUser(user, username);
-                            SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
+                            SocketTextChannel channel = guild.GetTextChannel(Extensions.GetLogChannel());
                             embed.Description = $"{Context.User.Mention} changed their verified account from **{Format.Sanitize(pr2name)}** to **{Format.Sanitize(username)}**.";
                             await channel.SendMessageAsync("", false, embed.Build());
                             if (!user.Username.Equals(username))
@@ -535,7 +535,7 @@ namespace FredBotNETCore.Modules.Public
                                 return;
                             }
                             Database.VerifyUser(user, username);
-                            SocketTextChannel channel = guild.GetTextChannel(327575359765610496);
+                            SocketTextChannel channel = guild.GetTextChannel(Extensions.GetLogChannel());
                             embed.Description = $"Verified {Context.User.Mention} who is **{Format.Sanitize(username)}** on PR2.";
                             await channel.SendMessageAsync("", false, embed.Build());
                             IEnumerable<SocketRole> role = guild.Roles.Where(input => input.Name.ToUpper() == "Verified".ToUpper());
@@ -758,7 +758,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Tells the user the current artifact hint.")]
         public async Task Hint()
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 HttpClient web = new HttpClient();
                 string text = await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt");
@@ -801,7 +801,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Tells information about pr2 name put after the command.")]
         public async Task View([Remainder] string pr2name = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (string.IsNullOrWhiteSpace(pr2name))
                 {
@@ -994,7 +994,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Info about a user using their ID.")]
         public async Task ViewID([Remainder] string id = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out int id2))
                 {
@@ -1082,7 +1082,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Info about the guild named after.")]
         public async Task Guild([Remainder] string guildname = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 HttpClient web = new HttpClient();
                 if (guildname == null)
@@ -1184,7 +1184,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets info of a guild via ID")]
         public async Task GuildID(string id = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out int id2))
                 {
@@ -1247,7 +1247,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Tells exp needed to rank up at that rank.")]
         public async Task EXP([Remainder] string lvl)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 string lvl2 = "0";
                 if (string.IsNullOrEmpty(lvl))
@@ -1384,7 +1384,7 @@ namespace FredBotNETCore.Modules.Public
                 guild = CommandHandler._client.GetGuild(249657315576381450);
                 user = guild.GetUser(Context.User.Id);
             }
-            else if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675)
+            else if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
             {
                 user = Context.User as SocketGuildUser;
                 guild = Context.Guild as SocketGuild;
@@ -1509,7 +1509,7 @@ namespace FredBotNETCore.Modules.Public
             {
                 guild = CommandHandler._client.GetGuild(249657315576381450);
             }
-            else if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675)
+            else if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
             {
                 guild = Context.Guild as SocketGuild;
             }
@@ -1558,7 +1558,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Returns current top 10 guild on pr2.")]
         public async Task TopGuilds()
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 HttpClient web = new HttpClient();
                 string text = await web.GetStringAsync("https://pr2hub.com/guilds_top.php");
@@ -1645,7 +1645,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets the specified names f@h points")]
         public async Task Fah([Remainder] string fahuser = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (fahuser == null)
                 {
@@ -1784,7 +1784,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets a PR2 Ban with ID from ban log.")]
         public async Task Bans([Remainder] string id = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (id == null || !int.TryParse(id, out int id2))
                 {
@@ -1906,7 +1906,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Tells you the number of users on pr2. Does not include private servers.")]
         public async Task Pop([Remainder] string s = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (s != null)
                 {
@@ -1959,7 +1959,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets stats of a server on PR2.")]
         public async Task Stats([Remainder] string server = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (string.IsNullOrWhiteSpace(server))
                 {
@@ -2100,7 +2100,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets members of a pr2 guild")]
         public async Task GuildMembers([Remainder] string guildname = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (guildname == null)
                 {
@@ -2199,7 +2199,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets members of a pr2 guild with id")]
         public async Task GuildMembersID([Remainder] string id = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (id == null || !int.TryParse(id, out int id2))
                 {
@@ -2262,7 +2262,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Returns a list of servers with happy hour on them.")]
         public async Task HH()
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 HttpClient web = new HttpClient();
                 string hhServers = "", happyHour = "";
@@ -2324,7 +2324,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets info about a level")]
         public async Task Level([Remainder] string level)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (string.IsNullOrWhiteSpace(level))
                 {
@@ -2397,7 +2397,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Creates a channel for the users guild.")]
         public async Task VerifyGuild()
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
             {
                 var result = Database.CheckExistingUser(Context.User);
                 if (result.Count() <= 0)
@@ -2479,7 +2479,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Adds user to guild role of their guild if it exists.")]
         public async Task JoinGuild()
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
             {
                 var result = Database.CheckExistingUser(Context.User);
                 if (result.Count() <= 0)
@@ -2523,7 +2523,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Shows all servers and population")]
         public async Task Servers([Remainder] string s1 = null)
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 if (s1 != null)
                 {
@@ -2602,7 +2602,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Returns currect names of currect staff online and what server.")]
         public async Task Staff()
         {
-            if (Context.Channel.Id == 249678944956055562 || Context.Channel.Id == 327232898061041675 || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
             {
                 HttpClient web = new HttpClient();
                 string text = await web.GetStringAsync("https://pr2hub.com/staff.php");
