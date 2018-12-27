@@ -886,17 +886,26 @@ namespace FredBotNETCore
                         options.AuditLogReason = "Setting nickname to PR2 name.";
                         await user.ModifyAsync(x => x.Nickname = pr2name, options);
                     }
-                    await user.SendMessageAsync($"Hello {Format.Sanitize(user.Username)} ! Welcome back to the Platform Racing Group.\nYou have been added to the verified role as you verified yourself the last time you were here.");
+                    try
+                    {
+                        await user.SendMessageAsync($"Hello {Format.Sanitize(user.Username)} ! Welcome back to the Platform Racing Group.\nYou have been added to the verified role as you verified yourself the last time you were here.");
+                    }
+                    catch(Discord.Net.HttpException)
+                    {
+                        //could not send message
+                    }
                 }
                 else
                 {
-                    RequestOptions options = new RequestOptions()
+                    try
                     {
-                        AuditLogReason = "Auto Role."
-                    };
-                    await user.AddRolesAsync(roles: members, options: options);
-                    await user.SendMessageAsync($"Hello {user.Username} ! Welcome to the Platform Racing Group.\nIf you would like to be verified type /verify in DMs " +
-                    $"with me or on the Server and follow the instructions.\nAnyway thank you for joining and don't forget to read {rules.Mention} and {roles.Mention}.");
+                        await user.SendMessageAsync($"Hello {user.Username} ! Welcome to the Platform Racing Group.\nIf you would like to be verified type /verify in DMs " +
+                        $"with me or on the Server and follow the instructions.\nAnyway thank you for joining and don't forget to read {rules.Mention} and {roles.Mention}.");
+                    }
+                    catch (Discord.Net.HttpException)
+                    {
+                        //could not send message
+                    }
                 }
             }
             else
