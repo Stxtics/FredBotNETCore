@@ -269,15 +269,7 @@ namespace FredBotNETCore
             {
                 if (channel.Guild.Id == 249657315576381450 && channel.Id != Extensions.GetLogChannel())
                 {
-                    try
-                    {
-                        if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false).First().Id.ToString()))
-                        {
-                            AutoMod mod = new AutoMod(_client);
-                            badMessage = await mod.FilterMessage(msg, channel);
-                        }
-                    }
-                    catch(ArgumentNullException)
+                    if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false)))
                     {
                         AutoMod mod = new AutoMod(_client);
                         badMessage = await mod.FilterMessage(msg, channel);

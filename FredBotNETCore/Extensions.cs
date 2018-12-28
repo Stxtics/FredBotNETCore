@@ -56,8 +56,13 @@ namespace FredBotNETCore
             }
         }
 
-        public static bool CheckStaff(string userID, string roleID)
+        public static bool CheckStaff(string userID, IEnumerable<SocketRole> roles)
         {
+            string roleID = null;
+            if (roles.Count() > 0)
+            {
+                roleID = roles.First().Id.ToString();
+            }
             var staff = new StreamReader(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
             var staffRoles = new StreamReader(path: Path.Combine(downloadPath, "DiscordStaffRoles.txt"));
             string line = staff.ReadLine();
@@ -71,20 +76,17 @@ namespace FredBotNETCore
                 }
                 line = staff.ReadLine();
             }
-            if (!isStaff)
+            if (!isStaff && roleID != null)
             {
-                if (roleID.Length > 0)
+                line = staffRoles.ReadLine();
+                while (line != null)
                 {
-                    line = staffRoles.ReadLine();
-                    while (line != null)
+                    if (line.Equals(roleID))
                     {
-                        if (line.Equals(roleID))
-                        {
-                            isStaff = true;
-                            break;
-                        }
-                        line = staffRoles.ReadLine();
+                        isStaff = true;
+                        break;
                     }
+                    line = staffRoles.ReadLine();
                 }
             }
             staff.Close();

@@ -1244,7 +1244,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                        if (Extensions.CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false).First().Id.ToString()) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -1363,7 +1363,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false).First().Id.ToString()) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -1482,7 +1482,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false).First().Id.ToString()) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -1827,7 +1827,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false).First().Id.ToString()) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -2917,7 +2917,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false).First().Id.ToString()) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -3021,7 +3021,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false).First().Id.ToString()) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -3125,7 +3125,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false).First().Id.ToString()) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
