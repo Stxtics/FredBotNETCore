@@ -73,15 +73,18 @@ namespace FredBotNETCore
             }
             if (!isStaff)
             {
-                line = staffRoles.ReadLine();
-                while (line != null)
+                if (roleID.Length > 0)
                 {
-                    if (line.Equals(roleID))
-                    {
-                        isStaff = true;
-                        break;
-                    }
                     line = staffRoles.ReadLine();
+                    while (line != null)
+                    {
+                        if (line.Equals(roleID))
+                        {
+                            isStaff = true;
+                            break;
+                        }
+                        line = staffRoles.ReadLine();
+                    }
                 }
             }
             staff.Close();
