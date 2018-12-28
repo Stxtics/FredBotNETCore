@@ -826,7 +826,7 @@ namespace FredBotNETCore
             if (user.Guild.Id == 249657315576381450)
             {
                 SocketTextChannel log = user.Guild.GetTextChannel(Extensions.GetLogChannel()), channel = user.Guild.GetTextChannel(249657315576381450);
-                IEnumerable<SocketRole> members = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Members".ToUpper()), verified = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Verified".ToUpper()), muted = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Muted".ToUpper());
+                IEnumerable<SocketRole> verified = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Verified".ToUpper()), muted = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Muted".ToUpper());
                 SocketTextChannel rules = user.Guild.GetTextChannel(249682754407497728), roles = user.Guild.GetTextChannel(260272249976782848);
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {

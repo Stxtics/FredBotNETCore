@@ -539,13 +539,11 @@ namespace FredBotNETCore.Modules.Public
                             embed.Description = $"Verified {Context.User.Mention} who is **{Format.Sanitize(username)}** on PR2.";
                             await channel.SendMessageAsync("", false, embed.Build());
                             IEnumerable<SocketRole> role = guild.Roles.Where(input => input.Name.ToUpper() == "Verified".ToUpper());
-                            IEnumerable<SocketRole> role2 = guild.Roles.Where(input => input.Name.ToUpper() == "Members".ToUpper());
                             RequestOptions options = new RequestOptions()
                             {
                                 AuditLogReason = "Verifying User."
                             };
                             await user.AddRolesAsync(role, options);
-                            await user.RemoveRolesAsync(role2, options);
                             if (!user.Username.Equals(username))
                             {
                                 options.AuditLogReason = "Setting nickname to PR2 name.";
