@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace FredBotNETCore.Modules
@@ -19,7 +20,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ResetPR2Name(string username)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 try
                 {
@@ -43,8 +44,7 @@ namespace FredBotNETCore.Modules
                         {
                             AuditLogReason = $"PR2 Name reset by: {Context.User.Username}#{Context.User.Discriminator}"
                         };
-                        await user.RemoveRoleAsync(Context.Guild.GetRole(255513962798514177), options);
-                        await user.AddRoleAsync(Context.Guild.GetRole(253265134393229312), options);
+                        await user.RemoveRolesAsync(Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Verified".ToUpper()), options);
                         if (user.Nickname.Equals(pr2name, StringComparison.InvariantCultureIgnoreCase))
                         {
                             options.AuditLogReason = "Resetting nickname";
@@ -75,7 +75,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ClearWarn([Remainder] string username = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -280,7 +280,7 @@ namespace FredBotNETCore.Modules
                     {
                         AuditLogReason = $"Changed by: {Context.User.Mention}#{Context.User.Discriminator}"
                     };
-                    await Context.Guild.GetUser(383927022583545859).ModifyAsync(x => x.Nickname = nickname, options);
+                    await Context.Guild.GetUser(Context.Client.CurrentUser.Id).ModifyAsync(x => x.Nickname = nickname, options);
                     await Context.Channel.SendMessageAsync($"Successfully set my nickname to **{Format.Sanitize(nickname)}**.");
                 }
             }
@@ -354,7 +354,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task AddJoinableRole([Remainder] string roleName = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -426,7 +426,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task DelJoinableRole([Remainder] string roleName = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -498,7 +498,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task AddModUser([Remainder] string mod = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -613,7 +613,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task DelMod([Remainder] string mod = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -727,7 +727,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ListMods()
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -788,7 +788,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task BlacklistWord([Remainder] string text = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(text))
                 {
@@ -858,7 +858,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task UnblacklistWord([Remainder] string text = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(text))
                 {
@@ -928,7 +928,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ListBlacklistedWords()
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 var blacklistedWords = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
@@ -977,7 +977,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task BlacklistUrl([Remainder] string text = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(text))
                 {
@@ -1047,7 +1047,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task UnblacklistUrl([Remainder] string text = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(text))
                 {
@@ -1117,7 +1117,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ListBlacklistedUrls()
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 var blacklistedUrls = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
@@ -1166,7 +1166,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task AddAllowedChannel([Remainder] string text = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(text))
                 {
@@ -1250,7 +1250,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task RemoveAllowedChannel([Remainder] string text = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(text))
                 {
@@ -1334,7 +1334,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ListAllowedChannels()
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 var allowedChannels = new StreamReader(path: Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
@@ -1383,7 +1383,7 @@ namespace FredBotNETCore.Modules
         [RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task SetLogChannel([Remainder] string text = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 try
                 {

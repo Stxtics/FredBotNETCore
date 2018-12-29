@@ -18,7 +18,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceRoleUpdated(SocketRole role, SocketRole role2)
         {
-            if (role.Guild.Id != 249657315576381450)
+            if (role.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -124,7 +124,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceRoleDeleted(SocketRole role)
         {
-            if (role.Guild.Id != 249657315576381450)
+            if (role.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -171,7 +171,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceRoleCreated(SocketRole role)
         {
-            if (role.Guild.Id != 249657315576381450)
+            if (role.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -218,7 +218,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceChannelUpdated(SocketChannel channel, SocketChannel channel2)
         {
-            if ((channel as SocketGuildChannel).Guild.Id != 249657315576381450)
+            if ((channel as SocketGuildChannel).Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -389,7 +389,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceChannelDestroyed(SocketChannel channel)
         {
-            if ((channel as SocketGuildChannel).Guild.Id != 249657315576381450)
+            if ((channel as SocketGuildChannel).Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -447,7 +447,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceChannelCreated(SocketChannel channel)
         {
-            if ((channel as SocketGuildChannel).Guild.Id != 249657315576381450)
+            if ((channel as SocketGuildChannel).Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -505,7 +505,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceGuildMemberUpdated(SocketGuildUser user, SocketGuildUser user2)
         {
-            if (user.Guild.Id != 249657315576381450 || (user.Roles.Count == user2.Roles.Count && user.Nickname == user2.Nickname))
+            if (user.Guild.Id != 528679522707701760 || (user.Roles.Count == user2.Roles.Count && user.Nickname == user2.Nickname))
             {
                 return;
             }
@@ -651,7 +651,7 @@ namespace FredBotNETCore
             IMessage message2 = await message.GetOrDownloadAsync();
             SocketTextChannel channel2 = channel as SocketTextChannel;
             SocketTextChannel log = Client.GetChannel(Extensions.GetLogChannel()) as SocketTextChannel;
-            if (channel2.Id == log.Id || channel2.Guild.Id != 249657315576381450)
+            if (channel2.Id == log.Id || channel2.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -727,7 +727,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceUserUnbanned(SocketUser user, SocketGuild guild)
         {
-            if (guild.Id != 249657315576381450)
+            if (guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -775,7 +775,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceUserBanned(SocketUser user, SocketGuild guild)
         {
-            if (guild.Id != 249657315576381450)
+            if (guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -823,11 +823,11 @@ namespace FredBotNETCore
 
         public async Task AnnounceUserJoined(SocketGuildUser user)
         {
-            if (user.Guild.Id == 249657315576381450)
+            if (user.Guild.Id == 528679522707701760)
             {
-                SocketTextChannel log = user.Guild.GetTextChannel(Extensions.GetLogChannel()), channel = user.Guild.GetTextChannel(249657315576381450);
+                SocketTextChannel log = user.Guild.GetTextChannel(Extensions.GetLogChannel());
                 IEnumerable<SocketRole> verified = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Verified".ToUpper()), muted = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Muted".ToUpper());
-                SocketTextChannel rules = user.Guild.GetTextChannel(249682754407497728), roles = user.Guild.GetTextChannel(260272249976782848);
+                SocketTextChannel rules = user.Guild.GetTextChannel(528681885577248789), welcome = user.Guild.GetTextChannel(528683520864813086);
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
                     Name = "User Joined",
@@ -900,7 +900,7 @@ namespace FredBotNETCore
                     try
                     {
                         await user.SendMessageAsync($"Hello {user.Username} ! Welcome to the Platform Racing Group.\nIf you would like to be verified type /verify in DMs " +
-                        $"with me or on the Server and follow the instructions.\nAnyway thank you for joining and don't forget to read {rules.Mention} and {roles.Mention}.");
+                        $"with me or on the Server and follow the instructions.\nAnyway thank you for joining and don't forget to read {rules.Mention} and {welcome.Mention}.");
                     }
                     catch (Discord.Net.HttpException)
                     {
@@ -916,7 +916,7 @@ namespace FredBotNETCore
 
         public async Task AnnounceUserLeft(SocketGuildUser user)
         {
-            if (user.Guild.Id != 249657315576381450)
+            if (user.Guild.Id != 528679522707701760)
             {
                 return;
             }

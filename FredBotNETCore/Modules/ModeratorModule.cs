@@ -26,11 +26,11 @@ namespace FredBotNETCore.Modules
             {
                 string currentToken = File.ReadAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
 
-                SocketTextChannel log = Context.Client.GetGuild(249657315576381450).GetTextChannel(Extensions.GetLogChannel());
+                SocketTextChannel log = Context.Client.GetGuild(528679522707701760).GetTextChannel(Extensions.GetLogChannel());
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
                     Name = "Token Changed",
-                    IconUrl = Context.Client.GetGuild(249657315576381450).IconUrl
+                    IconUrl = Context.Client.GetGuild(528679522707701760).IconUrl
                 };
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
@@ -59,18 +59,21 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task NotifyMacroers()
         {
-            var channel = Context.Guild.GetTextChannel(249678944956055562);
-            var role = Context.Guild.GetRole(497409284615962834);
-            RequestOptions options = new RequestOptions()
+            if (Context.Guild.Id == 528679522707701760)
             {
-                AuditLogReason = $"Notified by {Context.User.Username}#{Context.User.Discriminator}."
-            };
-            Extensions.Purging = true;
-            await Context.Message.DeleteAsync();
-            await role.ModifyAsync(x => x.Mentionable = true, options);
-            await channel.SendMessageAsync($"Servers have just been restarted. Check your macros!! {role.Mention}");
-            Extensions.Purging = false;
-            await role.ModifyAsync(x => x.Mentionable = false, options);
+                var channel = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "pr2-discussion".ToUpper()).First() as SocketTextChannel;
+                var role = Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Macroer".ToUpper()).First() as SocketRole;
+                RequestOptions options = new RequestOptions()
+                {
+                    AuditLogReason = $"Notified by {Context.User.Username}#{Context.User.Discriminator}."
+                };
+                Extensions.Purging = true;
+                await Context.Message.DeleteAsync();
+                await role.ModifyAsync(x => x.Mentionable = true, options);
+                await channel.SendMessageAsync($"Servers have just been restarted. Check your macros!! {role.Mention}");
+                Extensions.Purging = false;
+                await role.ModifyAsync(x => x.Mentionable = false, options);
+            }
         }
 
         [Command("addrole", RunMode = RunMode.Async)]
@@ -190,7 +193,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task BlacklistMusic([Remainder] string username = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(username))
                 {
@@ -265,7 +268,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task UnblacklistMusic([Remainder] string username = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(username))
                 {
@@ -340,7 +343,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ListBlacklistedMusic()
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 var blacklistedMusic = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
@@ -390,7 +393,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task BlacklistSuggestions([Remainder] string username = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(username))
                 {
@@ -418,7 +421,7 @@ namespace FredBotNETCore.Modules
                             else
                             {
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
-                                SocketTextChannel suggestions = Context.Guild.GetTextChannel(249684395454234624);
+                                SocketTextChannel suggestions = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "suggestions".ToUpper()).First() as SocketTextChannel;
                                 RequestOptions options = new RequestOptions()
                                 {
                                     AuditLogReason = $"Blacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
@@ -471,7 +474,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task UnblacklistSuggestions([Remainder] string username = null)
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(username))
                 {
@@ -495,7 +498,7 @@ namespace FredBotNETCore.Modules
                             {
                                 currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
-                                SocketTextChannel suggestions = Context.Guild.GetTextChannel(249684395454234624);
+                                SocketTextChannel suggestions = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "suggestions".ToUpper()).First() as SocketTextChannel;
                                 RequestOptions options = new RequestOptions()
                                 {
                                     AuditLogReason = $"Unblacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
@@ -552,7 +555,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ListBlacklistedSuggestions()
         {
-            if (Context.Guild.Id == 249657315576381450)
+            if (Context.Guild.Id == 528679522707701760)
             {
                 var blacklistedsuggestions = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
@@ -1022,7 +1025,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Warnings([Remainder] string username = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -1118,7 +1121,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Unban(string username = null, [Remainder] string reason = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -1148,7 +1151,7 @@ namespace FredBotNETCore.Modules
                 }
                 if (isBanned)
                 {
-                    ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
                         Name = $"Case {Database.CaseCount() + 1} | Unban | {user.Username}#{user.Discriminator}",
@@ -1222,7 +1225,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Undeafen(string username = null, [Remainder] string reason = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -1244,7 +1247,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                        if (Extensions.CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -1254,7 +1257,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
-                        SocketTextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
                             Name = $"Case {Database.CaseCount() + 1} | Undeafen | {user.Username}#{user.Discriminator}",
@@ -1341,7 +1344,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Deafen(string username = null, [Remainder] string reason = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -1363,7 +1366,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -1373,7 +1376,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
-                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
                             Name = $"Case {Database.CaseCount() + 1} | Deafen | {user.Username}#{user.Discriminator}",
@@ -1460,7 +1463,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Softban(string username = null, [Remainder] string reason = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -1482,7 +1485,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -1492,7 +1495,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
-                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
                             Name = $"Case {Database.CaseCount() + 1} | Softban | {user.Username}#{user.Discriminator}",
@@ -1566,7 +1569,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task GetCase([Remainder] string caseN = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -1615,7 +1618,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Modlogs([Remainder] string username)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -1709,7 +1712,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Reason(string caseN = null, [Remainder] string reason = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -1725,7 +1728,7 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                 var messages = (banlog.GetMessagesAsync().Flatten()).Where(x => x.Embeds.Count > 0);
                 string author = "", iconUrl = "", footerText = "";
                 IUserMessage msgToEdit = null;
@@ -1806,7 +1809,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Warn(string username = null, [Remainder] string reason = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -1827,7 +1830,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -1837,7 +1840,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
-                        SocketTextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
                             Name = $"Case {Database.CaseCount() + 1} | Warn | {user.Username}#{user.Discriminator}",
@@ -2184,7 +2187,7 @@ namespace FredBotNETCore.Modules
                     for (int i = 0; i < winners; i++)
                     {
                         IUser randomUser = users.GetRandomElement();
-                        while (randomUser.Id == 383927022583545859 || userWinners.Contains(randomUser))
+                        while (randomUser.Id == Context.Client.CurrentUser.Id || userWinners.Contains(randomUser))
                         {
                             randomUser = users.GetRandomElement();
                         }
@@ -2295,7 +2298,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task UnTemp([Remainder] string username = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -2348,7 +2351,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task UnMute(string username = null, [Remainder] string reason = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -2437,7 +2440,7 @@ namespace FredBotNETCore.Modules
                             }
                         }
                         await Context.Message.DeleteAsync();
-                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                         await banlog.SendMessageAsync("", false, embed.Build());
                         await user.RemoveRolesAsync(role, options);
                         await Context.Channel.SendMessageAsync($"Unmuted **{Format.Sanitize(user.Username)}#{user.Discriminator}**");
@@ -2658,7 +2661,7 @@ namespace FredBotNETCore.Modules
                         y.Value = roleList;
                         y.IsInline = false;
                     });
-                    if (Context.Guild.Id == 249657315576381450)
+                    if (Context.Guild.Id == 528679522707701760)
                     {
                         embed.AddField(y =>
                         {
@@ -2795,7 +2798,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Purge(string amount = null, [Remainder] string username = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -2810,7 +2813,7 @@ namespace FredBotNETCore.Modules
                 await Context.Channel.SendMessageAsync("", false, embed.Build());
                 return;
             }
-            ITextChannel channel = Context.Channel as ITextChannel, log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
+            SocketTextChannel channel = Context.Channel as SocketTextChannel, log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
                 Name = "Purge Messages",
@@ -2835,7 +2838,7 @@ namespace FredBotNETCore.Modules
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message in {channel.Mention} .");
                     Extensions.Purging = true;
-                    await (Context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
+                    await (Context.Channel as SocketTextChannel).DeleteMessagesAsync(items.ToEnumerable());
                     embed2.Description = $"{Context.User.Mention} purged **{amount}** message in {channel.Mention}.";
                 }
                 else
@@ -2895,7 +2898,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task KickAsync(string username = null, [Remainder] string reason = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -2927,7 +2930,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
-                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
                             Name = $"Case {Database.CaseCount() + 1} | Kick | {user.Username}#{user.Discriminator}",
@@ -3000,7 +3003,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Ban(string username = null, [Remainder] string reason = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -3031,7 +3034,7 @@ namespace FredBotNETCore.Modules
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
-                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
                             Name = $"Case {Database.CaseCount() + 1} | Ban | {user.Username}#{user.Discriminator}",
@@ -3104,7 +3107,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Mute(string username = null, string time = null, [Remainder] string reason = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -3125,7 +3128,7 @@ namespace FredBotNETCore.Modules
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
+                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
@@ -3150,7 +3153,7 @@ namespace FredBotNETCore.Modules
                         {
                             Text = ($"ID: {user.Id}")
                         };
-                        ITextChannel banlog = Context.Guild.GetTextChannel(263474494327226388);
+                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                         IEnumerable<IRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
                         RequestOptions options = new RequestOptions()
                         {
@@ -3266,7 +3269,7 @@ namespace FredBotNETCore.Modules
                                 {
                                     //cant send message
                                 }
-                                Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: "Fred the G. Cactus#1000", reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                                Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: Context.Client.CurrentUser.Username + "#" + Context.Client.CurrentUser.Discriminator, reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             }
                             else
                             {
@@ -3294,7 +3297,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Temp(string username = null, string time = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -3320,7 +3323,7 @@ namespace FredBotNETCore.Modules
                         return;
                     }
                     double minutes = Math.Round(Convert.ToDouble(time), 0);
-                    ITextChannel roles = user.Guild.GetChannel(260272249976782848) as ITextChannel;
+                    SocketTextChannel roles = user.Guild.Channels.Where(x => x.Name.ToUpper() == "Welcome".ToUpper()).First() as SocketTextChannel;
 
                     IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
                     RequestOptions options = new RequestOptions()

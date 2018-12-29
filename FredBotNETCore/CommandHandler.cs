@@ -179,9 +179,9 @@ namespace FredBotNETCore
                 {
                     return;
                 }
-                SocketGuild Guild = _client.GetGuild(249657315576381450);
-                SocketRole RoleM = Guild.GetRole(307631922094407682);
-                SocketTextChannel channel = Guild.GetTextChannel(249678944956055562);
+                SocketGuild Guild = _client.GetGuild(528679522707701760);
+                SocketRole RoleM = Guild.Roles.Where(x => x.Name.ToUpper() == "HH".ToUpper()).First();
+                SocketTextChannel channel = Guild.Channels.Where(x => x.Name.ToUpper() == "pr2-discussion".ToUpper()).First() as SocketTextChannel;
                 RequestOptions options = new RequestOptions()
                 {
                     AuditLogReason = "Announcing happy hour on " + Name
@@ -194,18 +194,18 @@ namespace FredBotNETCore
 
         public static async Task AnnouceHintUpdatedAsync(string hint = null, bool newArti = false)
         {
-            SocketGuild Guild = _client.GetGuild(249657315576381450);
-            SocketTextChannel channel = Guild.GetTextChannel(249678944956055562);
+            SocketGuild Guild = _client.GetGuild(528679522707701760);
+            SocketTextChannel channel = Guild.Channels.Where(x => x.Name.ToUpper() == "pr2-discussion".ToUpper()).First() as SocketTextChannel;
             RequestOptions options = new RequestOptions()
             {
                 AuditLogReason = "Announcing new artifact"
             };
             if (newArti)
             {
-                await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = true, options);
-                await channel.SendMessageAsync($"{Guild.GetRole(347312071618330626).Mention} Hmm... I seem to have misplaced the artifact. Maybe you can help me find it?\n" +
+                await Guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).First().ModifyAsync(x => x.Mentionable = true, options);
+                await channel.SendMessageAsync($"{Guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).First().Mention} Hmm... I seem to have misplaced the artifact. Maybe you can help me find it?\n" +
                         $"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**. Maybe I can remember more later!!");
-                await Guild.GetRole(347312071618330626).ModifyAsync(x => x.Mentionable = false, options);
+                await Guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).First().ModifyAsync(x => x.Mentionable = false, options);
             }
             else
             {
@@ -215,7 +215,8 @@ namespace FredBotNETCore
 
         public static async Task AnnounceArtifactFoundAsync(string finder = null)
         {
-            SocketTextChannel channel = _client.GetChannel(249678944956055562) as SocketTextChannel;
+            SocketGuild Guild = _client.GetGuild(528679522707701760);
+            SocketTextChannel channel = Guild.Channels.Where(x => x.Name.ToUpper() == "pr2-discussion".ToUpper()).First() as SocketTextChannel;
             await channel.SendMessageAsync($"**{finder}** has found the artifact!");
         }
 
@@ -267,7 +268,7 @@ namespace FredBotNETCore
             if (msg.Author.IsBot) return;
             if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
             {
-                if (channel.Guild.Id == 249657315576381450 && channel.Id != Extensions.GetLogChannel())
+                if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
                 {
                     if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false)))
                     {

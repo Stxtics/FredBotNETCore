@@ -55,9 +55,9 @@ namespace FredBotNETCore.Modules.Public
                     {
                         if (Database.GetBalance(Context.User) > money)
                         {
-                            if (Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(249657315576381450), username) != null)
+                            if (Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username) != null)
                             {
-                                SocketUser user = Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(249657315576381450), username);
+                                SocketUser user = Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username);
                                 Database.SetBalance(Context.User, Database.GetBalance(Context.User) - money);
                                 Database.SetBalance(user, Database.GetBalance(user) + money);
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully paid **{Format.Sanitize(user.Username)}#{user.Discriminator} ${money.ToString("N0")}**.\nYour new balance is ${Database.GetBalance(Context.User).ToString("N0")}.");
@@ -115,9 +115,9 @@ namespace FredBotNETCore.Modules.Public
                 {
                     try
                     {
-                        if (Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(249657315576381450), username) != null)
+                        if (Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username) != null)
                         {
-                            SocketUser user = Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(249657315576381450), username);
+                            SocketUser user = Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username);
                             result = Database.CheckExistingUser(user);
                             if (result.Count() <= 0)
                             {
@@ -184,7 +184,7 @@ namespace FredBotNETCore.Modules.Public
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     Name = "Leaderboard",
-                    IconUrl = Context.Client.GetGuild(249657315576381450).IconUrl
+                    IconUrl = Context.Client.GetGuild(528679522707701760).IconUrl
                 };
                 EmbedBuilder embed = new EmbedBuilder()
                 {
@@ -357,7 +357,7 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                SocketGuild guild = Context.Client.GetGuild(249657315576381450);
+                SocketGuild guild = Context.Client.GetGuild(528679522707701760);
                 HttpClient web = new HttpClient();
                 var jv2Key = new StreamReader(path: Path.Combine(Extensions.downloadPath, "JV2ApiKey.txt"));
                 var values = new Dictionary<string, string>
@@ -376,7 +376,7 @@ namespace FredBotNETCore.Modules.Public
                     AuditLogReason = "JV2 Verify"
                 };
                 Database.VerifyJV2(Context.User, jv2Id);
-                await guild.GetUser(Context.User.Id).AddRoleAsync(guild.GetRole(498114271066980352), options);
+                await guild.GetUser(Context.User.Id).AddRoleAsync(guild.Roles.Where(x => x.Name.ToUpper() == "JV2 Verified".ToUpper()).First(), options);
                 options.AuditLogReason = "JV2 Role Sync";
                 if (!(additionalGroups.Contains(18) || additionalGroups.Contains(17)))
                 {
@@ -385,18 +385,18 @@ namespace FredBotNETCore.Modules.Public
                 else if (additionalGroups.Contains(18) && additionalGroups.Contains(17))
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully linked your JV2 account to your Discord account.\nYou have also been added to the Beta Testers and Contest Judges role.");
-                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.GetRole(498115815120437269), options);
-                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.GetRole(307688674487959555), options);
+                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.Roles.Where(x => x.Name.ToUpper() == "Beta Testers".ToUpper()).First(), options);
+                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.Roles.Where(x => x.Name.ToUpper() == "Contest Judges".ToUpper()).First(), options);
                 }
                 else if (additionalGroups.Contains(18))
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully linked your JV2 account to your Discord account.\nYou have also been added to the Beta Testers role.");
-                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.GetRole(498115815120437269), options);
+                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.Roles.Where(x => x.Name.ToUpper() == "Beta Testers".ToUpper()).First(), options);
                 }
                 else if (additionalGroups.Contains(17))
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully linked your JV2 account to your Discord account.\nYou have also been added to the Contest Judges role.");
-                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.GetRole(307688674487959555), options);
+                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.Roles.Where(x => x.Name.ToUpper() == "Contest Judges".ToUpper()).First(), options);
                 }
             }
         }
@@ -422,7 +422,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.DM)]
         public async Task Verified([Remainder] string username)
         {
-            var guild = CommandHandler._client.GetGuild(249657315576381450);
+            var guild = CommandHandler._client.GetGuild(528679522707701760);
             if (string.IsNullOrWhiteSpace(username))
             {
                 EmbedBuilder embed = new EmbedBuilder()
@@ -441,9 +441,8 @@ namespace FredBotNETCore.Modules.Public
             }
             catch
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you are not a memeber of The Platform Racing Group.");
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you are not a memeber of **{Format.Sanitize(guild.Name)}**.");
             }
-            SocketRole verified = guild.GetRole(255513962798514177);
             var pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
             var values = new Dictionary<string, string>
                 {
@@ -599,7 +598,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task Suggest([Remainder] string suggestion = null)
         {
-            if (Context.Guild.Id != 249657315576381450)
+            if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
@@ -624,7 +623,7 @@ namespace FredBotNETCore.Modules.Public
                     await ReplyAsync($"{Context.User.Mention} your suggestion must be between at least 18 and no more than 800 characters long.");
                     return;
                 }
-                SocketTextChannel channel = Context.Guild.GetChannel(249684395454234624) as SocketTextChannel;
+                SocketTextChannel channel = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "suggestions".ToUpper()).First() as SocketTextChannel;
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     Name = Context.User.Username + "#" + Context.User.Discriminator,
@@ -756,7 +755,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Tells the user the current artifact hint.")]
         public async Task Hint()
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 HttpClient web = new HttpClient();
                 string text = await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt");
@@ -772,7 +771,7 @@ namespace FredBotNETCore.Modules.Public
                     ulong userID = Convert.ToUInt64(Database.GetUserID(person));
                     if (userID != 1)
                     {
-                        SocketGuild guild = CommandHandler._client.GetGuild(249657315576381450);
+                        SocketGuild guild = CommandHandler._client.GetGuild(528679522707701760);
                         try
                         {
                             IUser user = guild.GetUser(userID);
@@ -799,7 +798,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Tells information about pr2 name put after the command.")]
         public async Task View([Remainder] string pr2name = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(pr2name))
                 {
@@ -992,7 +991,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Info about a user using their ID.")]
         public async Task ViewID([Remainder] string id = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out int id2))
                 {
@@ -1080,7 +1079,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Info about the guild named after.")]
         public async Task Guild([Remainder] string guildname = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 HttpClient web = new HttpClient();
                 if (guildname == null)
@@ -1182,7 +1181,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets info of a guild via ID")]
         public async Task GuildID(string id = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out int id2))
                 {
@@ -1245,7 +1244,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Tells exp needed to rank up at that rank.")]
         public async Task EXP([Remainder] string lvl)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 string lvl2 = "0";
                 if (string.IsNullOrEmpty(lvl))
@@ -1379,7 +1378,7 @@ namespace FredBotNETCore.Modules.Public
             SocketGuild guild;
             if (Context.Channel is IDMChannel)
             {
-                guild = CommandHandler._client.GetGuild(249657315576381450);
+                guild = CommandHandler._client.GetGuild(528679522707701760);
                 user = guild.GetUser(Context.User.Id);
             }
             else if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
@@ -1505,7 +1504,7 @@ namespace FredBotNETCore.Modules.Public
             SocketGuild guild;
             if (Context.Channel is IDMChannel)
             {
-                guild = CommandHandler._client.GetGuild(249657315576381450);
+                guild = CommandHandler._client.GetGuild(528679522707701760);
             }
             else if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
             {
@@ -1556,7 +1555,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Returns current top 10 guild on pr2.")]
         public async Task TopGuilds()
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 HttpClient web = new HttpClient();
                 string text = await web.GetStringAsync("https://pr2hub.com/guilds_top.php");
@@ -1643,7 +1642,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets the specified names f@h points")]
         public async Task Fah([Remainder] string fahuser = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (fahuser == null)
                 {
@@ -1782,7 +1781,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets a PR2 Ban with ID from ban log.")]
         public async Task Bans([Remainder] string id = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (id == null || !int.TryParse(id, out int id2))
                 {
@@ -1904,7 +1903,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Tells you the number of users on pr2. Does not include private servers.")]
         public async Task Pop([Remainder] string s = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (s != null)
                 {
@@ -1957,7 +1956,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets stats of a server on PR2.")]
         public async Task Stats([Remainder] string server = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(server))
                 {
@@ -2098,7 +2097,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets members of a pr2 guild")]
         public async Task GuildMembers([Remainder] string guildname = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (guildname == null)
                 {
@@ -2197,7 +2196,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets members of a pr2 guild with id")]
         public async Task GuildMembersID([Remainder] string id = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (id == null || !int.TryParse(id, out int id2))
                 {
@@ -2260,7 +2259,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Returns a list of servers with happy hour on them.")]
         public async Task HH()
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 HttpClient web = new HttpClient();
                 string hhServers = "", happyHour = "";
@@ -2322,7 +2321,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Gets info about a level")]
         public async Task Level([Remainder] string level)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (string.IsNullOrWhiteSpace(level))
                 {
@@ -2436,14 +2435,14 @@ namespace FredBotNETCore.Modules.Public
                     {
                         var guildRole = await Context.Guild.CreateRoleAsync(guild, null, null, false);
                         var everyoneRole = Context.Guild.EveryoneRole;
-                        var mutedRole = Context.Guild.GetRole(308331455602229268);
+                        var mutedRole = Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Muted".ToUpper()).First();
                         var guildChannel = await Context.Guild.CreateTextChannelAsync(guild.Replace(" ", "-"));
-                        await guildChannel.ModifyAsync(x => x.CategoryId = 361634557067526146);
+                        await guildChannel.ModifyAsync(x => x.CategoryId = 528704611289399296);
                         await guildChannel.AddPermissionOverwriteAsync(guildRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Inherit));
                         await guildChannel.AddPermissionOverwriteAsync(mutedRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Deny));
                         await guildChannel.AddPermissionOverwriteAsync(everyoneRole, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny));
                         var guildVoice = await Context.Guild.CreateVoiceChannelAsync(guild);
-                        await guildVoice.ModifyAsync(x => x.CategoryId = 361634557067526146);
+                        await guildVoice.ModifyAsync(x => x.CategoryId = 528704611289399296);
                         await guildVoice.AddPermissionOverwriteAsync(guildRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Allow));
                         await guildVoice.AddPermissionOverwriteAsync(mutedRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Deny, speak: PermValue.Deny));
                         await guildVoice.AddPermissionOverwriteAsync(everyoneRole, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny));
@@ -2521,7 +2520,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Shows all servers and population")]
         public async Task Servers([Remainder] string s1 = null)
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 if (s1 != null)
                 {
@@ -2600,7 +2599,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("Returns currect names of currect staff online and what server.")]
         public async Task Staff()
         {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 249657315576381450)
+            if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 HttpClient web = new HttpClient();
                 string text = await web.GetStringAsync("https://pr2hub.com/staff.php");
