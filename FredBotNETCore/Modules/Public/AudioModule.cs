@@ -111,7 +111,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task Add([Remainder] string url = null)
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -134,7 +134,7 @@ namespace FredBotNETCore.Modules.Public
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                     }
-                    else if (_voiceChannel.Id != 259900874204119054)
+                    else if (_voiceChannel.Id != 528688237812908057)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                     }
@@ -413,7 +413,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task ShowQueue()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -424,7 +424,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                 }
-                else if (_voiceChannel.Id != 259900874204119054)
+                else if (_voiceChannel.Id != 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
@@ -446,7 +446,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task QueueLoop()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -457,7 +457,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                 }
-                else if (_voiceChannel.Id != 259900874204119054)
+                else if (_voiceChannel.Id != 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
@@ -484,7 +484,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task PauseMusic()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -495,7 +495,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                 }
-                else if (_voiceChannel.Id != 259900874204119054)
+                else if (_voiceChannel.Id != 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
@@ -525,7 +525,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task Resume()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -536,7 +536,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                 }
-                else if (_voiceChannel.Id != 259900874204119054)
+                else if (_voiceChannel.Id != 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
@@ -558,7 +558,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task Play([Remainder] string url = null)
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -567,7 +567,7 @@ namespace FredBotNETCore.Modules.Public
                 if (url == null)
                 {
                     SocketGuildUser user = Context.User as SocketGuildUser;
-                    if (user.Roles.Any(e => e.Name.ToUpperInvariant() == "Server Staff".ToUpperInvariant()) && !Playing)
+                    if (user.Roles.Any(e => e.Name.ToUpperInvariant() == "Discord Staff".ToUpperInvariant()) && !Playing)
                     {
                         Pause = false;
                         Playing = true;
@@ -596,7 +596,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task QueueRemove(string position = null)
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -643,7 +643,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task QueueClear()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -654,7 +654,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                 }
-                else if (_voiceChannel.Id != 259900874204119054)
+                else if (_voiceChannel.Id != 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
@@ -684,7 +684,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task Come()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -695,11 +695,11 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                 }
-                else if (_voiceChannel.Id != 259900874204119054)
+                else if (_voiceChannel.Id != 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
-                else if (Context.Guild.CurrentUser.VoiceChannel != null && Context.Guild.CurrentUser.VoiceChannel.Id == 259900874204119054)
+                else if (Context.Guild.CurrentUser.VoiceChannel != null && Context.Guild.CurrentUser.VoiceChannel.Id == 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I am already in the Music voice channel.");
                 }
@@ -724,7 +724,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task SkipSong()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -735,7 +735,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                 }
-                else if (_voiceChannel.Id != 259900874204119054)
+                else if (_voiceChannel.Id != 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
@@ -787,7 +787,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task ForceSkip()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -798,7 +798,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                 }
-                else if (_voiceChannel.Id != 259900874204119054)
+                else if (_voiceChannel.Id != 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
@@ -828,7 +828,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task NP()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -839,7 +839,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                 }
-                else if (_voiceChannel.Id != 259900874204119054)
+                else if (_voiceChannel.Id != 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
@@ -905,7 +905,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.Guild)]
         public async Task VoiceLatency()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -932,7 +932,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireOwner]
         public async Task Stop()
         {
-            if (Context.Channel.Id == 257682684405481472 || Context.Channel.Id == 327232898061041675)
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
             {
                 if (Blacklisted(Context.User))
                 {
@@ -943,7 +943,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in a voice channel to use this command.");
                 }
-                else if (_voiceChannel.Id != 259900874204119054)
+                else if (_voiceChannel.Id != 528688237812908057)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
