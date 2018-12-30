@@ -857,6 +857,8 @@ namespace FredBotNETCore
                 {
                     embed.Description = $"**{Format.Sanitize(user.Username)}#{user.Discriminator}** joined the guild. Account created **{(DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days}** days ago.\nTotal members: **{user.Guild.MemberCount}**";
                 }
+                SocketGuild prg = Client.GetGuild(249657315576381450);
+                await prg.GetUser(user.Id).KickAsync();
                 await log.SendMessageAsync("", false, embed.Build());
                 var result = Database.CheckExistingUser(user);
                 if (result.Count() <= 0)
@@ -888,7 +890,7 @@ namespace FredBotNETCore
                     }
                     try
                     {
-                        await user.SendMessageAsync($"Hello {Format.Sanitize(user.Username)} ! Welcome back to the Platform Racing Group.\nYou have been added to the verified role as you verified yourself the last time you were here.");
+                        await user.SendMessageAsync($"Hello {Format.Sanitize(user.Username)} ! Welcome back to Jiggmin's Village.\nYou have been added to the verified role as you verified yourself the last time you were here.");
                     }
                     catch(Discord.Net.HttpException)
                     {
@@ -899,7 +901,7 @@ namespace FredBotNETCore
                 {
                     try
                     {
-                        await user.SendMessageAsync($"Hello {user.Username} ! Welcome to the Platform Racing Group.\nIf you would like to be verified type /verify in DMs " +
+                        await user.SendMessageAsync($"Hello {user.Username} ! Welcome to Jiggmin's Village.\nIf you would like to be verified type /verify in DMs " +
                         $"with me or on the Server and follow the instructions.\nAnyway thank you for joining and don't forget to read {rules.Mention} and {welcome.Mention}.");
                     }
                     catch (Discord.Net.HttpException)
