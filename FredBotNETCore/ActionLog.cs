@@ -858,7 +858,14 @@ namespace FredBotNETCore
                     embed.Description = $"**{Format.Sanitize(user.Username)}#{user.Discriminator}** joined the guild. Account created **{(DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days}** days ago.\nTotal members: **{user.Guild.MemberCount}**";
                 }
                 SocketGuild prg = Client.GetGuild(249657315576381450);
-                await prg.GetUser(user.Id).KickAsync();
+                try
+                {
+                    await prg.GetUser(user.Id).KickAsync();
+                }
+                catch(Exception)
+                {
+                    //couldn't kick or get user
+                }
                 await log.SendMessageAsync("", false, embed.Build());
                 var result = Database.CheckExistingUser(user);
                 if (result.Count() <= 0)
