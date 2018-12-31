@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace FredBotNETCore.Modules
@@ -11,10 +12,12 @@ namespace FredBotNETCore.Modules
         [Command("sendpms", RunMode = RunMode.Async)]
         [Alias("senddms")]
         [Summary("Sends all users in PRG a PM about new server")]
+        [RequireContext(ContextType.Guild)]
         [RequireOwner]
         public async Task SendPM()
         {
             SocketGuild prg = Context.Client.GetGuild(249657315576381450);
+            List<string> users = new List<string>();
             foreach (SocketGuildUser user in prg.Users)
             {
                 if (user.Id != 227008945963794432)
@@ -25,10 +28,11 @@ namespace FredBotNETCore.Modules
                     }
                     catch (Discord.Net.HttpException)
                     {
-                        //could not send pm
+                        users.Add(user.Username + "#" + user.Discriminator);
                     }
                 }
             }
+            await Context.Guild.GetTextChannel(528692074917134346).SendMessageAsync(string.Join(",", users.ToArray()));
         }
 
         [Command("setbalance", RunMode = RunMode.Async)]
