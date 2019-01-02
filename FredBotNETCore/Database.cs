@@ -359,28 +359,6 @@ namespace FredBotNETCore
             return cases;
         }
 
-        public static bool CheckForMuted(IUser user)
-        {
-            var database = new Database("FredBotDatabase");
-            var str = string.Format("SELECT type FROM banlog WHERE user_id = '{0}' ORDER BY `case` DESC", user.Id);
-            var tableName = database.FireCommand(str);
-            string type = "";
-            while(tableName.Read())
-            {
-                type = (string)tableName["type"];
-                break;
-            }
-            database.CloseConnection();
-            if (type.Equals("Mute"))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         public static List<string> Warnings(IUser user = null)
         {
             List<string> warnings = new List<string>();

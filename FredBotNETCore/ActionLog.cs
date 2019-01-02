@@ -873,16 +873,16 @@ namespace FredBotNETCore
                     Database.EnterUser(user);
                 }
                 result = Database.CheckForVerified(user, "Not verified");
-                //bool isMuted = Database.CheckForMuted(user);
-                //if (isMuted)
-                //{
-                //    RequestOptions options = new RequestOptions()
-                //    {
-                //        AuditLogReason = "Auto Mute - Attempted Mute Evade."
-                //    };
-                //    await user.AddRolesAsync(roles: muted, options: options);
-                //}
-                //else 
+                bool isMuted = Extensions.IsMuted(user.Id);
+                if (isMuted)
+                {
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = "Auto Mute - Attempted Mute Evade."
+                    };
+                    await user.AddRolesAsync(roles: muted, options: options);
+                }
+                else
                 if ((result.Count() <= 0))
                 {
                     RequestOptions options = new RequestOptions()

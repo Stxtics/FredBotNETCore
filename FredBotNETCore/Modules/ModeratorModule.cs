@@ -2444,6 +2444,8 @@ namespace FredBotNETCore.Modules
                         await banlog.SendMessageAsync("", false, embed.Build());
                         await user.RemoveRolesAsync(role, options);
                         await Context.Channel.SendMessageAsync($"Unmuted **{Format.Sanitize(user.Username)}#{user.Discriminator}**");
+                        string mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace("\n" + user.Id.ToString(), string.Empty);
+                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
                     }
                     else
                     {
@@ -3217,6 +3219,8 @@ namespace FredBotNETCore.Modules
                         {
                             //cant send message
                         }
+                        string mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"));
+                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers + user.Id.ToString() + "\n");
                         int mutetime = Convert.ToInt32(minutes) * 60000;
                         Task task = Task.Run(async () =>
                         {
@@ -3270,6 +3274,8 @@ namespace FredBotNETCore.Modules
                                     //cant send message
                                 }
                                 Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: Context.Client.CurrentUser.Username + "#" + Context.Client.CurrentUser.Discriminator, reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                                mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace("\n" + user.Id.ToString(), string.Empty);
+                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
                             }
                             else
                             {

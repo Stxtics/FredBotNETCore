@@ -56,6 +56,18 @@ namespace FredBotNETCore
             }
         }
 
+        public static bool IsMuted(ulong userID)
+        {
+            if (File.ReadAllText(Path.Combine(downloadPath, "MutedUsers.txt")).Contains(userID.ToString()))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public static bool CheckStaff(string userID, IEnumerable<SocketRole> roles)
         {
             string roleID = null;
