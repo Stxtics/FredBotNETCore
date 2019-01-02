@@ -882,8 +882,7 @@ namespace FredBotNETCore
                     };
                     await user.AddRolesAsync(roles: muted, options: options);
                 }
-                else
-                if ((result.Count() <= 0))
+                else if ((result.Count() <= 0))
                 {
                     RequestOptions options = new RequestOptions()
                     {
