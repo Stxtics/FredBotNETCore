@@ -347,7 +347,7 @@ namespace FredBotNETCore.Modules
             }
         }
 
-        [Command("addjoinablerole")]
+        [Command("addjoinablerole", RunMode = RunMode.Async)]
         [Alias("addjoinrole", "ajr", "+jr", "+joinablerole")]
         [Summary("Adds a joinable role.")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
@@ -419,8 +419,8 @@ namespace FredBotNETCore.Modules
             }
         }
 
-        [Command("deljoinablerole")]
-        [Alias("deljoinrole", "djr", "-jr", "-joinablerole")]
+        [Command("deljoinablerole", RunMode = RunMode.Async)]
+        [Alias("deljoinrole", "djr", "-jr", "-joinablerole", "removejoinablerole", "rjr")]
         [Summary("Removes a joinable role.")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireContext(ContextType.Guild)]
