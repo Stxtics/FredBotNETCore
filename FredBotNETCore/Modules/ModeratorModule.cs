@@ -2657,7 +2657,7 @@ namespace FredBotNETCore.Modules
                         y.Value = "N/A";
                         y.IsInline = true;
                     });
-                    if (roleList.Length > 0)
+                    if ((user.Roles.Count - 1) > 0)
                     {
                         embed.AddField(y =>
                         {
