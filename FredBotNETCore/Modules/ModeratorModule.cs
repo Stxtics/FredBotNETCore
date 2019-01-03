@@ -2657,12 +2657,15 @@ namespace FredBotNETCore.Modules
                         y.Value = "N/A";
                         y.IsInline = true;
                     });
-                    embed.AddField(y =>
+                    if (roleList.Length > 0)
                     {
-                        y.Name = $"Roles [{user.Roles.Count - 1}]";
-                        y.Value = roleList;
-                        y.IsInline = false;
-                    });
+                        embed.AddField(y =>
+                        {
+                            y.Name = $"Roles [{user.Roles.Count - 1}]";
+                            y.Value = roleList;
+                            y.IsInline = false;
+                        });
+                    }
                     if (Context.Guild.Id == 528679522707701760)
                     {
                         embed.AddField(y =>
