@@ -1,17 +1,17 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using System.Text;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.IO;
 using Newtonsoft.Json;
-using static FredBotNETCore.WeatherDataCurrent;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using static FredBotNETCore.WeatherDataCurrent;
 
 namespace FredBotNETCore.Modules.Public
 {
@@ -27,7 +27,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.DM)]
         public async Task Pay(string amount = null, [Remainder] string username = null)
         {
-            var result = Database.CheckExistingUser(Context.User);
+            List<string> result = Database.CheckExistingUser(Context.User);
             if (result.Count() <= 0)
             {
                 Database.EnterUser(Context.User);
@@ -65,7 +65,7 @@ namespace FredBotNETCore.Modules.Public
                                 {
                                     await user.SendMessageAsync($"{user.Mention} you have been paid **${money}** by **{Format.Sanitize(Context.User.Username)}#{Context.User.Discriminator}**");
                                 }
-                                catch(Discord.Net.HttpException)
+                                catch (Discord.Net.HttpException)
                                 {
                                     await ReplyAsync($"{Context.User.Mention} I could not DM **{Format.Sanitize(user.Username)}#{user.Discriminator}** to notify them of your payment.");
                                 }
@@ -94,7 +94,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.DM)]
         public async Task Balance([Remainder] string username = null)
         {
-            var result = Database.CheckExistingUser(Context.User);
+            List<string> result = Database.CheckExistingUser(Context.User);
             if (result.Count() <= 0)
             {
                 Database.EnterUser(Context.User);
@@ -145,7 +145,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.DM)]
         public async Task Jackpot()
         {
-            var result = Database.CheckExistingUser(Context.User);
+            List<string> result = Database.CheckExistingUser(Context.User);
             if (result.Count() <= 0)
             {
                 Database.EnterUser(Context.User);
@@ -169,7 +169,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.DM)]
         public async Task Leaderboard()
         {
-            var result = Database.CheckExistingUser(Context.User);
+            List<string> result = Database.CheckExistingUser(Context.User);
             if (result.Count() <= 0)
             {
                 Database.EnterUser(Context.User);
@@ -210,7 +210,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     try
                     {
-                        leaderboard = leaderboard + "**" + (i + 1).ToString() + ".** " + (Format.Sanitize(Context.Client.GetUser(Convert.ToUInt64(userid)).Username) + "#" + Context.Client.GetUser(Convert.ToUInt64(userid)).Discriminator + " - " + topBalance.ElementAt(i) + "\n");
+                        leaderboard = leaderboard + "**" + (i + 1).ToString() + ".** " + Format.Sanitize(Context.Client.GetUser(Convert.ToUInt64(userid)).Username) + "#" + Context.Client.GetUser(Convert.ToUInt64(userid)).Discriminator + " - " + topBalance.ElementAt(i) + "\n";
                         i++;
                     }
                     catch (Exception)
@@ -229,7 +229,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.DM)]
         public async Task Lotto(string ticketsS = null)
         {
-            var result = Database.CheckExistingUser(Context.User);
+            List<string> result = Database.CheckExistingUser(Context.User);
             if (result.Count() <= 0)
             {
                 Database.EnterUser(Context.User);
@@ -262,7 +262,7 @@ namespace FredBotNETCore.Modules.Public
                         StreamReader lotto = new StreamReader(path: Path.Combine(Extensions.downloadPath, "LottoBalance.txt"));
                         Database.SetBalance(Context.User, Database.GetBalance(Context.User) - tickets);
                         int lottobal = Convert.ToInt32(lotto.ReadLine());
-                        int chance = Convert.ToInt32((tickets / (lottobal + 0.00)) * 100);
+                        int chance = Convert.ToInt32(tickets / (lottobal + 0.00) * 100);
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
                             Name = "Lottery",
@@ -274,7 +274,7 @@ namespace FredBotNETCore.Modules.Public
                             Author = auth,
                             Description = $"Jackpot: ${lottobal.ToString("N0")}\nScratching Tickets..."
                         };
-                        var message = await Context.Channel.SendMessageAsync("", false, embed.Build());
+                        Discord.Rest.RestUserMessage message = await Context.Channel.SendMessageAsync("", false, embed.Build());
                         await Task.Delay(500);
                         if (chance >= 100)
                         {
@@ -312,7 +312,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.DM)]
         public async Task Daily()
         {
-            var result = Database.CheckExistingUser(Context.User);
+            List<string> result = Database.CheckExistingUser(Context.User);
             if (result.Count() <= 0)
             {
                 Database.EnterUser(Context.User);
@@ -359,16 +359,16 @@ namespace FredBotNETCore.Modules.Public
             {
                 SocketGuild guild = Context.Client.GetGuild(528679522707701760);
                 HttpClient web = new HttpClient();
-                var jv2Key = new StreamReader(path: Path.Combine(Extensions.downloadPath, "JV2ApiKey.txt"));
-                var values = new Dictionary<string, string>
+                StreamReader jv2Key = new StreamReader(path: Path.Combine(Extensions.downloadPath, "JV2ApiKey.txt"));
+                Dictionary<string, string> values = new Dictionary<string, string>
                 {
                     { "key", jv2Key.ReadLine() },
                     { "user_id", "8" }
                 };
                 jv2Key.Close();
-                var content = new FormUrlEncodedContent(values);
-                var response = await web.PostAsync("https://jiggmin2.com/api/usergroup_api.php?", content);
-                var responseString = await response.Content.ReadAsStringAsync();
+                FormUrlEncodedContent content = new FormUrlEncodedContent(values);
+                HttpResponseMessage response = await web.PostAsync("https://jiggmin2.com/api/usergroup_api.php?", content);
+                string responseString = await response.Content.ReadAsStringAsync();
                 int[] additionalGroups = Array.ConvertAll(Extensions.GetBetween(responseString, "\",\"additionalgroups\":\"", "\"}").Split(","),
                                       delegate (string s) { return int.Parse(s); });
                 RequestOptions options = new RequestOptions()
@@ -422,7 +422,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.DM)]
         public async Task Verified([Remainder] string username)
         {
-            var guild = CommandHandler._client.GetGuild(528679522707701760);
+            SocketGuild guild = CommandHandler._client.GetGuild(528679522707701760);
             if (string.IsNullOrWhiteSpace(username))
             {
                 EmbedBuilder embed = new EmbedBuilder()
@@ -443,8 +443,8 @@ namespace FredBotNETCore.Modules.Public
             {
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} you are not a memeber of **{Format.Sanitize(guild.Name)}**.");
             }
-            var pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
-            var values = new Dictionary<string, string>
+            StreamReader pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
+            Dictionary<string, string> values = new Dictionary<string, string>
                 {
                     { "count", "10" },
                     { "start", "0" },
@@ -452,9 +452,9 @@ namespace FredBotNETCore.Modules.Public
                 };
             pr2token.Close();
             HttpClient web = new HttpClient();
-            var content = new FormUrlEncodedContent(values);
-            var response = await web.PostAsync("https://pr2hub.com/messages_get.php?", content);
-            var responseString = await response.Content.ReadAsStringAsync();
+            FormUrlEncodedContent content = new FormUrlEncodedContent(values);
+            HttpResponseMessage response = await web.PostAsync("https://pr2hub.com/messages_get.php?", content);
+            string responseString = await response.Content.ReadAsStringAsync();
             string[] pms = responseString.Split('}');
             int tries = 0;
             foreach (string message_id in pms)
@@ -465,7 +465,7 @@ namespace FredBotNETCore.Modules.Public
                     string message = Extensions.GetBetween(message_id, "message\":\"", "\",\"time");
                     if (message.Equals(Context.Channel.Id.ToString()))
                     {
-                        var result = Database.CheckExistingUser(user);
+                        List<string> result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
                             Database.EnterUser(user);
@@ -553,7 +553,7 @@ namespace FredBotNETCore.Modules.Public
                         WebClient wc = new WebClient();
                         wc.Headers.Add("Referer", "https://pr2hub.com/");
                         pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
-                        var reqparm = new System.Collections.Specialized.NameValueCollection
+                        System.Collections.Specialized.NameValueCollection reqparm = new System.Collections.Specialized.NameValueCollection
                             {
                                 { "message", $"Hey {username}! Thank you for verifying your PR2 Account with Fred the G. Cactus on the Discord Server. You verified your PR2 Account with the Discord Account {Context.User.Username}#{Context.User.Discriminator} ({Context.User.Id}). If you did not do this you should change your password and your email on your account as well to make sure it is secure." },
                                 { "to_name", username },
@@ -680,7 +680,7 @@ namespace FredBotNETCore.Modules.Public
                 double maxTemp = weather.Main.TempMax;
                 double speed = weather.Wind.Speed;
                 double deg = weather.Wind.Deg;
-                var directions = new string[]
+                string[] directions = new string[]
                 {
                         "North", "NorthEast", "East", "SouthEast", "South", "SouthWest", "West", "NorthWest", "North"
                 };
@@ -703,7 +703,7 @@ namespace FredBotNETCore.Modules.Public
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
                     IconUrl = Context.User.GetAvatarUrl(),
-                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                 };
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
@@ -777,7 +777,7 @@ namespace FredBotNETCore.Modules.Public
                             IUser user = guild.GetUser(userID);
                             await Context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!!");
                         }
-                        catch(NullReferenceException)
+                        catch (NullReferenceException)
                         {
                             await Context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))}**!!");
                         }
@@ -829,7 +829,7 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user does not exist or could not be found.");
                             return;
                         }
-                        var result = Database.CheckExistingUser(user);
+                        List<string> result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
                             Database.EnterUser(user);
@@ -854,7 +854,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
@@ -1013,7 +1013,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
@@ -1111,7 +1111,7 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user does not exist or could not be found.");
                             return;
                         }
-                        var result = Database.CheckExistingUser(user);
+                        List<string> result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
                             Database.EnterUser(user);
@@ -1124,7 +1124,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         string pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + guildname);
                         string[] userinfo = pr2userinfo.Split(',');
-                        string guild = userinfo[17].Substring(13).TrimEnd(new Char[] { '"', ' ' });
+                        string guild = userinfo[17].Substring(13).TrimEnd(new char[] { '"', ' ' });
                         if (guild.Length <= 0)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that users account is not a member of a guild.");
@@ -1160,7 +1160,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
@@ -1223,7 +1223,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
@@ -1285,7 +1285,7 @@ namespace FredBotNETCore.Modules.Public
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
                             IconUrl = Context.User.GetAvatarUrl(),
-                            Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                         };
                         try
                         {
@@ -1298,7 +1298,7 @@ namespace FredBotNETCore.Modules.Public
                                 }
                                 else
                                 {
-                                    exp = Math.Round((Math.Pow(1.25, level_)) * 30).ToString("N0");
+                                    exp = Math.Round(Math.Pow(1.25, level_) * 30).ToString("N0");
                                 }
                                 embed.WithFooter(footer);
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -1341,7 +1341,7 @@ namespace FredBotNETCore.Modules.Public
                                     }
                                     else
                                     {
-                                        exp = exp + Math.Round((Math.Pow(1.25, i)) * 30);
+                                        exp = exp + Math.Round(Math.Pow(1.25, i) * 30);
                                     }
                                 }
                                 embed.WithFooter(footer);
@@ -1425,7 +1425,7 @@ namespace FredBotNETCore.Modules.Public
                                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                                 {
                                     IconUrl = Context.User.GetAvatarUrl(),
-                                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                                 };
                                 embed.WithFooter(footer);
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -1459,7 +1459,7 @@ namespace FredBotNETCore.Modules.Public
                                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                                 {
                                     IconUrl = Context.User.GetAvatarUrl(),
-                                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                                 };
                                 embed.WithFooter(footer);
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -1514,7 +1514,7 @@ namespace FredBotNETCore.Modules.Public
             {
                 return;
             }
-            var joinableRoles = new StreamReader(path: Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"));
+            StreamReader joinableRoles = new StreamReader(path: Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"));
             EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
             {
                 IconUrl = guild.IconUrl,
@@ -1529,7 +1529,7 @@ namespace FredBotNETCore.Modules.Public
             string line = joinableRoles.ReadLine();
             while (line != null)
             {
-                string role = (guild.GetRole(Convert.ToUInt64(line))).Name;
+                string role = guild.GetRole(Convert.ToUInt64(line)).Name;
                 jRoles = jRoles + Format.Sanitize(role) + "\n";
                 line = joinableRoles.ReadLine();
             }
@@ -1618,7 +1618,7 @@ namespace FredBotNETCore.Modules.Public
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
                     IconUrl = Context.User.GetAvatarUrl(),
-                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                 };
                 embed.WithFooter(footer);
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -1673,7 +1673,7 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user does not exist or could not be found.");
                             return;
                         }
-                        var result = Database.CheckExistingUser(user);
+                        List<string> result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
                             Database.EnterUser(user);
@@ -1700,7 +1700,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
@@ -1716,7 +1716,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     try
                     {
-                        var o = JObject.Parse(text).GetValue("teams");
+                        JToken o = JObject.Parse(text).GetValue("teams");
                         JArray array = JArray.Parse(o.ToString());
                         JObject stats = new JObject();
                         foreach (JObject jobject in array)
@@ -1764,10 +1764,10 @@ namespace FredBotNETCore.Modules.Public
                         }
                         await Context.Channel.SendMessageAsync("", false, embed.Build());
                     }
-                    catch(JsonReaderException)
+                    catch (JsonReaderException)
                     {
                         await ReplyAsync($"{Context.User.Mention} the F@H Api is currently down.");
-                    }   
+                    }
                 }
             }
             else
@@ -1810,7 +1810,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                     };
                     EmbedBuilder embed = new EmbedBuilder()
                     {
@@ -1931,7 +1931,7 @@ namespace FredBotNETCore.Modules.Public
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
                     IconUrl = Context.User.GetAvatarUrl(),
-                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                 };
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
@@ -1988,7 +1988,7 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user does not exist or could not be found.");
                             return;
                         }
-                        var result = Database.CheckExistingUser(user);
+                        List<string> result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
                             Database.EnterUser(user);
@@ -2042,7 +2042,7 @@ namespace FredBotNETCore.Modules.Public
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
                             IconUrl = Context.User.GetAvatarUrl(),
-                            Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                         };
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
@@ -2129,7 +2129,7 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user does not exist or could not be found.");
                             return;
                         }
-                        var result = Database.CheckExistingUser(user);
+                        List<string> result = Database.CheckExistingUser(user);
                         if (result.Count() <= 0)
                         {
                             Database.EnterUser(user);
@@ -2142,7 +2142,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         string pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + guildname);
                         string[] userinfo = pr2userinfo.Split(',');
-                        string guild = userinfo[17].Substring(13).TrimEnd(new Char[] { '"', ' ' });
+                        string guild = userinfo[17].Substring(13).TrimEnd(new char[] { '"', ' ' });
                         if (guild.Length <= 0)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} that users account is not a member of a guild.");
@@ -2176,7 +2176,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
@@ -2239,7 +2239,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
@@ -2293,7 +2293,7 @@ namespace FredBotNETCore.Modules.Public
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
                     IconUrl = Context.User.GetAvatarUrl(),
-                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                 };
                 embed.WithFooter(footer);
                 embed.WithCurrentTimestamp();
@@ -2335,8 +2335,8 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    var pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
-                    var values = new Dictionary<string, string>
+                    StreamReader pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
+                    Dictionary<string, string> values = new Dictionary<string, string>
                     {
                         { "dir", "desc" },
                         { "mode", "title" },
@@ -2347,9 +2347,9 @@ namespace FredBotNETCore.Modules.Public
                     };
                     pr2token.Close();
                     HttpClient web = new HttpClient();
-                    var content = new FormUrlEncodedContent(values);
-                    var response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
-                    var responseString = await response.Content.ReadAsStringAsync();
+                    FormUrlEncodedContent content = new FormUrlEncodedContent(values);
+                    HttpResponseMessage response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
+                    string responseString = await response.Content.ReadAsStringAsync();
                     string version = Extensions.GetBetween(responseString, "&version0=", "&title0=");
                     string title = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&title0=", "&rating0=")).Replace("+", " ");
                     string rating = Extensions.GetBetween(responseString, "&rating0=", "&playCount0=");
@@ -2375,7 +2375,7 @@ namespace FredBotNETCore.Modules.Public
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
@@ -2396,7 +2396,7 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
             {
-                var result = Database.CheckExistingUser(Context.User);
+                List<string> result = Database.CheckExistingUser(Context.User);
                 if (result.Count() <= 0)
                 {
                     Database.EnterUser(Context.User);
@@ -2415,13 +2415,13 @@ namespace FredBotNETCore.Modules.Public
                 string owner = Extensions.GetBetween(guildinfo, "\",\"owner_id\":\"", "\",\"note\":\"");
                 if (id.Equals(owner))
                 {
-                    int memberCount = Int32.Parse(Extensions.GetBetween(guildinfo, "\",\"member_count\":\"", "\",\"emblem\":\""));
+                    int memberCount = int.Parse(Extensions.GetBetween(guildinfo, "\",\"member_count\":\"", "\",\"emblem\":\""));
                     if (memberCount < 15)
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need at least 15 members in your guild.");
                         return;
                     }
-                    var roles = Context.Guild.Roles;
+                    IReadOnlyCollection<SocketRole> roles = Context.Guild.Roles;
                     bool exists = false;
                     foreach (IRole role in roles)
                     {
@@ -2433,15 +2433,15 @@ namespace FredBotNETCore.Modules.Public
                     }
                     if (!exists)
                     {
-                        var guildRole = await Context.Guild.CreateRoleAsync(guild, null, null, false);
-                        var everyoneRole = Context.Guild.EveryoneRole;
-                        var mutedRole = Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Muted".ToUpper()).First();
-                        var guildChannel = await Context.Guild.CreateTextChannelAsync(guild.Replace(" ", "-"));
+                        Discord.Rest.RestRole guildRole = await Context.Guild.CreateRoleAsync(guild, null, null, false);
+                        SocketRole everyoneRole = Context.Guild.EveryoneRole;
+                        SocketRole mutedRole = Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Muted".ToUpper()).First();
+                        Discord.Rest.RestTextChannel guildChannel = await Context.Guild.CreateTextChannelAsync(guild.Replace(" ", "-"));
                         await guildChannel.ModifyAsync(x => x.CategoryId = 528704611289399296);
                         await guildChannel.AddPermissionOverwriteAsync(guildRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Inherit));
                         await guildChannel.AddPermissionOverwriteAsync(mutedRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Deny));
                         await guildChannel.AddPermissionOverwriteAsync(everyoneRole, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny));
-                        var guildVoice = await Context.Guild.CreateVoiceChannelAsync(guild);
+                        Discord.Rest.RestVoiceChannel guildVoice = await Context.Guild.CreateVoiceChannelAsync(guild);
                         await guildVoice.ModifyAsync(x => x.CategoryId = 528704611289399296);
                         await guildVoice.AddPermissionOverwriteAsync(guildRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Allow));
                         await guildVoice.AddPermissionOverwriteAsync(mutedRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Deny, speak: PermValue.Deny));
@@ -2478,7 +2478,7 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
             {
-                var result = Database.CheckExistingUser(Context.User);
+                List<string> result = Database.CheckExistingUser(Context.User);
                 if (result.Count() <= 0)
                 {
                     Database.EnterUser(Context.User);
@@ -2492,7 +2492,7 @@ namespace FredBotNETCore.Modules.Public
                 HttpClient web = new HttpClient();
                 string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
                 string guild = Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
-                var roles = Context.Guild.Roles;
+                IReadOnlyCollection<SocketRole> roles = Context.Guild.Roles;
                 foreach (IRole role in roles)
                 {
                     if (role.Name == guild)
@@ -2545,7 +2545,7 @@ namespace FredBotNETCore.Modules.Public
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
                     IconUrl = Context.User.GetAvatarUrl(),
-                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                 };
                 embed.WithFooter(footer);
                 embed.WithCurrentTimestamp();
@@ -2617,7 +2617,7 @@ namespace FredBotNETCore.Modules.Public
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
                     IconUrl = Context.User.GetAvatarUrl(),
-                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                 };
                 embed.WithFooter(footer);
                 embed.WithCurrentTimestamp();

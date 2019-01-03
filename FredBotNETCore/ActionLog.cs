@@ -1,9 +1,9 @@
-﻿using Discord.WebSocket;
-using Discord;
+﻿using Discord;
+using Discord.WebSocket;
 using System;
-using System.Threading.Tasks;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace FredBotNETCore
 {
@@ -600,8 +600,8 @@ namespace FredBotNETCore
                         }
                     }
                 }
-                var roles = user.Roles.OrderBy(x => x.Name);
-                var roles2 = user2.Roles.OrderBy(x => x.Name);
+                IOrderedEnumerable<SocketRole> roles = user.Roles.OrderBy(x => x.Name);
+                IOrderedEnumerable<SocketRole> roles2 = user2.Roles.OrderBy(x => x.Name);
                 List<SocketRole> roleList = new List<SocketRole>(), roleList2 = new List<SocketRole>();
                 foreach (SocketRole role in roles)
                 {
@@ -619,14 +619,14 @@ namespace FredBotNETCore
                 }
                 if (roleList.Count > roleList2.Count)
                 {
-                    var diff = roleList.Except(roleList2);
-                    var role = diff.ElementAt(0);
+                    IEnumerable<SocketRole> diff = roleList.Except(roleList2);
+                    SocketRole role = diff.ElementAt(0);
                     embed.Description = $"{iUser.Mention} removed {user.Mention} from the {role.Mention} role.";
                 }
                 else
                 {
-                    var diff = roleList2.Except(roleList);
-                    var role = diff.ElementAt(0);
+                    IEnumerable<SocketRole> diff = roleList2.Except(roleList);
+                    SocketRole role = diff.ElementAt(0);
                     embed.Description = $"{iUser.Mention} added {user.Mention} to the {role.Mention} role.";
                 }
                 if (reason != null)
@@ -862,12 +862,12 @@ namespace FredBotNETCore
                 {
                     await prg.GetUser(user.Id).KickAsync();
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     //couldn't kick or get user
                 }
                 await log.SendMessageAsync("", false, embed.Build());
-                var result = Database.CheckExistingUser(user);
+                List<string> result = Database.CheckExistingUser(user);
                 if (result.Count() <= 0)
                 {
                     Database.EnterUser(user);
@@ -899,7 +899,7 @@ namespace FredBotNETCore
                     {
                         await user.SendMessageAsync($"Hello {Format.Sanitize(user.Username)} ! Welcome back to Jiggmin's Village.\nYou have been added to the verified role as you verified yourself the last time you were here.");
                     }
-                    catch(Discord.Net.HttpException)
+                    catch (Discord.Net.HttpException)
                     {
                         //could not send message
                     }

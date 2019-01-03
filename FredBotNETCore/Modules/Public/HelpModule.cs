@@ -141,7 +141,7 @@ namespace FredBotNETCore.Modules.Public
                 "/suggest - Lets you add a suggestion for the suggestions channel.\n" +
                 "/verify - Gives you instructions on how to get verified(if you are not).\n";
             embed.Title = "Fred the G. Cactus Commands";
-            var parts = help.SplitInParts(2000);
+            System.Collections.Generic.IEnumerable<string> parts = help.SplitInParts(2000);
             try
             {
                 foreach (string part in parts)
@@ -151,7 +151,7 @@ namespace FredBotNETCore.Modules.Public
                     embed.Title = "";
                 }
             }
-            catch(Discord.Net.HttpException)
+            catch (Discord.Net.HttpException)
             {
                 if (msg != null)
                 {

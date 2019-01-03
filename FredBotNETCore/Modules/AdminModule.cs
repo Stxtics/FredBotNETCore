@@ -633,7 +633,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.RoleInGuild(Context.Message, Context.Guild, mod) != null)
                     {
-                        SocketRole role = (Extensions.RoleInGuild(Context.Message, Context.Guild, mod));
+                        SocketRole role = Extensions.RoleInGuild(Context.Message, Context.Guild, mod);
                         string modRoles = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"));
                         if (modRoles.Contains(role.Id.ToString()))
                         {
@@ -675,7 +675,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.UserInGuild(Context.Message, Context.Guild, mod) != null)
                     {
-                        SocketUser user = (Extensions.UserInGuild(Context.Message, Context.Guild, mod));
+                        SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, mod);
                         string modUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"));
                         if (modUsers.Contains(user.Id.ToString()))
                         {
@@ -731,8 +731,8 @@ namespace FredBotNETCore.Modules
             {
                 return;
             }
-            var modRoles = new StreamReader(path: Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"));
-            var modUsers = new StreamReader(path: Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"));
+            StreamReader modRoles = new StreamReader(path: Path.Combine(Extensions.downloadPath, "DiscordStaffRoles.txt"));
+            StreamReader modUsers = new StreamReader(path: Path.Combine(Extensions.downloadPath, "DiscordStaff.txt"));
             EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
             {
                 IconUrl = Context.Guild.IconUrl,
@@ -747,7 +747,7 @@ namespace FredBotNETCore.Modules
             string line = modUsers.ReadLine();
             while (line != null)
             {
-                string user = (Context.Guild.GetUser(Convert.ToUInt64(line))).Username + "#" + (Context.Guild.GetUser(Convert.ToUInt64(line))).Discriminator;
+                string user = Context.Guild.GetUser(Convert.ToUInt64(line)).Username + "#" + Context.Guild.GetUser(Convert.ToUInt64(line)).Discriminator;
                 modU = modU + Format.Sanitize(user) + "\n";
                 line = modUsers.ReadLine();
             }
@@ -755,7 +755,7 @@ namespace FredBotNETCore.Modules
             line = modRoles.ReadLine();
             while (line != null)
             {
-                string role = (Context.Guild.GetRole(Convert.ToUInt64(line))).Name;
+                string role = Context.Guild.GetRole(Convert.ToUInt64(line)).Name;
                 modR = modR + Format.Sanitize(role) + "\n";
                 line = modRoles.ReadLine();
             }
@@ -922,7 +922,7 @@ namespace FredBotNETCore.Modules
         }
 
         [Command("listblacklistedwords", RunMode = RunMode.Async)]
-        [Alias("lbw","blacklistedwords")]
+        [Alias("lbw", "blacklistedwords")]
         [Summary("Lists all the words that are blacklisted from being said on the server.")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireContext(ContextType.Guild)]
@@ -930,7 +930,7 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                var blacklistedWords = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt"));
+                StreamReader blacklistedWords = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     IconUrl = Context.Guild.IconUrl,
@@ -1119,7 +1119,7 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                var blacklistedUrls = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt"));
+                StreamReader blacklistedUrls = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     IconUrl = Context.Guild.IconUrl,
@@ -1188,7 +1188,7 @@ namespace FredBotNETCore.Modules
                         {
                             if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName) != null)
                             {
-                                var channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName);
+                                SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName);
                                 string currentAllowedChannels = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"));
                                 if (currentAllowedChannels.Contains(channel.Id.ToString(), StringComparison.InvariantCultureIgnoreCase))
                                 {
@@ -1272,7 +1272,7 @@ namespace FredBotNETCore.Modules
                         {
                             if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName) != null)
                             {
-                                var channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName);
+                                SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName);
                                 string currentAllowedChannels = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"));
                                 if (currentAllowedChannels.Contains(channel.Id.ToString(), StringComparison.InvariantCultureIgnoreCase))
                                 {
@@ -1336,7 +1336,7 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                var allowedChannels = new StreamReader(path: Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"));
+                StreamReader allowedChannels = new StreamReader(path: Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     IconUrl = Context.Guild.IconUrl,
@@ -1389,7 +1389,7 @@ namespace FredBotNETCore.Modules
                 {
                     if (Extensions.ChannelInGuild(Context.Message, Context.Guild, text) != null)
                     {
-                        var channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, text);
+                        SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, text);
                         string currentLogChannel = File.ReadAllText(Path.Combine(Extensions.downloadPath, "LogChannel.txt"));
 
                         SocketTextChannel log = Context.Guild.GetTextChannel(channel.Id);
@@ -1420,7 +1420,7 @@ namespace FredBotNETCore.Modules
                         await ReplyAsync($"{Context.User.Mention} the channel **{Format.Sanitize(text)}** does not exist or could not be found.");
                     }
                 }
-                catch(NullReferenceException)
+                catch (NullReferenceException)
                 {
                     await ReplyAsync($"{Context.User.Mention} the channel with ID: **{Format.Sanitize(text)}** does not exist or could not be found.");
                 }

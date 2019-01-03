@@ -1,11 +1,11 @@
-﻿using System.Threading.Tasks;
-using System.Reflection;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Discord;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace FredBotNETCore
 {
@@ -20,14 +20,18 @@ namespace FredBotNETCore
 
         public static string CheckHint
         {
-            get { return hint; }
+            get => hint;
             set
             {
                 if (value == hint)
+                {
                     return;
+                }
 
                 if (value.Contains("\"happy_hour\":\"1\""))
+                {
                     hint = value;
+                }
             }
         }
 
@@ -52,7 +56,9 @@ namespace FredBotNETCore
             {
                 case "Derron":
                     if (DerronStatus == compare)
+                    {
                         return;
+                    }
 
                     DerronStatus = compare;
                     if (justConnected == true)
@@ -65,7 +71,9 @@ namespace FredBotNETCore
 
                 case "Carina":
                     if (CarinaStatus == compare)
+                    {
                         return;
+                    }
 
                     CarinaStatus = compare;
                     if (justConnected == true)
@@ -78,7 +86,9 @@ namespace FredBotNETCore
 
                 case "Grayan":
                     if (GrayanStatus == compare)
+                    {
                         return;
+                    }
 
                     GrayanStatus = compare;
                     if (justConnected == true)
@@ -91,7 +101,9 @@ namespace FredBotNETCore
 
                 case "Fitz":
                     if (FitzStatus == compare)
+                    {
                         return;
+                    }
 
                     FitzStatus = compare;
                     if (justConnected == true)
@@ -104,7 +116,9 @@ namespace FredBotNETCore
 
                 case "Loki":
                     if (LokiStatus == compare)
+                    {
                         return;
+                    }
 
                     LokiStatus = compare;
                     if (justConnected == true)
@@ -117,7 +131,9 @@ namespace FredBotNETCore
 
                 case "Promie":
                     if (PromieStatus == compare)
+                    {
                         return;
+                    }
 
                     PromieStatus = compare;
                     if (justConnected == true)
@@ -130,7 +146,9 @@ namespace FredBotNETCore
 
                 case "Morgana":
                     if (MorganaStatus == compare)
+                    {
                         return;
+                    }
 
                     MorganaStatus = compare;
                     if (justConnected == true)
@@ -143,7 +161,9 @@ namespace FredBotNETCore
 
                 case "Andres":
                     if (AndresStatus == compare)
+                    {
                         return;
+                    }
 
                     AndresStatus = compare;
                     if (justConnected == true)
@@ -156,7 +176,9 @@ namespace FredBotNETCore
 
                 case "Isabel":
                     if (IsabelStatus == compare)
+                    {
                         return;
+                    }
 
                     IsabelStatus = compare;
                     if (justConnected == true)
@@ -173,8 +195,8 @@ namespace FredBotNETCore
         {
             if (isOn)
             {
-                var process = Process.GetCurrentProcess();
-                var time = DateTime.Now - process.StartTime;
+                Process process = Process.GetCurrentProcess();
+                TimeSpan time = DateTime.Now - process.StartTime;
                 if (time.Minutes < 2)
                 {
                     return;
@@ -223,7 +245,10 @@ namespace FredBotNETCore
         public async Task Install(DiscordSocketClient c)
         {
 
-            if (c.LoginState != LoginState.LoggedIn) return;
+            if (c.LoginState != LoginState.LoggedIn)
+            {
+                return;
+            }
 
             _client = c;
             _cmds = new CommandService();
@@ -253,8 +278,8 @@ namespace FredBotNETCore
 
         public async Task LogException(LogMessage message)
         {
-            var user = _client.GetUser(181853112045142016);
-            var parts = message.Exception.ToString().SplitInParts(1990);
+            SocketUser user = _client.GetUser(181853112045142016);
+            System.Collections.Generic.IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1990);
             foreach (string part in parts)
             {
                 await user.SendMessageAsync("```" + part + "```");
@@ -263,9 +288,17 @@ namespace FredBotNETCore
 
         public async Task OnMessageReceived(SocketMessage m)
         {
-            if (!(m is SocketUserMessage msg)) return;
+            if (!(m is SocketUserMessage msg))
+            {
+                return;
+            }
+
             bool badMessage = false;
-            if (msg.Author.IsBot) return;
+            if (msg.Author.IsBot)
+            {
+                return;
+            }
+
             if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
             {
                 if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())

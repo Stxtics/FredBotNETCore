@@ -12,7 +12,11 @@ namespace FredBotNETCore
 {
     public static class Extensions
     {
-        public static string GetHeapSize() => Math.Round(GC.GetTotalMemory(false) / (1024.0 * 1024.0), 2).ToString();
+        public static string GetHeapSize()
+        {
+            return Math.Round(GC.GetTotalMemory(false) / (1024.0 * 1024.0), 2).ToString();
+        }
+
         public static string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
         public static Random random = new Random();
         public static bool Purging { get; set; } = false;
@@ -20,7 +24,9 @@ namespace FredBotNETCore
         public static T GetRandomElement<T>(this IEnumerable<T> list)
         {
             if (list.Count() == 0)
+            {
                 return default(T);
+            }
 
             return list.ElementAt(random.Next(list.Count()));
         }
@@ -28,12 +34,19 @@ namespace FredBotNETCore
         public static IEnumerable<string> SplitInParts(this string s, int partLength)
         {
             if (s == null)
+            {
                 throw new ArgumentNullException("s");
-            if (partLength <= 0)
-                throw new ArgumentException("Part length has to be positive.", "partLength");
+            }
 
-            for (var i = 0; i < s.Length; i += partLength)
+            if (partLength <= 0)
+            {
+                throw new ArgumentException("Part length has to be positive.", "partLength");
+            }
+
+            for (int i = 0; i < s.Length; i += partLength)
+            {
                 yield return s.Substring(i, Math.Min(partLength, s.Length - i));
+            }
         }
 
         public static bool Contains(this string source, string toCheck, StringComparison comp)
@@ -75,8 +88,8 @@ namespace FredBotNETCore
             {
                 roleID = roles.First().Id.ToString();
             }
-            var staff = new StreamReader(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
-            var staffRoles = new StreamReader(path: Path.Combine(downloadPath, "DiscordStaffRoles.txt"));
+            StreamReader staff = new StreamReader(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
+            StreamReader staffRoles = new StreamReader(path: Path.Combine(downloadPath, "DiscordStaffRoles.txt"));
             string line = staff.ReadLine();
             bool isStaff = false;
             while (line != null)
@@ -211,10 +224,10 @@ namespace FredBotNETCore
         public static readonly string appid = new StreamReader(path: Path.Combine(downloadPath, "WeatherAppID.txt")).ReadLine();
         public static async Task<string> GetWeatherAsync(string city)
         {
-            var httpClient = new HttpClient();
+            HttpClient httpClient = new HttpClient();
             string URL = "http://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=" + appid;
-            var response = await httpClient.GetAsync(URL);
-            var result = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response = await httpClient.GetAsync(URL);
+            string result = await response.Content.ReadAsStringAsync();
             return result;
         }
 
@@ -225,8 +238,8 @@ namespace FredBotNETCore
 
         public static List<ulong> AllowedChannels()
         {
-            var channels = new List<ulong>();
-            var allowedChannels = new StreamReader(path: Path.Combine(Extensions.downloadPath, "AllowedChannels.txt"));
+            List<ulong> channels = new List<ulong>();
+            StreamReader allowedChannels = new StreamReader(path: Path.Combine(downloadPath, "AllowedChannels.txt"));
             string channel = allowedChannels.ReadLine();
             while (channel != null)
             {

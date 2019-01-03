@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Discord;
+using Discord.WebSocket;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
 
 namespace FredBotNETCore
 {
@@ -20,7 +20,7 @@ namespace FredBotNETCore
 
         public bool Spam(SocketUserMessage msg, SocketTextChannel channel)
         {
-            var usermessages = channel.GetMessagesAsync().Flatten().Where(x => x.Author == msg.Author).Take(4).ToEnumerable();
+            IEnumerable<IMessage> usermessages = channel.GetMessagesAsync().Flatten().Where(x => x.Author == msg.Author).Take(4).ToEnumerable();
             if (((usermessages.ElementAt(0) as SocketUserMessage).CreatedAt - (usermessages.ElementAt(3) as SocketUserMessage).CreatedAt).Seconds < 5)
             {
                 return true;
@@ -32,7 +32,7 @@ namespace FredBotNETCore
         {
             if (msg.MentionedUsers.Distinct().Count() + msg.MentionedRoles.Distinct().Where(x => x.IsMentionable == true).Count() >= 10)
             {
-                var user = channel.Guild.GetUser(msg.Author.Id);
+                SocketGuildUser user = channel.Guild.GetUser(msg.Author.Id);
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     Name = $"Case {Database.CaseCount() + 1} | Mute | {user.Username}#{user.Discriminator}",
@@ -45,7 +45,7 @@ namespace FredBotNETCore
                 };
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
-                    Text = ($"ID: {user.Id}")
+                    Text = $"ID: {user.Id}"
                 };
                 SocketTextChannel banlog = user.Guild.GetTextChannel(263474494327226388);
                 SocketRole role = user.Guild.GetRole(308331455602229268);
@@ -123,7 +123,7 @@ namespace FredBotNETCore
                         };
                         EmbedFooterBuilder footer2 = new EmbedFooterBuilder()
                         {
-                            Text = ($"ID: {user.Id}")
+                            Text = $"ID: {user.Id}"
                         };
                         embed2.WithCurrentTimestamp();
                         embed2.WithFooter(footer2);
@@ -184,7 +184,7 @@ namespace FredBotNETCore
 
         public bool BlacklistedUrl(SocketUserMessage msg)
         {
-            var blacklistedUrls = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt")).Split("\n");
+            string[] blacklistedUrls = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt")).Split("\n");
             foreach (string blacklistedUrl in blacklistedUrls)
             {
                 if (blacklistedUrl.Length > 0 && msg.Content.Contains(blacklistedUrl, StringComparison.InvariantCultureIgnoreCase))
@@ -197,7 +197,7 @@ namespace FredBotNETCore
 
         public bool BlacklistedWord(SocketUserMessage msg)
         {
-            var bannedwords = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt")).Split("\n");
+            string[] bannedwords = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt")).Split("\n");
             foreach (string bannedword in bannedwords)
             {
                 if (bannedword.Length > 0 && msg.Content.Contains(bannedword, StringComparison.InvariantCultureIgnoreCase))
@@ -236,7 +236,7 @@ namespace FredBotNETCore
                 }
             };
             embed.WithCurrentTimestamp();
-            var log = channel.Guild.GetTextChannel(Extensions.GetLogChannel());
+            SocketTextChannel log = channel.Guild.GetTextChannel(Extensions.GetLogChannel());
             Discord.Rest.RestUserMessage message = null;
             if (msg.Content.Length > 252)
             {

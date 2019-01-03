@@ -61,8 +61,8 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                var channel = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "pr2-discussion".ToUpper()).First() as SocketTextChannel;
-                var role = Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Macroer".ToUpper()).First() as SocketRole;
+                SocketTextChannel channel = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "pr2-discussion".ToUpper()).First() as SocketTextChannel;
+                SocketRole role = Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Macroer".ToUpper()).First() as SocketRole;
                 RequestOptions options = new RequestOptions()
                 {
                     AuditLogReason = $"Notified by {Context.User.Username}#{Context.User.Discriminator}."
@@ -345,7 +345,7 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                var blacklistedMusic = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"));
+                StreamReader blacklistedMusic = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     IconUrl = Context.Guild.IconUrl,
@@ -360,7 +360,7 @@ namespace FredBotNETCore.Modules
                 string line = blacklistedMusic.ReadLine();
                 while (line != null)
                 {
-                    string user = (Context.Guild.GetUser(Convert.ToUInt64(line))).Username + "#" + (Context.Guild.GetUser(Convert.ToUInt64(line))).Discriminator;
+                    string user = Context.Guild.GetUser(Convert.ToUInt64(line)).Username + "#" + Context.Guild.GetUser(Convert.ToUInt64(line)).Discriminator;
                     blacklistedUsers = blacklistedUsers + user + "\n";
                     line = blacklistedMusic.ReadLine();
                 }
@@ -557,7 +557,7 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                var blacklistedsuggestions = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"));
+                StreamReader blacklistedsuggestions = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     IconUrl = Context.Guild.IconUrl,
@@ -572,7 +572,7 @@ namespace FredBotNETCore.Modules
                 string line = blacklistedsuggestions.ReadLine();
                 while (line != null)
                 {
-                    string user = (Context.Guild.GetUser(Convert.ToUInt64(line))).Username + "#" + (Context.Guild.GetUser(Convert.ToUInt64(line))).Discriminator;
+                    string user = Context.Guild.GetUser(Convert.ToUInt64(line)).Username + "#" + Context.Guild.GetUser(Convert.ToUInt64(line)).Discriminator;
                     blacklistedUsers = blacklistedUsers + user + "\n";
                     line = blacklistedsuggestions.ReadLine();
                 }
@@ -806,9 +806,9 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Uptime()
         {
-            var process = Process.GetCurrentProcess();
-            var time = DateTime.Now - process.StartTime;
-            var sb = new StringBuilder();
+            Process process = Process.GetCurrentProcess();
+            TimeSpan time = DateTime.Now - process.StartTime;
+            StringBuilder sb = new StringBuilder();
             if (time.Days > 0)
             {
                 sb.Append($"{time.Days}d ");  /*Pulls the Uptime in Days*/
@@ -887,7 +887,7 @@ namespace FredBotNETCore.Modules
                         int roleMembers = 0;
                         foreach (IGuildUser user in Context.Guild.Users)
                         {
-                            var roles = user.RoleIds;
+                            IReadOnlyCollection<ulong> roles = user.RoleIds;
                             foreach (ulong id in roles)
                             {
                                 if (id == role.Id)
@@ -968,7 +968,7 @@ namespace FredBotNETCore.Modules
             EmbedFooterBuilder footer = new EmbedFooterBuilder()
             {
                 IconUrl = Context.User.GetAvatarUrl(),
-                Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
             };
             EmbedBuilder embed = new EmbedBuilder()
             {
@@ -989,7 +989,7 @@ namespace FredBotNETCore.Modules
                 {
                     foreach (IGuildUser user in Context.Guild.Users)
                     {
-                        var roles = user.RoleIds;
+                        IReadOnlyCollection<ulong> roles = user.RoleIds;
                         foreach (ulong id in roles)
                         {
                             if (id == role.Id)
@@ -1077,7 +1077,7 @@ namespace FredBotNETCore.Modules
             EmbedFooterBuilder footer = new EmbedFooterBuilder()
             {
                 IconUrl = Context.User.GetAvatarUrl(),
-                Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
             };
             embed.WithFooter(footer);
             embed.WithCurrentTimestamp();
@@ -1140,7 +1140,7 @@ namespace FredBotNETCore.Modules
             {
                 bool isBanned = false;
                 IUser user = null;
-                var bans = await Context.Guild.GetBansAsync();
+                IReadOnlyCollection<Discord.Rest.RestBan> bans = await Context.Guild.GetBansAsync();
                 foreach (IBan ban in bans)
                 {
                     if (ban.User.Username == username || ban.User.Id.ToString() == username)
@@ -1164,7 +1164,7 @@ namespace FredBotNETCore.Modules
                     };
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
-                        Text = ($"ID: {user.Id}")
+                        Text = $"ID: {user.Id}"
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
@@ -1270,7 +1270,7 @@ namespace FredBotNETCore.Modules
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            Text = ($"ID: {user.Id}")
+                            Text = $"ID: {user.Id}"
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
@@ -1389,7 +1389,7 @@ namespace FredBotNETCore.Modules
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            Text = ($"ID: {user.Id}")
+                            Text = $"ID: {user.Id}"
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
@@ -1508,7 +1508,7 @@ namespace FredBotNETCore.Modules
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            Text = ($"ID: {user.Id}")
+                            Text = $"ID: {user.Id}"
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
@@ -1597,7 +1597,7 @@ namespace FredBotNETCore.Modules
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
                     IconUrl = Context.User.GetAvatarUrl(),
-                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                 };
                 embed.WithFooter(footer);
                 embed.WithCurrentTimestamp();
@@ -1653,7 +1653,7 @@ namespace FredBotNETCore.Modules
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
                             IconUrl = Context.User.GetAvatarUrl(),
-                            Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
@@ -1729,7 +1729,7 @@ namespace FredBotNETCore.Modules
             else
             {
                 SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
-                var messages = (banlog.GetMessagesAsync().Flatten()).Where(x => x.Embeds.Count > 0);
+                IAsyncEnumerable<IMessage> messages = banlog.GetMessagesAsync().Flatten().Where(x => x.Embeds.Count > 0);
                 string author = "", iconUrl = "", footerText = "";
                 IUserMessage msgToEdit = null;
                 IEmbed msgEmbed = null;
@@ -1762,7 +1762,7 @@ namespace FredBotNETCore.Modules
                 };
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
-                    Text = ($"{footerText}")
+                    Text = $"{footerText}"
                 };
                 foreach (EmbedField field in msgEmbed.Fields)
                 {
@@ -1853,7 +1853,7 @@ namespace FredBotNETCore.Modules
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            Text = ($"ID: {user.Id}")
+                            Text = $"ID: {user.Id}"
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
@@ -1907,18 +1907,18 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task EndGiveaway()
         {
-            var messages = await Context.Channel.GetMessagesAsync(100).FlattenAsync();
+            IEnumerable<IMessage> messages = await Context.Channel.GetMessagesAsync(100).FlattenAsync();
             IUserMessage message = null;
             IEmbed msgEmbed = null;
             EmbedBuilder embed = new EmbedBuilder();
             string item = null;
             int winners = 0;
-            foreach (var msg in messages)
+            foreach (IMessage msg in messages)
             {
                 if (msg.Content.Equals(":confetti_ball: **Giveaway** :confetti_ball:") && msg.Author.Id == Context.Guild.CurrentUser.Id)
                 {
                     message = msg as IUserMessage;
-                    var msgEmbeds = msg.Embeds;
+                    IReadOnlyCollection<IEmbed> msgEmbeds = msg.Embeds;
                     msgEmbed = msgEmbeds.ElementAt(0);
                     embed.Title = msgEmbed.Title;
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
@@ -1936,7 +1936,7 @@ namespace FredBotNETCore.Modules
                 embed.Footer.Text = $"Winners: {winners} | Ended at";
                 await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
 
-                var users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
+                IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
                 if (users.Count() <= 1)
                 {
                     await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
@@ -1995,12 +1995,12 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Repick()
         {
-            var messages = await Context.Channel.GetMessagesAsync(100).FlattenAsync();
+            IEnumerable<IMessage> messages = await Context.Channel.GetMessagesAsync(100).FlattenAsync();
             IUserMessage message = null;
             IEmbed msgEmbed = null;
             EmbedBuilder embed = new EmbedBuilder();
             int winners = 0;
-            foreach (var msg in messages)
+            foreach (IMessage msg in messages)
             {
                 if (msg.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:") && msg.Author.Id == Context.Guild.CurrentUser.Id)
                 {
@@ -2011,7 +2011,7 @@ namespace FredBotNETCore.Modules
             }
             if (message != null)
             {
-                var users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
+                IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
                 embed = msgEmbed as EmbedBuilder;
                 winners = int.Parse(Extensions.GetBetween(embed.Footer.Text, "Winners: ", " | Ends at"));
                 if (users.Count() <= 1)
@@ -2127,11 +2127,11 @@ namespace FredBotNETCore.Modules
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
                     IconUrl = Context.User.GetAvatarUrl(),
-                    Text = ($"Winners: {winners} | Ends at")
+                    Text = $"Winners: {winners} | Ends at"
                 };
                 embed.WithFooter(footer);
                 embed.Title = $"{item}";
-                embed.WithTimestamp((DateTime.Now).AddMinutes(minutes));
+                embed.WithTimestamp(DateTime.Now.AddMinutes(minutes));
                 embed.Description = $"React with <:artifact:260898610734956574> to enter the giveaway.\nTime left: {minutes} minutes.";
                 IUserMessage message = null;
                 try
@@ -2163,8 +2163,8 @@ namespace FredBotNETCore.Modules
                 }
                 if (!ended)
                 {
-                    var user = message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999);
-                    var users = user.ElementAt(0).Result;
+                    IAsyncEnumerable<IReadOnlyCollection<IUser>> user = message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999);
+                    IReadOnlyCollection<IUser> users = user.ElementAt(0).Result;
                     if (users.Count <= 1)
                     {
                         await giveawayChannel.SendMessageAsync("Nobody entered the giveaway.");
@@ -2391,7 +2391,7 @@ namespace FredBotNETCore.Modules
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            Text = ($"ID: {user.Id}")
+                            Text = $"ID: {user.Id}"
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
@@ -2415,7 +2415,7 @@ namespace FredBotNETCore.Modules
                             {
                                 await user.SendMessageAsync($"{Context.User.Mention} you have been unmuted in **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention}.");
                             }
-                            catch(Discord.Net.HttpException)
+                            catch (Discord.Net.HttpException)
                             {
                                 //can't send message
                             }
@@ -2476,10 +2476,10 @@ namespace FredBotNETCore.Modules
         [RequireUserPermission(GuildPermission.KickMembers)]
         public async Task BotInfo()
         {
-            using (var process = Process.GetCurrentProcess())
+            using (Process process = Process.GetCurrentProcess())
             {
-                var embed = new EmbedBuilder();
-                var application = await Context.Client.GetApplicationInfoAsync();  /*for lib version*/
+                EmbedBuilder embed = new EmbedBuilder();
+                Discord.Rest.RestApplication application = await Context.Client.GetApplicationInfoAsync();  /*for lib version*/
                 embed.ImageUrl = application.IconUrl;  /*pulls bot Avatar. Not needed can be removed*/
                 embed.WithCurrentTimestamp();
                 embed.Title = "__**Bot Info**__";
@@ -2496,8 +2496,8 @@ namespace FredBotNETCore.Modules
                 .AddField(y =>  /*add new field, rinse and repeat*/
                 {
                     y.Name = "Uptime.";
-                    var time = DateTime.Now - process.StartTime;  /*Subtracts current time and start time to get Uptime*/
-                    var sb = new StringBuilder();
+                    TimeSpan time = DateTime.Now - process.StartTime;  /*Subtracts current time and start time to get Uptime*/
+                    StringBuilder sb = new StringBuilder();
                     if (time.Days > 0)
                     {
                         sb.Append($"{time.Days}d ");  /*Pulls the Uptime in Days*/
@@ -2552,7 +2552,7 @@ namespace FredBotNETCore.Modules
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
                 {
                     IconUrl = Context.User.GetAvatarUrl(),
-                    Text = ($"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})")
+                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                 };
                 embed.WithFooter(footer);
 
@@ -2593,11 +2593,11 @@ namespace FredBotNETCore.Modules
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
                         IconUrl = Context.User.GetAvatarUrl(),
-                        Text = ($"ID: {user.Id}")
+                        Text = $"ID: {user.Id}"
                     };
                     embed.Description = $"{user.Mention}";
                     string roleList = "";
-                    var guildusers = Context.Guild.Users.OrderBy(x => x.JoinedAt);
+                    IOrderedEnumerable<SocketGuildUser> guildusers = Context.Guild.Users.OrderBy(x => x.JoinedAt);
                     int position = 0;
                     string joinedMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.JoinedAt.Value.Month);
                     string joinedDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.JoinedAt.Value.DayOfWeek);
@@ -2699,7 +2699,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ServerInfo()
         {
-            var gld = Context.Guild as SocketGuild;
+            SocketGuild gld = Context.Guild as SocketGuild;
             EmbedAuthorBuilder auth = new EmbedAuthorBuilder() // Shows the Name of the user
             {
                 Name = gld.Name,
@@ -2713,7 +2713,7 @@ namespace FredBotNETCore.Modules
             string guildName = gld.Name;
             ulong guildID = gld.Id;
             SocketGuildUser owner = gld.Owner;
-            var guildCreatedAt = gld.CreatedAt;
+            DateTimeOffset guildCreatedAt = gld.CreatedAt;
             string guildRegion = gld.VoiceRegionId;
             int guildUsers = gld.MemberCount;
             int guildRoles = gld.Roles.Count;
@@ -2727,7 +2727,7 @@ namespace FredBotNETCore.Modules
             EmbedFooterBuilder footer = new EmbedFooterBuilder()
             {
                 IconUrl = Context.User.GetAvatarUrl(),
-                Text = ($"Server Created | {createdAt}")
+                Text = $"Server Created | {createdAt}"
             };
             embed.AddField(y =>
             {
@@ -2838,7 +2838,7 @@ namespace FredBotNETCore.Modules
             if (username == null)
             {
                 await Context.Message.DeleteAsync();
-                var items = Context.Channel.GetMessagesAsync(delete).Flatten();
+                IAsyncEnumerable<IMessage> items = Context.Channel.GetMessagesAsync(delete).Flatten();
                 if (delete == 1)
                 {
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message in {channel.Mention} .");
@@ -2865,7 +2865,7 @@ namespace FredBotNETCore.Modules
                     {
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         await Context.Message.DeleteAsync();
-                        var usermessages = (Context.Channel.GetMessagesAsync().Flatten()).Where(x => x.Author == user).Take(delete);
+                        IAsyncEnumerable<IMessage> usermessages = Context.Channel.GetMessagesAsync().Flatten().Where(x => x.Author == user).Take(delete);
                         if (delete == 1)
                         {
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
@@ -2948,7 +2948,7 @@ namespace FredBotNETCore.Modules
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            Text = ($"ID: {user.Id}")
+                            Text = $"ID: {user.Id}"
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
@@ -3052,7 +3052,7 @@ namespace FredBotNETCore.Modules
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            Text = ($"ID: {user.Id}")
+                            Text = $"ID: {user.Id}"
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
@@ -3156,7 +3156,7 @@ namespace FredBotNETCore.Modules
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            Text = ($"ID: {user.Id}")
+                            Text = $"ID: {user.Id}"
                         };
                         SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                         IEnumerable<IRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
@@ -3245,7 +3245,7 @@ namespace FredBotNETCore.Modules
                                 };
                                 EmbedFooterBuilder footer2 = new EmbedFooterBuilder()
                                 {
-                                    Text = ($"ID: {user.Id}")
+                                    Text = $"ID: {user.Id}"
                                 };
                                 embed2.WithCurrentTimestamp();
                                 embed2.WithFooter(footer2);

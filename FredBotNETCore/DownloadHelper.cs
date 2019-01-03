@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FredBotNETCore
 {
-    class DownloadHelper
+    internal class DownloadHelper
     {
         private static readonly string DownloadPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp") /*Path.GetTempPath() ??*/ ;
 
@@ -71,7 +71,8 @@ namespace FredBotNETCore
         {
             TaskCompletionSource<Tuple<string, string>> tcs = new TaskCompletionSource<Tuple<string, string>>();
 
-            new Thread(() => {
+            new Thread(() =>
+            {
                 string title;
                 string duration;
 
@@ -91,7 +92,7 @@ namespace FredBotNETCore
                 youtubedl.WaitForExit();
                 //Read Title
                 string[] lines = youtubedl.StandardOutput.ReadToEnd().Split('\n');
-                
+
                 if (lines.Length >= 2)
                 {
                     title = lines[0];
@@ -110,7 +111,9 @@ namespace FredBotNETCore
 
             Tuple<string, string> result = await tcs.Task;
             if (result == null)
+            {
                 throw new Exception("youtube-dl.exe failed to receive title!");
+            }
 
             return result;
         }
@@ -124,7 +127,8 @@ namespace FredBotNETCore
         {
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
-            new Thread(() => {
+            new Thread(() =>
+            {
                 string file;
                 string[] urlS = url.Split("watch?v=");
                 do
@@ -162,7 +166,9 @@ namespace FredBotNETCore
 
             string result = await tcs.Task;
             if (result == null)
+            {
                 result = "0";
+            }
 
             //Remove \n at end of Line
             result = result.Replace("\n", "").Replace(Environment.NewLine, "");
@@ -179,7 +185,8 @@ namespace FredBotNETCore
         {
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
-            new Thread(() => {
+            new Thread(() =>
+            {
                 string file;
                 int count = 0;
                 do
@@ -217,7 +224,9 @@ namespace FredBotNETCore
 
             string result = await tcs.Task;
             if (result == null)
+            {
                 throw new Exception("youtube-dl.exe failed to download!");
+            }
 
             //Remove \n at end of Line
             result = result.Replace("\n", "").Replace(Environment.NewLine, "");

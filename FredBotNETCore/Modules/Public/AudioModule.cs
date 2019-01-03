@@ -1,18 +1,18 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Audio;
-using Discord.WebSocket;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
 using Discord.Commands;
+using Discord.WebSocket;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FredBotNETCore.Modules.Public
 {
@@ -20,33 +20,32 @@ namespace FredBotNETCore.Modules.Public
     [Summary("Module containing all of the music commands.")]
     public class AudioModule : ModuleBase<SocketCommandContext>
     {
-        static readonly string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
-        YouTubeService youtubeService = new YouTubeService(new BaseClientService.Initializer()
+        private static readonly string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
+        private readonly YouTubeService youtubeService = new YouTubeService(new BaseClientService.Initializer()
         {
             ApiKey = new StreamReader(path: Path.Combine(downloadPath, "YoutubeApiKey.txt")).ReadLine(),
             ApplicationName = "Fred bot"
         });
         private IVoiceChannel _voiceChannel;
         private static TaskCompletionSource<bool> _tcs = new TaskCompletionSource<bool>();
-        private CancellationTokenSource _disposeToken = new CancellationTokenSource();
+        private readonly CancellationTokenSource _disposeToken = new CancellationTokenSource();
         private static IAudioClient Audio { get; set; }
         private static AudioOutStream Discord { get; set; }
         private static Queue<Tuple<string, string, string, string, string, string, string>> Queue { get; set; } = new Queue<Tuple<string, string, string, string, string, string, string>>();
         private static bool Playing { get; set; } = false;
-        static bool _internalPause = false;
+
+        private static bool _internalPause = false;
         private static bool Pause
         {
-            get
-            {
-                return _internalPause;
-            }
+            get => _internalPause;
             set
             {
                 new Thread(() => _tcs.TrySetResult(value)).Start();
                 _internalPause = value;
             }
         }
-        static bool _internalSkip = false;
+
+        private static bool _internalSkip = false;
         private static bool Skip
         {
             get
@@ -160,7 +159,7 @@ namespace FredBotNETCore.Modules.Public
                             string jsonResponse = myDownloader.DownloadString(
                             "https://www.googleapis.com/youtube/v3/videos?id=" + urlS[1] + "&key="
                             + File.ReadAllText(Path.Combine(downloadPath, "YoutubeApiKey.txt")) + "&part=contentDetails");
-                            var duration = System.Xml.XmlConvert.ToTimeSpan(Extensions.GetBetween(jsonResponse, "\"duration\": \"", "\","));
+                            TimeSpan duration = System.Xml.XmlConvert.ToTimeSpan(Extensions.GetBetween(jsonResponse, "\"duration\": \"", "\","));
                             jsonResponse = myDownloader.DownloadString(
                             "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + urlS[1] + "&key="
                             + File.ReadAllText(Path.Combine(downloadPath, "YoutubeApiKey.txt")));
@@ -175,14 +174,14 @@ namespace FredBotNETCore.Modules.Public
                             }
                             else
                             {
-                                var searchListRequest = youtubeService.Search.List("snippet");
+                                SearchResource.ListRequest searchListRequest = youtubeService.Search.List("snippet");
                                 searchListRequest.Q = title;
                                 searchListRequest.MaxResults = 1;
                                 searchListRequest.Type = "video";
-                                var searchListResponse = await searchListRequest.ExecuteAsync();
+                                SearchListResponse searchListResponse = await searchListRequest.ExecuteAsync();
                                 string channel = "";
                                 ThumbnailDetails thumbnails = null;
-                                foreach (var searchResult in searchListResponse.Items)
+                                foreach (Google.Apis.YouTube.v3.Data.SearchResult searchResult in searchListResponse.Items)
                                 {
                                     switch (searchResult.Id.Kind)
                                     {
@@ -231,7 +230,7 @@ namespace FredBotNETCore.Modules.Public
                                 embed.WithCurrentTimestamp();
                                 string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp");
                                 string location = Path.Combine(downloadPath, urlS[1] + ".webm.part");
-                                var vidInfo = new Tuple<string, string, string, string, string, string, string>(location, title, duration.Minutes + ":" + duration.Seconds, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
+                                Tuple<string, string, string, string, string, string, string> vidInfo = new Tuple<string, string, string, string, string, string, string>(location, title, duration.Minutes + ":" + duration.Seconds, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
                                 if (Queue.Any(x => x.Item1.Contains(urlS[1])))
                                 {
                                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
@@ -278,14 +277,14 @@ namespace FredBotNETCore.Modules.Public
                         }
                         else
                         {
-                            var searchListRequest = youtubeService.Search.List("snippet");
+                            SearchResource.ListRequest searchListRequest = youtubeService.Search.List("snippet");
                             searchListRequest.Q = url;
                             searchListRequest.MaxResults = 1;
                             searchListRequest.Type = "video";
-                            var searchListResponse = await searchListRequest.ExecuteAsync();
+                            SearchListResponse searchListResponse = await searchListRequest.ExecuteAsync();
                             string channel = "", title = "";
                             ThumbnailDetails thumbnails = null;
-                            foreach (var searchResult in searchListResponse.Items)
+                            foreach (Google.Apis.YouTube.v3.Data.SearchResult searchResult in searchListResponse.Items)
                             {
                                 switch (searchResult.Id.Kind)
                                 {
@@ -305,7 +304,7 @@ namespace FredBotNETCore.Modules.Public
                             string jsonResponse = myDownloader.DownloadString(
                             "https://www.googleapis.com/youtube/v3/videos?id=" + urlS[1] + "&key="
                             + File.ReadAllText(Path.Combine(downloadPath, "YoutubeApiKey.txt")) + "&part=contentDetails");
-                            var duration = System.Xml.XmlConvert.ToTimeSpan(Extensions.GetBetween(jsonResponse, "\"duration\": \"", "\","));
+                            TimeSpan duration = System.Xml.XmlConvert.ToTimeSpan(Extensions.GetBetween(jsonResponse, "\"duration\": \"", "\","));
                             if (duration.TotalMinutes > 10)
                             {
                                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
@@ -355,7 +354,7 @@ namespace FredBotNETCore.Modules.Public
                                 embed.WithCurrentTimestamp();
                                 string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp");
                                 string location = Path.Combine(downloadPath, urlS[1] + ".webm");
-                                var vidInfo = new Tuple<string, string, string, string, string, string, string>(location, title, duration.Minutes + ":" + duration.Seconds, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
+                                Tuple<string, string, string, string, string, string, string> vidInfo = new Tuple<string, string, string, string, string, string, string>(location, title, duration.Minutes + ":" + duration.Seconds, Context.User.Id.ToString(), channel, thumbnails.High.Url, url);
                                 if (Queue.Any(x => x.Item1.Contains(urlS[1])))
                                 {
                                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
@@ -624,7 +623,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
-                        var item = Queue.ElementAt(pos-1);
+                        Tuple<string, string, string, string, string, string, string> item = Queue.ElementAt(pos - 1);
                         Queue = new Queue<Tuple<string, string, string, string, string, string, string>>(Queue.Where(s => s != item));
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} removed **{Format.Sanitize(item.Item2)}** from the queue.");
                     }
@@ -951,11 +950,11 @@ namespace FredBotNETCore.Modules.Public
                 {
                     if (Queue.Count > 0)
                     {
-                        var song = Queue.Peek();
+                        Tuple<string, string, string, string, string, string, string> song = Queue.Peek();
                         Queue.Clear();
                         NowPlaying.Clear();
                         PlayingUrl = song.Item7;
-                        var _ = RemoveFiles();
+                        Task _ = RemoveFiles();
                     }
                     Playing = false;
                     Pause = true;
@@ -1007,10 +1006,10 @@ namespace FredBotNETCore.Modules.Public
                     byte[] buffer = new byte[bufferSize];
 
                     while (
-                        !Skip &&                                    
-                        !fail &&                                    
-                        !_disposeToken.IsCancellationRequested &&   
-                        !exit                                       
+                        !Skip &&
+                        !fail &&
+                        !_disposeToken.IsCancellationRequested &&
+                        !exit
                             )
                     {
                         try
@@ -1041,10 +1040,10 @@ namespace FredBotNETCore.Modules.Public
                         {
                             exit = true;
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
-                            var user =  Context.Client.GetUser(181853112045142016);
-                            var parts = e.ToString().SplitInParts(1990);
+                            SocketUser user = Context.Client.GetUser(181853112045142016);
+                            IEnumerable<string> parts = e.ToString().SplitInParts(1990);
                             foreach (string part in parts)
                             {
                                 await user.SendMessageAsync("```" + part + "```");
@@ -1091,7 +1090,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     if (!pause)
                     {
-                        var song = Queue.Peek();
+                        Tuple<string, string, string, string, string, string, string> song = Queue.Peek();
                         await Context.Channel.SendMessageAsync($"Now playing: **{Format.Sanitize(song.Item2)}** ({song.Item3})");
                         NowPlaying.Enqueue(song);
                         await SendAudio(song.Item1);
@@ -1099,12 +1098,12 @@ namespace FredBotNETCore.Modules.Public
                         try
                         {
                             PlayingUrl = song.Item7;
-                            var _ = RemoveFiles();
+                            Task _ = RemoveFiles();
                         }
                         catch (Exception e)
                         {
-                            var user = Context.Client.GetUser(181853112045142016);
-                            var parts = e.ToString().SplitInParts(1990);
+                            SocketUser user = Context.Client.GetUser(181853112045142016);
+                            IEnumerable<string> parts = e.ToString().SplitInParts(1990);
                             foreach (string part in parts)
                             {
                                 await user.SendMessageAsync("```" + part + "```");
@@ -1114,7 +1113,7 @@ namespace FredBotNETCore.Modules.Public
                         {
                             if (Loop)
                             {
-                                var item = Queue.Peek();
+                                Tuple<string, string, string, string, string, string, string> item = Queue.Peek();
                                 if (song == item)
                                 {
                                     Queue.Dequeue();
@@ -1124,7 +1123,7 @@ namespace FredBotNETCore.Modules.Public
                             }
                             else
                             {
-                                var item = Queue.Peek();
+                                Tuple<string, string, string, string, string, string, string> item = Queue.Peek();
                                 if (song == item)
                                 {
                                     Queue.Dequeue();
@@ -1132,17 +1131,17 @@ namespace FredBotNETCore.Modules.Public
                                 NowPlaying.Dequeue();
                             }
                         }
-                        var voiceChannel = Context.Guild.CurrentUser.VoiceChannel;
+                        SocketVoiceChannel voiceChannel = Context.Guild.CurrentUser.VoiceChannel;
                         if (voiceChannel.Users.Count < 2)
                         {
                             await Context.Channel.SendMessageAsync("Voice channel empty. Stopping music.");
                             if (Queue.Count > 0)
                             {
-                                var song1 = Queue.Peek();
+                                Tuple<string, string, string, string, string, string, string> song1 = Queue.Peek();
                                 Queue.Clear();
                                 NowPlaying.Clear();
                                 PlayingUrl = song.Item7;
-                                var _ = RemoveFiles();
+                                Task _ = RemoveFiles();
                             }
                             Playing = false;
                             Pause = true;

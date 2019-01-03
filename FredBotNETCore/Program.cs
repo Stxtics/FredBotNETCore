@@ -1,14 +1,14 @@
-﻿using System;
-using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
+﻿using Discord;
 using Discord.Commands;
-using System.Net.Http;
+using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
+using System;
 using System.Diagnostics;
-using System.Text;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace FredBotNETCore
 {
@@ -40,7 +40,9 @@ namespace FredBotNETCore
             {
                 if (_client.ConnectionState == ConnectionState.Connecting ||
                 _client.ConnectionState == ConnectionState.Connected)
+                {
                     return;
+                }
             }
 
             _client = new DiscordSocketClient(new DiscordSocketConfig
@@ -90,15 +92,15 @@ namespace FredBotNETCore
 
         private IServiceProvider ConfigureServices()
         {
-            var services = new ServiceCollection()
+            IServiceCollection services = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false }));
 
-            var provider = new DefaultServiceProviderFactory().CreateServiceProvider(services);
+            IServiceProvider provider = new DefaultServiceProviderFactory().CreateServiceProvider(services);
 
             return provider;
-        }   
-        
+        }
+
         #endregion
 
         #region Timer Loop
@@ -123,7 +125,7 @@ namespace FredBotNETCore
                     foreach (string server_name in servers)
                     {
                         guildId = Extensions.GetBetween(server_name, "guild_id\":\"", "\"");
-                        if(guildId.Equals("0"))
+                        if (guildId.Equals("0"))
                         {
                             happyHour = Extensions.GetBetween(server_name, "hour\":\"", "\"");
                             string serverName = Extensions.GetBetween(server_name, "server_name\":\"", "\"");
@@ -185,9 +187,9 @@ namespace FredBotNETCore
             while (true)
             {
                 await Task.Delay(new Random().Next(300000, 600000));
-                var process = Process.GetCurrentProcess();
-                var time = DateTime.Now - process.StartTime;
-                var sb = new StringBuilder();
+                Process process = Process.GetCurrentProcess();
+                TimeSpan time = DateTime.Now - process.StartTime;
+                StringBuilder sb = new StringBuilder();
                 if (time.Days > 0)
                 {
                     sb.Append($"{time.Days}d ");  /*Pulls the Uptime in Days*/
@@ -240,7 +242,7 @@ namespace FredBotNETCore
             }
 
             Console.WriteLine($"{DateTime.Now,-19} [{msg.Severity,8}] {msg.Source}: {msg.Message}");
-                Console.ForegroundColor = log;
+            Console.ForegroundColor = log;
 
             return Task.CompletedTask;
         }
