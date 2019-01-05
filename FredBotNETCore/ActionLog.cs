@@ -857,15 +857,6 @@ namespace FredBotNETCore
                 {
                     embed.Description = $"**{Format.Sanitize(user.Username)}#{user.Discriminator}** joined the guild. Account created **{(DateTime.Now.ToUniversalTime() - user.CreatedAt.ToUniversalTime()).Days}** days ago.\nTotal members: **{user.Guild.MemberCount}**";
                 }
-                SocketGuild prg = Client.GetGuild(249657315576381450);
-                try
-                {
-                    await prg.GetUser(user.Id).KickAsync();
-                }
-                catch (Exception)
-                {
-                    //couldn't kick or get user
-                }
                 await log.SendMessageAsync("", false, embed.Build());
                 List<string> result = Database.CheckExistingUser(user);
                 if (result.Count() <= 0)
@@ -882,7 +873,7 @@ namespace FredBotNETCore
                     };
                     await user.AddRolesAsync(roles: muted, options: options);
                 }
-                else if ((result.Count() <= 0))
+                else if (result.Count() <= 0)
                 {
                     RequestOptions options = new RequestOptions()
                     {
