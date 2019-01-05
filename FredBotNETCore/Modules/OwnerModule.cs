@@ -9,32 +9,6 @@ namespace FredBotNETCore.Modules
 {
     public class OwnerModule : ModuleBase<SocketCommandContext>
     {
-        [Command("sendpms", RunMode = RunMode.Async)]
-        [Alias("senddms")]
-        [Summary("Sends all users in PRG a PM about new server")]
-        [RequireContext(ContextType.Guild)]
-        [RequireOwner]
-        public async Task SendPM()
-        {
-            SocketGuild prg = Context.Client.GetGuild(249657315576381450);
-            List<string> users = new List<string>();
-            foreach (SocketGuildUser user in prg.Users)
-            {
-                if (user.Id != 227008945963794432)
-                {
-                    try
-                    {
-                        await user.SendMessageAsync("PRG is moving to a new server. Use https://discord.gg/kcWBBBj to join it.");
-                    }
-                    catch (Discord.Net.HttpException)
-                    {
-                        users.Add(user.Username + "#" + user.Discriminator);
-                    }
-                }
-            }
-            await Context.Guild.GetTextChannel(528692074917134346).SendMessageAsync(string.Join(",", users.ToArray()));
-        }
-
         [Command("setbalance", RunMode = RunMode.Async)]
         [Alias("balanceset")]
         [Summary("Sets balance for a user")]
