@@ -1936,7 +1936,7 @@ namespace FredBotNETCore.Modules
                 embed.Footer.Text = $"Winners: {winners} | Ended at";
                 await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
 
-                IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
+                IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999).FlattenAsync();
                 if (users.Count() <= 1)
                 {
                     await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
@@ -2011,7 +2011,7 @@ namespace FredBotNETCore.Modules
             }
             if (message != null)
             {
-                IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999).FlattenAsync();
+                IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999).FlattenAsync();
                 embed = msgEmbed as EmbedBuilder;
                 winners = int.Parse(Extensions.GetBetween(embed.Footer.Text, "Winners: ", " | Ends at"));
                 if (users.Count() <= 1)
@@ -2132,7 +2132,7 @@ namespace FredBotNETCore.Modules
                 embed.WithFooter(footer);
                 embed.Title = $"{item}";
                 embed.WithTimestamp(DateTime.Now.AddMinutes(minutes));
-                embed.Description = $"React with <:artifact:260898610734956574> to enter the giveaway.\nTime left: {minutes} minutes.";
+                embed.Description = $"React with <:artifact:530404386229321749> to enter the giveaway.\nTime left: {minutes} minutes.";
                 IUserMessage message = null;
                 try
                 {
@@ -2143,7 +2143,7 @@ namespace FredBotNETCore.Modules
                     await Context.Channel.SendMessageAsync($"{Context.User.Mention} I do not have permission to speak in that channel.");
                     return;
                 }
-                await message.AddReactionAsync(Emote.Parse("<:artifact:260898610734956574>"));
+                await message.AddReactionAsync(Emote.Parse("<:artifact:530404386229321749>"));
                 int temptime = Convert.ToInt32(minutes) * 60000, divide = Convert.ToInt32(minutes / (minutes / 10)), count = 1;
                 bool ended = false;
                 while (count < divide)
@@ -2156,14 +2156,14 @@ namespace FredBotNETCore.Modules
                     }
                     else
                     {
-                        embed.Description = $"React with <:artifact:260898610734956574> to enter the giveaway.\nTime left: {minutes - (minutes / 10 * count)} minutes.";
+                        embed.Description = $"React with <:artifact:530404386229321749> to enter the giveaway.\nTime left: {minutes - (minutes / 10 * count)} minutes.";
                         await message.ModifyAsync(x => x.Embed = embed.Build());
                         count = count + 1;
                     }
                 }
                 if (!ended)
                 {
-                    IAsyncEnumerable<IReadOnlyCollection<IUser>> user = message.GetReactionUsersAsync(Emote.Parse("<:artifact:260898610734956574>"), 9999);
+                    IAsyncEnumerable<IReadOnlyCollection<IUser>> user = message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999);
                     IReadOnlyCollection<IUser> users = user.ElementAt(0).Result;
                     if (users.Count <= 1)
                     {
@@ -2597,7 +2597,7 @@ namespace FredBotNETCore.Modules
                     };
                     embed.Description = $"{user.Mention}";
                     string roleList = "";
-                    IOrderedEnumerable<SocketGuildUser> guildusers = Context.Guild.Users.OrderBy(x => x.JoinedAt);
+                    IOrderedEnumerable<SocketGuildUser> guildUsers = Context.Guild.Users.OrderBy(x => x.JoinedAt);
                     int position = 0;
                     string joinedMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.JoinedAt.Value.Month);
                     string joinedDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.JoinedAt.Value.DayOfWeek);
@@ -2607,11 +2607,11 @@ namespace FredBotNETCore.Modules
                     {
                         pr2name = "N/A";
                     }
-                    foreach (SocketGuildUser member in guildusers)
+                    foreach (SocketGuildUser member in guildUsers)
                     {
                         if (member.Id == user.Id)
                         {
-                            position = guildusers.ToList().IndexOf(member) + 1;
+                            position = guildUsers.ToList().IndexOf(member) + 1;
                         }
                     }
                     foreach (SocketRole role in user.Roles)
