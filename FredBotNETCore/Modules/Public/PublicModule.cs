@@ -885,11 +885,11 @@ namespace FredBotNETCore.Modules.Public
                                 }
                                 if (group == "2")
                                 {
-                                    group = "Moderator";
+                                    group = "[Moderator](https://pr2hub.com/staff.php)";
                                 }
                                 if (group == "3")
                                 {
-                                    group = "Admin";
+                                    group = "[Admin](https://pr2hub.com/staff.php)";
                                 }
                                 if (createdat.Contains("1970"))
                                 {
@@ -1042,11 +1042,11 @@ namespace FredBotNETCore.Modules.Public
                     }
                     if (group == "2")
                     {
-                        group = "Moderator";
+                        group = "[Moderator](https://pr2hub.com/staff.php)";
                     }
                     if (group == "3")
                     {
-                        group = "Admin";
+                        group = "[Admin](https://pr2hub.com/staff.php)";
                     }
                     if (createdat.Contains("1970"))
                     {
