@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace FredBotNETCore.Modules
 {
     [Name("Admin")]
-    [Summary("Module for commands of administrators of Platform Racing Group")]
+    [Summary("Module for commands of administrators of Jiggmin's Village")]
     public class AdminModule : ModuleBase<SocketCommandContext>
     {
         [Command("resetpr2name", RunMode = RunMode.Async)]

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace FredBotNETCore.Modules
 {
     [Name("Moderator")]
-    [Summary("Module for commands of moderators and up of Platform Racing Group")]
+    [Summary("Module for commands of moderators and up of Jiggmin's Village")]
     public class ModeratorModule : ModuleBase<SocketCommandContext>
     {
         [Command("updatetoken", RunMode = RunMode.Async)]
