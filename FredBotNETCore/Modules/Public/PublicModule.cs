@@ -1819,22 +1819,39 @@ namespace FredBotNETCore.Modules.Public
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
-                    string[] ban = text.Split('<');
-                    if (text.Contains("<p>--- This ban has been lifted by "))
+                    if (Extensions.GetBetween(text, "---------------------------------------------</p><p>--- ", " ---</p><p>--- Reason: ").Contains("This ban has been lifted by "))
                     {
-                        string lifted = ban[19].Substring(6).TrimEnd(new char[] { '-', '-', '-', ' ' });
-                        string reason = ban[21].Substring(14).TrimEnd(new char[] { '-', '-', '-', ' ' });
-                        string bantext = ban[28].Substring(2);
-                        string reason1 = ban[30].Substring(10);
-                        string expire = ban[32].Substring(2);
-                        if (reason1.Length <= 0)
+                        string liftedMod = Extensions.GetBetween(text, "</p><p>--- This ban has been lifted by ", " ---</p><p>--- Reason: ");
+                        string liftedReason = Extensions.GetBetween(text, $"{liftedMod} ---</p><p>--- Reason: ", " ---</p><p>-----");
+                        string mod = Extensions.GetBetween(text, "</p><p>&nbsp;</p></b><p>", " banned ");
+                        string user = Extensions.GetBetween(text, $"{mod} banned ", " for ");
+                        string length = Extensions.GetBetween(text, $"{user} for ", " on ");
+                        string date = Extensions.GetBetween(text, $"{length} on ", ".</p>");
+                        string reason = Extensions.GetBetween(text, "<p>Reason: ", "</p>");
+                        string expires = Extensions.GetBetween(text, "<p>This ban will expire on ", ".</p>");
+                        liftedMod = $"[{Format.Sanitize(Uri.UnescapeDataString(liftedMod))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(liftedMod)})";
+                        mod = $"[{Format.Sanitize(Uri.UnescapeDataString(mod))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(mod)})";
+                        user = $"[{Format.Sanitize(Uri.UnescapeDataString(user))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(user)})";
+                        if (reason.Length <= 0)
                         {
-                            reason1 = "No reason was provided.";
+                            reason = "No reason was provided.";
                         }
                         embed.AddField(y =>
                         {
                             y.Name = "Lifted Ban";
-                            y.Value = $"{Format.Sanitize(lifted)}";
+                            y.Value = $"{Format.Sanitize("This ban has been lifted by " + liftedMod)}";
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = $"{Format.Sanitize(liftedReason)}";
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Ban Info";
+                            y.Value = Format.Sanitize($"{mod} banned {user} for {length} on {date}.");
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
@@ -1845,20 +1862,8 @@ namespace FredBotNETCore.Modules.Public
                         });
                         embed.AddField(y =>
                         {
-                            y.Name = "Ban Info";
-                            y.Value = $"{Format.Sanitize(bantext)}";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = $"{Format.Sanitize(reason1)}";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
                             y.Name = "Expires";
-                            y.Value = $"{expire}";
+                            y.Value = $"{expires}";
                             y.IsInline = true;
                         });
 
@@ -1866,13 +1871,18 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
-                        string bantext = ban[16].Substring(2);
-                        string reason = ban[18].Substring(10);
-                        string expire = ban[20].Substring(26);
+                        string mod = Extensions.GetBetween(text, "<div class='content'><p>", " banned ");
+                        string user = Extensions.GetBetween(text, $"{mod} banned ", " for ");
+                        string length = Extensions.GetBetween(text, $"{user} for ", " on ");
+                        string date = Extensions.GetBetween(text, $"{length} on ", ".</p>");
+                        string reason = Extensions.GetBetween(text, "<p>Reason: ", "</p>");
+                        string expires = Extensions.GetBetween(text, "<p>This ban will expire on ", ".</p>");
+                        mod = $"[{Format.Sanitize(Uri.UnescapeDataString(mod))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(mod)})";
+                        user = $"[{Format.Sanitize(Uri.UnescapeDataString(user))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(user)})";
                         embed.AddField(y =>
                         {
                             y.Name = "Ban Info";
-                            y.Value = $"{Format.Sanitize(bantext)}";
+                            y.Value = Format.Sanitize($"{mod} banned {user} for {length} on {date}.");
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
@@ -1884,7 +1894,7 @@ namespace FredBotNETCore.Modules.Public
                         embed.AddField(y =>
                         {
                             y.Name = "Expires";
-                            y.Value = $"{expire}";
+                            y.Value = $"{expires}";
                             y.IsInline = true;
                         });
 
