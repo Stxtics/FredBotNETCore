@@ -256,6 +256,7 @@ namespace FredBotNETCore
             _cmds.Log += LogException;
             ActionLog log = new ActionLog(_client);
             _client.MessageReceived += OnMessageReceived;
+            _client.MessageUpdated += OnMessageEdited;
 
             _client.UserJoined += log.AnnounceUserJoined;
             _client.UserLeft += log.AnnounceUserLeft;
@@ -283,6 +284,29 @@ namespace FredBotNETCore
             foreach (string part in parts)
             {
                 await user.SendMessageAsync("```" + part + "```");
+            }
+        }
+
+        public async Task OnMessageEdited(Cacheable<IMessage, ulong> message, SocketMessage m, ISocketMessageChannel chl)
+        {
+            if (!(m is SocketUserMessage msg))
+            {
+                return;
+            }
+            if (msg.Author.IsBot)
+            {
+                return;
+            }
+            if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
+            {
+                if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
+                {
+                    if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false)))
+                    {
+                        AutoMod mod = new AutoMod(_client);
+                        await mod.FilterMessage(msg, channel);
+                    }
+                }
             }
         }
 
