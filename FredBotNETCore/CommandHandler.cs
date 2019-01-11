@@ -297,7 +297,8 @@ namespace FredBotNETCore
             {
                 return;
             }
-            if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
+            IMessage message2 = await message.GetOrDownloadAsync();
+            if (message2.Content != msg.Content && msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
             {
                 if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
                 {
