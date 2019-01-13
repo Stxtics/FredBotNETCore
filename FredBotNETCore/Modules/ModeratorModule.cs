@@ -1926,14 +1926,14 @@ namespace FredBotNETCore.Modules
                         IconUrl = msgEmbed.Footer.Value.IconUrl
                     };
                     winners = int.Parse(Extensions.GetBetween(msgEmbed.Footer.Value.Text, "Winners: ", " | Ends at"));
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
+                    embed.WithFooter(footer);      
                     break;
                 }
             }
             if (message != null)
             {
                 embed.Footer.Text = $"Winners: {winners} | Ended at";
+                embed.WithCurrentTimestamp();
                 await message.ModifyAsync(x => x.Content = $":confetti_ball: **Giveaway Ended** :confetti_ball:");
 
                 IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999).FlattenAsync();
@@ -1958,7 +1958,7 @@ namespace FredBotNETCore.Modules
                     }
                     embed.Description = $"Winner: {randomUser.Mention}";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
-                    await Context.Channel.SendMessageAsync($"The winner of the {item} is {randomUser.Mention} !");
+                    await Context.Channel.SendMessageAsync($"The winner of the {embed.Title} is {randomUser.Mention} !");
                 }
                 else
                 {
@@ -2009,11 +2009,18 @@ namespace FredBotNETCore.Modules
                     break;
                 }
             }
-            if (message != null)
+            if (message != null && msgEmbed != null)
             {
-                IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999).FlattenAsync();
-                embed = msgEmbed as EmbedBuilder;
-                winners = int.Parse(Extensions.GetBetween(embed.Footer.Text, "Winners: ", " | Ends at"));
+                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                {
+                    Text = msgEmbed.Footer.Value.Text,
+                    IconUrl = msgEmbed.Footer.Value.IconUrl
+                };
+                embed.WithColor(new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)));
+                embed.WithFooter(footer);
+                embed.WithTitle(msgEmbed.Title);
+                IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999).FlattenAsync();;
+                winners = int.Parse(Extensions.GetBetween(msgEmbed.Footer.Value.Text, "Winners: ", " | Ended at"));
                 if (users.Count() <= 1)
                 {
                     await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
@@ -2035,7 +2042,7 @@ namespace FredBotNETCore.Modules
                 else if (winners == 1)
                 {
                     IUser randomUser = users.GetRandomElement();
-                    string oldWinner = embed.Description.Substring(8, embed.Description.Length);
+                    string oldWinner = msgEmbed.Description.Substring(8, msgEmbed.Description.Length - 8);
                     while (randomUser.Id == Context.Guild.CurrentUser.Id || randomUser.Mention.ToString().Equals(oldWinner))
                     {
                         randomUser = users.GetRandomElement();
@@ -2149,6 +2156,7 @@ namespace FredBotNETCore.Modules
                 while (count < divide)
                 {
                     await Task.Delay(temptime / divide);
+                    message = await Context.Channel.GetMessageAsync(message.Id) as IUserMessage;
                     if (message.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:"))
                     {
                         count = count + divide;
