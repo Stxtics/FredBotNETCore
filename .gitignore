@@ -278,3 +278,4 @@ __pycache__/
 /FredBotNETCore/TextFiles/AllowedChannels.txt
 /FredBotNETCore/TextFiles/LogChannel.txt
 /FredBotNETCore/TextFiles/MutedUsers.txt
+/FredBotNETCore/application.yml

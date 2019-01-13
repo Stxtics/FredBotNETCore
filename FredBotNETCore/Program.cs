@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FredBotNETCore.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Victoria;
 
 namespace FredBotNETCore
 {
@@ -19,6 +21,7 @@ namespace FredBotNETCore
 
         private DiscordSocketClient _client;
         private CommandHandler _commands;
+        private Lavalink _lavaLink;
         public static IServiceProvider _provider;
         private bool running = false;
         private bool retryConnection = false;
@@ -50,9 +53,11 @@ namespace FredBotNETCore
                 MessageCacheSize = 100,
                 LogLevel = LogSeverity.Verbose,
             });
-            _client.Log += Log;
-            _commands = new CommandHandler();
             _provider = ConfigureServices();
+            _client.Log += Log;
+            _lavaLink = _provider.GetRequiredService<Lavalink>();
+            _lavaLink.Log += Log;
+            _commands = new CommandHandler();
             running = false;
             retryConnection = true;
 
@@ -63,7 +68,7 @@ namespace FredBotNETCore
                     await _client.LoginAsync(tokenType: TokenType.Bot, token: new StreamReader(path: Path.Combine(downloadPath, "Token.txt")).ReadLine());
                     await _client.StartAsync();
 
-                    Task.WaitAny(Task.Factory.StartNew(() => CheckStatus()), Task.Factory.StartNew(() => GameLoop()), Task.Factory.StartNew(async () => await _commands.Install(_client)));
+                    Task.WaitAny(Task.Factory.StartNew(() => CheckStatus()), Task.Factory.StartNew(() => GameLoop()), Task.Factory.StartNew(async () => await _commands.Install(_client, _lavaLink, _provider)));
 
                     running = true;
 
@@ -94,7 +99,9 @@ namespace FredBotNETCore
         {
             IServiceCollection services = new ServiceCollection()
                 .AddSingleton(_client)
-                .AddSingleton(new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false }));
+                .AddSingleton(new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false }))
+                .AddSingleton<Lavalink>()
+                .AddSingleton<AudioService>();
 
             IServiceProvider provider = new DefaultServiceProviderFactory().CreateServiceProvider(services);
 

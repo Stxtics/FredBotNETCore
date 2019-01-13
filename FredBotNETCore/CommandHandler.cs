@@ -1,11 +1,13 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FredBotNETCore.Services;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Victoria;
 
 namespace FredBotNETCore
 {
@@ -13,6 +15,8 @@ namespace FredBotNETCore
     {
         private CommandService _cmds;
         public static DiscordSocketClient _client;
+        public static Lavalink _lavaLink;
+        private IServiceProvider _services;
 
         public static string Name;
 
@@ -242,14 +246,15 @@ namespace FredBotNETCore
             await channel.SendMessageAsync($"**{finder}** has found the artifact!");
         }
 
-        public async Task Install(DiscordSocketClient c)
+        public async Task Install(DiscordSocketClient c, Lavalink lavalink, IServiceProvider provider)
         {
 
             if (c.LoginState != LoginState.LoggedIn)
             {
                 return;
             }
-
+            _lavaLink = lavalink;
+            _services = provider;
             _client = c;
             _cmds = new CommandService();
             await _cmds.AddModulesAsync(Assembly.GetEntryAssembly(), Program._provider);
@@ -270,12 +275,21 @@ namespace FredBotNETCore
             _client.RoleCreated += log.AnnounceRoleCreated;
             _client.RoleDeleted += log.AnnounceRoleDeleted;
             _client.RoleUpdated += log.AnnounceRoleUpdated;
-            _client.Ready += async () =>
-            {
-                int users = _client.Guilds.Sum(g => g.Users.Count);
-                await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
-            };
+            _client.Ready += OnReady;
         }
+
+        private async Task OnReady()
+        {
+            int users = _client.Guilds.Sum(g => g.Users.Count);
+            await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
+            LavaNode node = await _lavaLink.AddNodeAsync(_client, new Configuration
+            {
+                Severity = LogSeverity.Info
+            }).ConfigureAwait(false);
+            AudioService aService = new AudioService();
+            aService.Initialize(node);
+        }
+
 
         public async Task LogException(LogMessage message)
         {
