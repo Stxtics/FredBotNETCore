@@ -41,224 +41,224 @@ namespace FredBotNETCore.Modules.Public
             }
         }
 
-        [Command("add", RunMode = RunMode.Async)]
-        [Alias("addsong")]
-        [Summary("Adds a song to play.")]
-        [RequireContext(ContextType.Guild)]
-        public async Task Add([Remainder] string url = null)
-        {
-            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
-            {
-                if (Blacklisted(Context.User))
-                {
-                    return;
-                }
-                if (string.IsNullOrWhiteSpace(url))
-                {
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Title = "Command: /add",
-                        Description = "**Description:** Add a song to the music queue.\n**Usage:** /add [url]\n**Example:** /add https://www.youtube.com/watch?v=ifFNeqzB5os",
-                        Color = new Color(220, 220, 220)
-                    };
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
-                }
-                else
-                {
-                    SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
-                    if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
-                    {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
-                    }
-                    else
-                    {
-                        bool result = Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult)
-                                  && (uriResult.Scheme == "http" || uriResult.Scheme == "https");
-                        if (Context.Guild.CurrentUser.VoiceChannel == null)
-                        {
-                            await audioService.Connect((Context.User as SocketGuildUser).VoiceChannel, Context.Channel);
-                        }
-                        if (audioService.Queue() != null && audioService.Queue().Items.Count() >= 20)
-                        {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue is full.");
-                        }
-                        else if (result)
-                        {
-                            if (url.Contains("&list="))
-                            {
-                                url = url.Split("&list=").First();
-                            }
-                            WebClient myDownloader = new WebClient
-                            {
-                                Encoding = System.Text.Encoding.UTF8
-                            };
-                            string[] urlS = url.Split("watch?v=");
-                            string jsonResponse = myDownloader.DownloadString(
-                            "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + urlS[1] + "&key="
-                            + File.ReadAllText(Path.Combine(downloadPath, "YoutubeApiKey.txt")));
-                            string title = Extensions.GetBetween(jsonResponse, "\"title\": \"", "\",");
-                            LavaTrack track = await audioService.GetTrack(title);
-                            if (track.Length.Minutes > 10 || (track.Length.Minutes == 10 && track.Length.Seconds > 0))
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
-                            }
-                            else if (audioService.Queue().Items.Any(x => x.Uri.Equals(track.Uri)))
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
-                            }
-                            else
-                            {
-                                SearchResource.ListRequest searchListRequest = youtubeService.Search.List("snippet");
-                                searchListRequest.Q = title;
-                                searchListRequest.MaxResults = 1;
-                                searchListRequest.Type = "video";
-                                SearchListResponse searchListResponse = await searchListRequest.ExecuteAsync();
-                                string channel = "";
-                                ThumbnailDetails thumbnails = null;
-                                foreach (Google.Apis.YouTube.v3.Data.SearchResult searchResult in searchListResponse.Items)
-                                {
-                                    switch (searchResult.Id.Kind)
-                                    {
-                                        case "youtube#video":
-                                            channel = searchResult.Snippet.ChannelTitle;
-                                            thumbnails = searchResult.Snippet.Thumbnails;
-                                            break;
-                                    }
-                                }
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                                    Author = new EmbedAuthorBuilder()
-                                    {
-                                        Name = "Add song",
-                                        Url = url
-                                    },
-                                    Fields = new List<EmbedFieldBuilder>
-                                        {
-                                            new EmbedFieldBuilder
-                                            {
-                                                Name = "Song",
-                                                Value = Format.Sanitize(title),
-                                                IsInline = false
-                                            },
-                                            new EmbedFieldBuilder
-                                            {
-                                                Name = "Duration",
-                                                Value = track.Length.Minutes + ":" + track.Length.Seconds,
-                                                IsInline = false
-                                            },
-                                            new EmbedFieldBuilder
-                                            {
-                                                Name = "Channel",
-                                                Value = Format.Sanitize(channel),
-                                                IsInline = false
-                                            }
-                                        },
-                                    Footer = new EmbedFooterBuilder()
-                                    {
-                                        IconUrl = Context.User.GetAvatarUrl(),
-                                        Text = $"Queued by {Context.User.Username}#{Context.User.Discriminator}"
-                                    },
-                                    ThumbnailUrl = thumbnails.High.Url
-                                };
-                                embed.WithCurrentTimestamp();
-                                await Context.Channel.SendMessageAsync("", false, embed.Build());
-                                if (audioService.Playing())
-                                {
-                                    audioService.QueueAdd(track);
-                                }
-                                else
-                                {
-                                    await audioService.Play(track);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            SearchResource.ListRequest searchListRequest = youtubeService.Search.List("snippet");
-                            searchListRequest.Q = url;
-                            searchListRequest.MaxResults = 1;
-                            searchListRequest.Type = "video";
-                            SearchListResponse searchListResponse = await searchListRequest.ExecuteAsync();
-                            string channel = "";
-                            ThumbnailDetails thumbnails = null;
-                            foreach (Google.Apis.YouTube.v3.Data.SearchResult searchResult in searchListResponse.Items)
-                            {
-                                switch (searchResult.Id.Kind)
-                                {
-                                    case "youtube#video":
-                                        channel = searchResult.Snippet.ChannelTitle;
-                                        thumbnails = searchResult.Snippet.Thumbnails;
-                                        break;
-                                }
-                            }
-                            LavaTrack track = await audioService.GetTrack(url);
-                            if (track.Length.Minutes > 10 || (track.Length.Minutes == 10 && track.Length.Seconds > 0))
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
-                            }
-                            else if (audioService.Queue().Items.Any(x => x.Uri.Equals(track.Uri)))
-                            {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
-                            }
-                            else
-                            {
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                                    Author = new EmbedAuthorBuilder()
-                                    {
-                                        Name = "Add song",
-                                        Url = url
-                                    },
-                                    Fields = new List<EmbedFieldBuilder>
-                                        {
-                                            new EmbedFieldBuilder
-                                            {
-                                                Name = "Song",
-                                                Value = Format.Sanitize(track.Title),
-                                                IsInline = false
-                                            },
-                                            new EmbedFieldBuilder
-                                            {
-                                                Name = "Duration",
-                                                Value = track.Length.Minutes + ":" + track.Length.Seconds,
-                                                IsInline = false
-                                            },
-                                            new EmbedFieldBuilder
-                                            {
-                                                Name = "Channel",
-                                                Value = Format.Sanitize(channel),
-                                                IsInline = false
-                                            }
-                                        },
-                                    Footer = new EmbedFooterBuilder()
-                                    {
-                                        IconUrl = Context.User.GetAvatarUrl(),
-                                        Text = $"Queued by {Context.User.Username}#{Context.User.Discriminator}"
-                                    },
-                                    ThumbnailUrl = thumbnails.High.Url
-                                };
-                                embed.WithCurrentTimestamp();
-                                await Context.Channel.SendMessageAsync("", false, embed.Build());
-                                if (audioService.Playing())
-                                {
-                                    audioService.QueueAdd(track);
-                                }
-                                else
-                                {
-                                    await audioService.Play(track);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                return;
-            }
-        }
+        //[Command("add", RunMode = RunMode.Async)]
+        //[Alias("addsong")]
+        //[Summary("Adds a song to play.")]
+        //[RequireContext(ContextType.Guild)]
+        //public async Task Add([Remainder] string url = null)
+        //{
+        //    if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
+        //    {
+        //        if (Blacklisted(Context.User))
+        //        {
+        //            return;
+        //        }
+        //        if (string.IsNullOrWhiteSpace(url))
+        //        {
+        //            EmbedBuilder embed = new EmbedBuilder()
+        //            {
+        //                Title = "Command: /add",
+        //                Description = "**Description:** Add a song to the music queue.\n**Usage:** /add [url]\n**Example:** /add https://www.youtube.com/watch?v=ifFNeqzB5os",
+        //                Color = new Color(220, 220, 220)
+        //            };
+        //            await Context.Channel.SendMessageAsync("", false, embed.Build());
+        //        }
+        //        else
+        //        {
+        //            SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
+        //            if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
+        //            {
+        //                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+        //            }
+        //            else
+        //            {
+        //                bool result = Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult)
+        //                          && (uriResult.Scheme == "http" || uriResult.Scheme == "https");
+        //                if (Context.Guild.CurrentUser.VoiceChannel == null)
+        //                {
+        //                    await audioService.Connect((Context.User as SocketGuildUser).VoiceChannel, Context.Channel);
+        //                }
+        //                if (audioService.Queue() != null && audioService.Queue().Items.Count() >= 20)
+        //                {
+        //                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue is full.");
+        //                }
+        //                else if (result)
+        //                {
+        //                    if (url.Contains("&list="))
+        //                    {
+        //                        url = url.Split("&list=").First();
+        //                    }
+        //                    WebClient myDownloader = new WebClient
+        //                    {
+        //                        Encoding = System.Text.Encoding.UTF8
+        //                    };
+        //                    string[] urlS = url.Split("watch?v=");
+        //                    string jsonResponse = myDownloader.DownloadString(
+        //                    "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + urlS[1] + "&key="
+        //                    + File.ReadAllText(Path.Combine(downloadPath, "YoutubeApiKey.txt")));
+        //                    string title = Extensions.GetBetween(jsonResponse, "\"title\": \"", "\",");
+        //                    LavaTrack track = await audioService.GetTrack(title);
+        //                    if (track.Length.Minutes > 10 || (track.Length.Minutes == 10 && track.Length.Seconds > 0))
+        //                    {
+        //                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
+        //                    }
+        //                    else if (audioService.Queue().Items.Any(x => x.Uri.Equals(track.Uri)))
+        //                    {
+        //                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
+        //                    }
+        //                    else
+        //                    {
+        //                        SearchResource.ListRequest searchListRequest = youtubeService.Search.List("snippet");
+        //                        searchListRequest.Q = title;
+        //                        searchListRequest.MaxResults = 1;
+        //                        searchListRequest.Type = "video";
+        //                        SearchListResponse searchListResponse = await searchListRequest.ExecuteAsync();
+        //                        string channel = "";
+        //                        ThumbnailDetails thumbnails = null;
+        //                        foreach (Google.Apis.YouTube.v3.Data.SearchResult searchResult in searchListResponse.Items)
+        //                        {
+        //                            switch (searchResult.Id.Kind)
+        //                            {
+        //                                case "youtube#video":
+        //                                    channel = searchResult.Snippet.ChannelTitle;
+        //                                    thumbnails = searchResult.Snippet.Thumbnails;
+        //                                    break;
+        //                            }
+        //                        }
+        //                        EmbedBuilder embed = new EmbedBuilder()
+        //                        {
+        //                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+        //                            Author = new EmbedAuthorBuilder()
+        //                            {
+        //                                Name = "Add song",
+        //                                Url = url
+        //                            },
+        //                            Fields = new List<EmbedFieldBuilder>
+        //                                {
+        //                                    new EmbedFieldBuilder
+        //                                    {
+        //                                        Name = "Song",
+        //                                        Value = Format.Sanitize(title),
+        //                                        IsInline = false
+        //                                    },
+        //                                    new EmbedFieldBuilder
+        //                                    {
+        //                                        Name = "Duration",
+        //                                        Value = track.Length.Minutes + ":" + track.Length.Seconds,
+        //                                        IsInline = false
+        //                                    },
+        //                                    new EmbedFieldBuilder
+        //                                    {
+        //                                        Name = "Channel",
+        //                                        Value = Format.Sanitize(channel),
+        //                                        IsInline = false
+        //                                    }
+        //                                },
+        //                            Footer = new EmbedFooterBuilder()
+        //                            {
+        //                                IconUrl = Context.User.GetAvatarUrl(),
+        //                                Text = $"Queued by {Context.User.Username}#{Context.User.Discriminator}"
+        //                            },
+        //                            ThumbnailUrl = thumbnails.High.Url
+        //                        };
+        //                        embed.WithCurrentTimestamp();
+        //                        await Context.Channel.SendMessageAsync("", false, embed.Build());
+        //                        if (audioService.Playing())
+        //                        {
+        //                            audioService.QueueAdd(track);
+        //                        }
+        //                        else
+        //                        {
+        //                            await audioService.Play(track);
+        //                        }
+        //                    }
+        //                }
+        //                else
+        //                {
+        //                    SearchResource.ListRequest searchListRequest = youtubeService.Search.List("snippet");
+        //                    searchListRequest.Q = url;
+        //                    searchListRequest.MaxResults = 1;
+        //                    searchListRequest.Type = "video";
+        //                    SearchListResponse searchListResponse = await searchListRequest.ExecuteAsync();
+        //                    string channel = "";
+        //                    ThumbnailDetails thumbnails = null;
+        //                    foreach (Google.Apis.YouTube.v3.Data.SearchResult searchResult in searchListResponse.Items)
+        //                    {
+        //                        switch (searchResult.Id.Kind)
+        //                        {
+        //                            case "youtube#video":
+        //                                channel = searchResult.Snippet.ChannelTitle;
+        //                                thumbnails = searchResult.Snippet.Thumbnails;
+        //                                break;
+        //                        }
+        //                    }
+        //                    LavaTrack track = await audioService.GetTrack(url);
+        //                    if (track.Length.Minutes > 10 || (track.Length.Minutes == 10 && track.Length.Seconds > 0))
+        //                    {
+        //                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
+        //                    }
+        //                    else if (audioService.Queue().Items.Any(x => x.Uri.Equals(track.Uri)))
+        //                    {
+        //                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
+        //                    }
+        //                    else
+        //                    {
+        //                        EmbedBuilder embed = new EmbedBuilder()
+        //                        {
+        //                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+        //                            Author = new EmbedAuthorBuilder()
+        //                            {
+        //                                Name = "Add song",
+        //                                Url = url
+        //                            },
+        //                            Fields = new List<EmbedFieldBuilder>
+        //                                {
+        //                                    new EmbedFieldBuilder
+        //                                    {
+        //                                        Name = "Song",
+        //                                        Value = Format.Sanitize(track.Title),
+        //                                        IsInline = false
+        //                                    },
+        //                                    new EmbedFieldBuilder
+        //                                    {
+        //                                        Name = "Duration",
+        //                                        Value = track.Length.Minutes + ":" + track.Length.Seconds,
+        //                                        IsInline = false
+        //                                    },
+        //                                    new EmbedFieldBuilder
+        //                                    {
+        //                                        Name = "Channel",
+        //                                        Value = Format.Sanitize(channel),
+        //                                        IsInline = false
+        //                                    }
+        //                                },
+        //                            Footer = new EmbedFooterBuilder()
+        //                            {
+        //                                IconUrl = Context.User.GetAvatarUrl(),
+        //                                Text = $"Queued by {Context.User.Username}#{Context.User.Discriminator}"
+        //                            },
+        //                            ThumbnailUrl = thumbnails.High.Url
+        //                        };
+        //                        embed.WithCurrentTimestamp();
+        //                        await Context.Channel.SendMessageAsync("", false, embed.Build());
+        //                        if (audioService.Playing())
+        //                        {
+        //                            audioService.QueueAdd(track);
+        //                        }
+        //                        else
+        //                        {
+        //                            await audioService.Play(track);
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return;
+        //    }
+        //}
 
         //[Command("queue", RunMode = RunMode.Async)]
         //[Alias("q")]

@@ -21,7 +21,7 @@ namespace FredBotNETCore
 
         private DiscordSocketClient _client;
         private CommandHandler _commands;
-        private Lavalink _lavaLink;
+        //private Lavalink _lavaLink;
         public static IServiceProvider _provider;
         private bool running = false;
         private bool retryConnection = false;
@@ -55,8 +55,8 @@ namespace FredBotNETCore
             });
             _provider = ConfigureServices();
             _client.Log += Log;
-            _lavaLink = _provider.GetRequiredService<Lavalink>();
-            _lavaLink.Log += Log;
+            //_lavaLink = _provider.GetRequiredService<Lavalink>();
+            //_lavaLink.Log += Log;
             _commands = new CommandHandler();
             running = false;
             retryConnection = true;
@@ -68,7 +68,7 @@ namespace FredBotNETCore
                     await _client.LoginAsync(tokenType: TokenType.Bot, token: new StreamReader(path: Path.Combine(downloadPath, "Token.txt")).ReadLine());
                     await _client.StartAsync();
 
-                    Task.WaitAny(Task.Factory.StartNew(() => CheckStatus()), Task.Factory.StartNew(() => GameLoop()), Task.Factory.StartNew(async () => await _commands.Install(_client, _lavaLink, _provider)));
+                    Task.WaitAny(Task.Factory.StartNew(() => CheckStatus()), Task.Factory.StartNew(() => GameLoop()), Task.Factory.StartNew(async () => await _commands.Install(_client, _provider)));
 
                     running = true;
 
