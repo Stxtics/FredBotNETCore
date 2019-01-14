@@ -39,7 +39,7 @@ namespace FredBotNETCore.Modules.Public
             }
         }
 
-        [Command("addww", RunMode = RunMode.Async)]
+        [Command("add", RunMode = RunMode.Async)]
         [Alias("addsong")]
         [Summary("Adds a song to play.")]
         [RequireContext(ContextType.Guild)]
