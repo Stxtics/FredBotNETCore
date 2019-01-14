@@ -48,30 +48,32 @@ namespace FredBotNETCore.Services
                 UserQueue.Clear();
                 NowPlayingUser = null;
             }
-            else
+            else if (QueueLoop)
             {
-                SocketUser user = NowPlayingUser, nextUser = null;
-                if (UserQueue.Count == 0)
+                SkippedUsers.Clear();
+                if (nextTrack is null)
                 {
-                    nextUser = user;
+                    await player.PlayAsync(track);
+                    await player.TextChannel.SendMessageAsync($"Now playing: **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) requested by **{NowPlayingUser.Username}#{NowPlayingUser.Discriminator}**.");
                 }
                 else
                 {
-                    nextUser = UserQueue.FirstOrDefault();
-                    UserQueue.RemoveAt(0);
-                }
-                SkippedUsers.Clear();
-                if (QueueLoop)
-                {
                     player.Queue.Enqueue(track);
-                    UserQueue.Add(user);
-                    if (player.Queue.Count == 1)
-                    {
-                        nextTrack = track;
-                    }
+                    UserQueue.Add(NowPlayingUser);
+                    SocketUser nextUser = UserQueue.FirstOrDefault();
+                    UserQueue.RemoveAt(0);
+                    NowPlayingUser = nextUser;
+                    await player.PlayAsync(nextTrack);
+                    await player.TextChannel.SendMessageAsync($"Now playing: **{Format.Sanitize(nextTrack.Title)}** ({nextTrack.Length.Minutes}:{nextTrack.Length.Seconds.ToString("D2")}) requested by **{nextUser.Username}#{nextUser.Discriminator}**.");
                 }
-                await player.PlayAsync(nextTrack);
+            }
+            else
+            {
+                SkippedUsers.Clear();
+                SocketUser nextUser = UserQueue.FirstOrDefault();
+                UserQueue.RemoveAt(0);
                 NowPlayingUser = nextUser;
+                await player.PlayAsync(nextTrack);
                 await player.TextChannel.SendMessageAsync($"Now playing: **{Format.Sanitize(nextTrack.Title)}** ({nextTrack.Length.Minutes}:{nextTrack.Length.Seconds.ToString("D2")}) requested by **{nextUser.Username}#{nextUser.Discriminator}**.");
             }
         }
@@ -82,7 +84,7 @@ namespace FredBotNETCore.Services
             await player.PlayAsync(track);
         }
 
-        public async Task<LavaTrack> GetTrack(string searchQuery)
+        public async Task<LavaTrack> GetTrackFromYoutube(string searchQuery)
         {
             LavaResult search = await _lavalink.DefaultNode.SearchYouTubeAsync(searchQuery);
             if (search.LoadResultType == LoadResultType.NoMatches)
@@ -113,6 +115,7 @@ namespace FredBotNETCore.Services
             {
                 await _lavalink.DefaultNode.GetPlayer(guildId).StopAsync();
                 UserQueue.Clear();
+                SkippedUsers.Clear();
                 NowPlayingUser = null;
             }
             else
@@ -152,7 +155,11 @@ namespace FredBotNETCore.Services
 
         public async Task Stop(ulong guildId)
         {
-            await _lavalink.DefaultNode.GetPlayer(guildId).StopAsync();
+            LavaPlayer player = _lavalink.DefaultNode.GetPlayer(guildId);
+            if (player.IsPlaying)
+            {
+                await player.StopAsync();
+            }
             await Disconnect(guildId);
             UserQueue.Clear();
             SkippedUsers.Clear();
