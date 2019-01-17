@@ -867,7 +867,7 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 string pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2user);
 
-                                string rank = Extensions.GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
+                                string rank = Extensions.GetBetween(pr2info, "\"rank\":", ",\"hats\":");
                                 string hats = Extensions.GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
                                 string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
                                 string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
@@ -1024,7 +1024,7 @@ namespace FredBotNETCore.Modules.Public
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user with ID **{id}** does not exist or could not be found.");
                         return;
                     }
-                    string rank = Extensions.GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
+                    string rank = Extensions.GetBetween(pr2info, "\"rank\":", ",\"hats\":");
                     string hats = Extensions.GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
                     string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
                     string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
@@ -1797,7 +1797,7 @@ namespace FredBotNETCore.Modules.Public
                 {
                     HttpClient web = new HttpClient();
                     string text = await web.GetStringAsync("https://pr2hub.com/bans/show_record.php?ban_id=" + id);
-                    if (text.Contains("banned for 0 seconds on Jan 1, 1970 12:00 AM."))
+                    if (Extensions.GetBetween(text, "<title>", "</title>").Contains("PR2 Hub - Error Fetching Ban"))
                     {
                         await Context.Channel.SendMessageAsync($"{Context.User.Mention} the ban with the ID **{id}** does not exist or could not be found.");
                         return;
