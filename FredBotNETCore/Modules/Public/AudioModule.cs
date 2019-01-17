@@ -19,17 +19,16 @@ namespace FredBotNETCore.Modules.Public
     [Summary("Module containing all of the music commands.")]
     public class AudioModule : ModuleBase<SocketCommandContext>
     {
-        private static readonly string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
         private readonly YouTubeService youtubeService = new YouTubeService(new BaseClientService.Initializer()
         {
-            ApiKey = new StreamReader(path: Path.Combine(downloadPath, "YoutubeApiKey.txt")).ReadLine(),
+            ApiKey = new StreamReader(path: Path.Combine(Extensions.downloadPath, "YoutubeApiKey.txt")).ReadLine(),
             ApplicationName = "Fred bot"
         });
         private readonly AudioService audioService = new AudioService(CommandHandler._lavaLink);
 
         private static bool Blacklisted(SocketUser user)
         {
-            if (File.ReadAllText(path: Path.Combine(downloadPath, "BlacklistedMusic.txt")).Contains(user.Id.ToString()))
+            if (File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt")).Contains(user.Id.ToString()))
             {
                 return true;
             }
@@ -112,7 +111,7 @@ namespace FredBotNETCore.Modules.Public
                             }
                             string jsonResponse = myDownloader.DownloadString(
                             "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + id + "&key="
-                            + File.ReadAllText(Path.Combine(downloadPath, "YoutubeApiKey.txt")));
+                            + File.ReadAllText(Path.Combine(Extensions.downloadPath, "YoutubeApiKey.txt")));
                             string title = Extensions.GetBetween(jsonResponse, "\"title\": \"", "\",");
                             LavaTrack track = await audioService.GetTrackFromYoutube(title);
                             if (track == null)
