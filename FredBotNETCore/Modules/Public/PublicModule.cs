@@ -934,7 +934,7 @@ namespace FredBotNETCore.Modules.Public
                             await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(Uri.UnescapeDataString(pr2name))}** does not exist or could not be found.");
                             return;
                         }
-                        string rank = Extensions.GetBetween(pr2info, "{\"rank\":", ",\"hats\":");
+                        string rank = Extensions.GetBetween(pr2info, "\"rank\":", ",\"hats\":");
                         string hats = Extensions.GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
                         string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
                         string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
