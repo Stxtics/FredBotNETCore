@@ -1587,16 +1587,16 @@ namespace FredBotNETCore.Modules.Public
                 embed.AddField(y =>
                 {
                     y.Name = "Guild";
-                    y.Value = Format.Sanitize($"{guild1name}\n" +
-                              $"{guild2name}\n" +
-                              $"{guild3name}\n" +
-                              $"{guild4name}\n" +
-                              $"{guild5name}\n" +
-                              $"{guild6name}\n" +
-                              $"{guild7name}\n" +
-                              $"{guild8name}\n" +
-                              $"{guild9name}\n" +
-                              $"{guild10name}");
+                    y.Value = $"[{Format.Sanitize(Uri.UnescapeDataString(guild1name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild1name)})\n" +
+                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild2name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild2name)})\n" +
+                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild3name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild3name)})\n" +
+                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild4name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild4name)})\n" +
+                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild5name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild5name)})\n" +
+                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild6name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild6name)})\n" +
+                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild7name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild7name)})\n" +
+                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild8name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild8name)})\n" +
+                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild9name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild9name)})\n" +
+                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild10name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild10name)})\n";
                     y.IsInline = true;
                 });
                 embed.AddField(y =>
