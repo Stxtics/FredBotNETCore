@@ -249,5 +249,15 @@ namespace FredBotNETCore
             allowedChannels.Close();
             return channels;
         }
+
+        public static async Task LogError(DiscordSocketClient client, string error)
+        {
+            SocketUser user = client.GetUser(181853112045142016);
+            IEnumerable<string> parts = error.SplitInParts(1990);
+            foreach (string part in parts)
+            {
+                await user.SendMessageAsync("```" + part + "```");
+            }
+        }
     }
 }

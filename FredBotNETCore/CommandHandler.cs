@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using FredBotNETCore.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics;

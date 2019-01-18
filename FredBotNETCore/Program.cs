@@ -68,7 +68,7 @@ namespace FredBotNETCore
                     await _client.LoginAsync(tokenType: TokenType.Bot, token: new StreamReader(path: Path.Combine(downloadPath, "Token.txt")).ReadLine());
                     await _client.StartAsync();
 
-                    Task.WaitAny(Task.Factory.StartNew(() => CheckStatus()), Task.Factory.StartNew(() => GameLoop()), Task.Factory.StartNew(async () => await _commands.Install(_client, _lavaLink, _provider)));
+                    Task.WaitAny(Task.Factory.StartNew(() => CheckStatus(_client)), Task.Factory.StartNew(() => GameLoop()), Task.Factory.StartNew(async () => await _commands.Install(_client, _lavaLink, _provider)));
 
                     running = true;
 
@@ -110,7 +110,7 @@ namespace FredBotNETCore
 
         #region Timer Loop
 
-        public static async Task CheckStatus()
+        public static async Task CheckStatus(DiscordSocketClient client)
         {
             HttpClient web = new HttpClient();
             string hint = Extensions.GetBetween(await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt"), "{\"hint\":\"", "\",\"finder_name\":\"");
@@ -132,7 +132,7 @@ namespace FredBotNETCore
                         guildId = Extensions.GetBetween(server_name, "guild_id\":\"", "\"");
                         if (guildId.Equals("0"))
                         {
-                            happyHour = Extensions.GetBetween(server_name, "hour\":\"", "\"");
+                            happyHour = Extensions.GetBetween(server_name, "happy_hour\":\"", "\"");
                             string serverName = Extensions.GetBetween(server_name, "server_name\":\"", "\"");
                             if (!serverName.Equals("Tournament"))
                             {
@@ -180,9 +180,13 @@ namespace FredBotNETCore
                     }
                     #endregion
                 }
-                catch (Exception)
+                catch (HttpRequestException)
                 {
-                    //ignore
+                    //failed to connect
+                }
+                catch (Exception e)
+                {
+                    await Extensions.LogError(client, e.Message + e.StackTrace);
                 }
             }
         }
