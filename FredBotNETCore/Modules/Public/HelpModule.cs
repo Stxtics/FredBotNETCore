@@ -21,7 +21,7 @@ namespace FredBotNETCore.Modules.Public
         [Summary("List of commands for the bot.")]
         public async Task Help()
         {
-            Discord.Rest.RestUserMessage msg = null;
+            IUserMessage msg = null;
             if (!(Context.Channel is IDMChannel))
             {
                 msg = await ReplyAsync($"{Context.User.Mention} I've just sent my commands to your DMs. :grinning:");

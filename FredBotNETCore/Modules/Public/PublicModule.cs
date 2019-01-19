@@ -274,7 +274,7 @@ namespace FredBotNETCore.Modules.Public
                             Author = auth,
                             Description = $"Jackpot: ${lottobal.ToString("N0")}\nScratching Tickets..."
                         };
-                        Discord.Rest.RestUserMessage message = await ReplyAsync("", false, embed.Build());
+                        IUserMessage message = await ReplyAsync("", false, embed.Build());
                         await Task.Delay(500);
                         if (chance >= 100)
                         {
