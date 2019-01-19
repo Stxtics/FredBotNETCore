@@ -145,7 +145,15 @@ namespace FredBotNETCore
             }
             if (ulong.TryParse(username, out ulong userid))
             {
-                username = guild.GetUser(userid).Username;
+                try
+                {
+                    user = guild.GetUser(userid);
+                    return user;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
             string discriminator = null;
             if (username.Contains("#"))
@@ -185,7 +193,15 @@ namespace FredBotNETCore
             }
             if (ulong.TryParse(roleName, out ulong roleId))
             {
-                roleName = guild.GetRole(roleId).Name;
+                try
+                {
+                    role = guild.GetRole(roleId);
+                    return role;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
             foreach (SocketRole gRole in guild.Roles)
             {
@@ -208,7 +224,15 @@ namespace FredBotNETCore
             }
             if (ulong.TryParse(channelName, out ulong channelId))
             {
-                channelName = guild.GetChannel(channelId).Name;
+                try
+                {
+                    channel = guild.GetChannel(channelId);
+                    return channel;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
             foreach (SocketGuildChannel gChannel in guild.Channels)
             {
