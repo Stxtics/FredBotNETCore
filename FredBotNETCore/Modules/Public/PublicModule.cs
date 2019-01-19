@@ -1506,7 +1506,7 @@ namespace FredBotNETCore.Modules.Public
                 Color = new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)),
                 Author = auth
             };
-            string[] joinableRoles = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt")).Split("\n", StringSplitOptions.RemoveEmptyEntries);
+            string[] joinableRoles = File.ReadAllText(Path.Combine(Extensions.downloadPath, "JoinableRoles.txt")).Split("\n", StringSplitOptions.RemoveEmptyEntries);
             string joinableRolesS = "";
             foreach (string role in joinableRoles)
             {
