@@ -48,6 +48,7 @@ namespace FredBotNETCore.Modules.Public
                 "/listblacklistedurls - Lists blacklisted URLs.\n" +
                 "/addjoinablerole - Add a joinable role.\n" +
                 "/deljoinablerole - Remove a joinable role.\n" +
+                "/rolecolor - Change color of a role.\n" +
                 "**Moderator**\n" +
                 "/notifymacroers - Mentions macroers in pr2-dicussion about server restart.\n" +
                 "/blacklistmusic - Blacklist a user from using music commands.\n" +
@@ -57,7 +58,6 @@ namespace FredBotNETCore.Modules.Public
                 "/unblacklistsuggestions - Unblacklist a user from using /suggest.\n" +
                 "/listblacklistedsuggestions - List blacklisted users from suggestions.\n" +
                 "/channelinfo - Get info about a channel.\n" +
-                "/rolecolor - Change color of a role.\n" +
                 "/nick - Set bot nickname.\n" +
                 "/setnick - Set nickname of a user.\n" +
                 "/mentionable - Toggle making a role mentionable on/off.\n" +
