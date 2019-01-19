@@ -1926,7 +1926,7 @@ namespace FredBotNETCore.Modules
                         IconUrl = msgEmbed.Footer.Value.IconUrl
                     };
                     winners = int.Parse(Extensions.GetBetween(msgEmbed.Footer.Value.Text, "Winners: ", " | Ends at"));
-                    embed.WithFooter(footer);      
+                    embed.WithFooter(footer);
                     break;
                 }
             }
@@ -2019,7 +2019,7 @@ namespace FredBotNETCore.Modules
                 embed.WithColor(new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)));
                 embed.WithFooter(footer);
                 embed.WithTitle(msgEmbed.Title);
-                IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999).FlattenAsync();;
+                IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999).FlattenAsync(); ;
                 winners = int.Parse(Extensions.GetBetween(msgEmbed.Footer.Value.Text, "Winners: ", " | Ended at"));
                 if (users.Count() <= 1)
                 {
