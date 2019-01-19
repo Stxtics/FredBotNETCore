@@ -61,6 +61,109 @@ namespace FredBotNETCore.Modules
             }
         }
 
+        [Command("addrole", RunMode = RunMode.Async)]
+        [Alias("+role", "createrole")]
+        [Summary("Add a new role, with optional color and hoist.")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        [RequireContext(ContextType.Guild)]
+        public async Task AddRole([Remainder] string settings = null)
+        {
+            if (string.IsNullOrWhiteSpace(settings))
+            {
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /addrole";
+                embed.Description = "**Description:** Add a new role, with optional color and hoist.\n**Usage:** /addrole [name] [hex color] [hoist]\n**Example:** /addrole Test #FF0000 true";
+                await ReplyAsync("", false, embed.Build());
+            }
+            else
+            {
+                RequestOptions options = new RequestOptions()
+                {
+                    AuditLogReason = $"Created by: {Context.User.Username}#{Context.User.Discriminator}"
+                };
+                if (settings.Contains("#"))
+                {
+                    string[] settingsSplit = settings.Split("#");
+                    if (settingsSplit[1].Contains("true", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        string[] settingsSplit2 = settingsSplit[1].Split(" ");
+                        try
+                        {
+                            System.Drawing.Color color = System.Drawing.Color.FromArgb(int.Parse(settingsSplit2[0].Replace("#", ""), NumberStyles.AllowHexSpecifier));
+                            bool hoisted = Convert.ToBoolean(settingsSplit2[1]);
+                            await Context.Guild.CreateRoleAsync(settingsSplit[0], null, new Color(color.R, color.G, color.B), hoisted, options);
+                            await ReplyAsync($"{Context.User.Mention} created role **{Format.Sanitize(settingsSplit[0])}** with color **#{settingsSplit2[0]}**, and is displayed separately.");
+                        }
+                        catch (FormatException)
+                        {
+                            await Context.Guild.CreateRoleAsync(settings, null, null, false, options);
+                            await ReplyAsync($"{Context.User.Mention} created role **{Format.Sanitize(settings)}**.");
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            System.Drawing.Color color = System.Drawing.Color.FromArgb(int.Parse(settingsSplit[1].Replace("#", ""), NumberStyles.AllowHexSpecifier));
+                            await Context.Guild.CreateRoleAsync(settingsSplit[0], null, new Color(color.R, color.G, color.B), false, options);
+                            await ReplyAsync($"{Context.User.Mention} created role **{Format.Sanitize(settingsSplit[0])}** with color **#{settingsSplit[1]}**.");
+                        }
+                        catch (FormatException)
+                        {
+                            await Context.Guild.CreateRoleAsync(settings, null, null, false, options);
+                            await ReplyAsync($"{Context.User.Mention} created role **{Format.Sanitize(settings)}**.");
+                        }
+                    }
+                }
+                else
+                {
+                    await Context.Guild.CreateRoleAsync(settings);
+                    await ReplyAsync($"{Context.User.Mention} created role **{Format.Sanitize(settings)}**.");
+                }
+            }
+        }
+
+        [Command("delrole", RunMode = RunMode.Async)]
+        [Alias("-role", "deleterole")]
+        [Summary("Delete a role")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        [RequireContext(ContextType.Guild)]
+        public async Task DelRole([Remainder] string roleName = null)
+        {
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /delrole";
+                embed.Description = "**Description:** Delete a role.\n**Usage:** /delrole [role]\n**Example:** /delrole Admins";
+                await ReplyAsync("", false, embed.Build());
+            }
+            else
+            {
+                if (Extensions.RoleInGuild(Context.Message, Context.Guild, roleName) != null)
+                {
+                    SocketRole role = Extensions.RoleInGuild(Context.Message, Context.Guild, roleName);
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"Deleted by: {Context.User.Username}#{Context.User.Discriminator}"
+                    };
+                    await role.DeleteAsync(options);
+                    await ReplyAsync($"{Context.User.Mention} deleted role **{Format.Sanitize(roleName)}**");
+                }
+                else
+                {
+                    await ReplyAsync($"{Context.User.Mention} I could not find role with name or ID **{Format.Sanitize(roleName)}**.");
+                }
+            }
+        }
+
         [Command("mentionable", RunMode = RunMode.Async)]
         [Alias("rolementionable")]
         [Summary("Toggle making a role mentionable on/off")]
@@ -1300,12 +1403,12 @@ namespace FredBotNETCore.Modules
             }
         }
 
-        [Command("notificationschannel", RunMode = RunMode.Async)]
-        [Alias("updatenotifactionschannel", "setnotificationschannel")]
+        [Command("banlogchannel", RunMode = RunMode.Async)]
+        [Alias("updatebanlogchannel", "setbanlogchannel")]
         [Summary("Sets the log channel for PRG")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageGuild)]
-        public async Task SetNotifcationsChannel([Remainder] string text = null)
+        public async Task SetBanLogChannel([Remainder] string text = null)
         {
             if (Context.Guild.Id == 528679522707701760)
             {
@@ -1314,11 +1417,11 @@ namespace FredBotNETCore.Modules
                     SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, text);
                     if (channel is SocketTextChannel)
                     {
-                        string currentNotificationsChannel = File.ReadAllText(Path.Combine(Extensions.downloadPath, "NotificationsChannel.txt"));
+                        string currentBanLogChannel = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BanLogChannel.txt"));
                         SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
-                            Name = "Notifications Channel Changed",
+                            Name = "Ban Log Channel Changed",
                             IconUrl = Context.Guild.IconUrl
                         };
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
@@ -1333,14 +1436,14 @@ namespace FredBotNETCore.Modules
                             Footer = footer
                         };
                         embed.WithCurrentTimestamp();
-                        embed.Description = $"{Context.User.Mention} changed the notifications channel from **{Format.Sanitize(currentNotificationsChannel)}** to **{Format.Sanitize(channel.Name)}**.";
-                        await ReplyAsync($"{Context.User.Mention} the notifications channel was successfully changed from **{Format.Sanitize(currentNotificationsChannel)}** to **{Format.Sanitize(channel.Name)}**.");
+                        embed.Description = $"{Context.User.Mention} changed the ban log channel from **{Format.Sanitize(currentBanLogChannel)}** to **{Format.Sanitize(channel.Name)}**.";
+                        await ReplyAsync($"{Context.User.Mention} the ban log channel was successfully changed from **{Format.Sanitize(currentBanLogChannel)}** to **{Format.Sanitize(channel.Name)}**.");
                         await log.SendMessageAsync("", false, embed.Build());
-                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "NotificationsChannel.txt"), channel.Name);
+                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "BanLogChannel.txt"), channel.Name);
                     }
                     else
                     {
-                        await ReplyAsync($"{Context.User.Mention} the notifications channel must be a text channel.");
+                        await ReplyAsync($"{Context.User.Mention} the ban log channel must be a text channel.");
                     }
                 }
                 else

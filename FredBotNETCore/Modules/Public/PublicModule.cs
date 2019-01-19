@@ -51,38 +51,31 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    try
+                    if (Database.GetBalance(Context.User) > money)
                     {
-                        if (Database.GetBalance(Context.User) > money)
+                        if (Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username) != null)
                         {
-                            if (Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username) != null)
+                            SocketUser user = Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username);
+                            Database.SetBalance(Context.User, Database.GetBalance(Context.User) - money);
+                            Database.SetBalance(user, Database.GetBalance(user) + money);
+                            await ReplyAsync($"{Context.User.Mention} you have successfully paid **{Format.Sanitize(user.Username)}#{user.Discriminator} ${money.ToString("N0")}**.\nYour new balance is ${Database.GetBalance(Context.User).ToString("N0")}.");
+                            try
                             {
-                                SocketUser user = Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username);
-                                Database.SetBalance(Context.User, Database.GetBalance(Context.User) - money);
-                                Database.SetBalance(user, Database.GetBalance(user) + money);
-                                await ReplyAsync($"{Context.User.Mention} you have successfully paid **{Format.Sanitize(user.Username)}#{user.Discriminator} ${money.ToString("N0")}**.\nYour new balance is ${Database.GetBalance(Context.User).ToString("N0")}.");
-                                try
-                                {
-                                    await user.SendMessageAsync($"{user.Mention} you have been paid **${money}** by **{Format.Sanitize(Context.User.Username)}#{Context.User.Discriminator}**");
-                                }
-                                catch (Discord.Net.HttpException)
-                                {
-                                    await ReplyAsync($"{Context.User.Mention} I could not DM **{Format.Sanitize(user.Username)}#{user.Discriminator}** to notify them of your payment.");
-                                }
+                                await user.SendMessageAsync($"{user.Mention} you have been paid **${money}** by **{Format.Sanitize(Context.User.Username)}#{Context.User.Discriminator}**");
                             }
-                            else
+                            catch (Discord.Net.HttpException)
                             {
-                                await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(username)}** does not exist or could not be found.");
+                                await ReplyAsync($"{Context.User.Mention} I could not DM **{Format.Sanitize(user.Username)}#{user.Discriminator}** to notify them of your payment.");
                             }
                         }
                         else
                         {
-                            await ReplyAsync($"{Context.User.Mention} you do not have enough money to do that.");
+                            await ReplyAsync($"{Context.User.Mention} the user with name or ID **{Format.Sanitize(username)}** does not exist or could not be found.");
                         }
                     }
-                    catch (NullReferenceException)
+                    else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await ReplyAsync($"{Context.User.Mention} you do not have enough money to do that.");
                     }
                 }
             }
@@ -113,27 +106,20 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    try
+                    if (Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username) != null)
                     {
-                        if (Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username) != null)
+                        SocketUser user = Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username);
+                        result = Database.CheckExistingUser(user);
+                        if (result.Count() <= 0)
                         {
-                            SocketUser user = Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username);
-                            result = Database.CheckExistingUser(user);
-                            if (result.Count() <= 0)
-                            {
-                                Database.EnterUser(user);
-                            }
-                            int bal = Database.GetBalance(user);
-                            await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance is **${bal.ToString("N0")}**.");
+                            Database.EnterUser(user);
                         }
-                        else
-                        {
-                            await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(username)}** does not exist or could not be found.");
-                        }
+                        int bal = Database.GetBalance(user);
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance is **${bal.ToString("N0")}**.");
                     }
-                    catch (NullReferenceException)
+                    else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await ReplyAsync($"{Context.User.Mention} the user with name or ID **{Format.Sanitize(username)}** does not exist or could not be found.");
                     }
                 }
             }
@@ -157,8 +143,7 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                StreamReader lotto = new StreamReader(path: Path.Combine(Extensions.downloadPath, "LottoBalance.txt"));
-                int lottobal = Convert.ToInt32(lotto.ReadLine());
+                int lottobal = int.Parse(File.ReadAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt")));
                 await ReplyAsync($"{Context.User.Mention} the jackpot is currently worth **${lottobal.ToString("N0")}**.");
             }
         }
@@ -259,9 +244,8 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
-                        StreamReader lotto = new StreamReader(path: Path.Combine(Extensions.downloadPath, "LottoBalance.txt"));
                         Database.SetBalance(Context.User, Database.GetBalance(Context.User) - tickets);
-                        int lottobal = Convert.ToInt32(lotto.ReadLine());
+                        int lottobal = int.Parse(File.ReadAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt")));
                         int chance = Convert.ToInt32(tickets / (lottobal + 0.00) * 100);
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
@@ -339,68 +323,6 @@ namespace FredBotNETCore.Modules.Public
             }
         }
 
-        [Command("verifyjv2", RunMode = RunMode.Async)]
-        [Alias("jv2verify")]
-        [Summary("Links Discord account to JV2 account.")]
-        [RequireContext(ContextType.DM)]
-        public async Task VerifyJV2(string jv2Id = null)
-        {
-            if (string.IsNullOrWhiteSpace(jv2Id) || !ulong.TryParse(jv2Id, out ulong result))
-            {
-                EmbedBuilder embed = new EmbedBuilder()
-                {
-                    Color = new Color(220, 220, 220)
-                };
-                embed.Title = "Command: /verifyjv2";
-                embed.Description = "**Description:** Link JV2 account to Discord account.\n**Usage:** /verifyjv2 [JV2 User ID]\n**Example:** /verifyjv2 4";
-                await ReplyAsync("", false, embed.Build());
-            }
-            else
-            {
-                SocketGuild guild = Context.Client.GetGuild(528679522707701760);
-                HttpClient web = new HttpClient();
-                StreamReader jv2Key = new StreamReader(path: Path.Combine(Extensions.downloadPath, "JV2ApiKey.txt"));
-                Dictionary<string, string> values = new Dictionary<string, string>
-                {
-                    { "key", jv2Key.ReadLine() },
-                    { "user_id", "8" }
-                };
-                jv2Key.Close();
-                FormUrlEncodedContent content = new FormUrlEncodedContent(values);
-                HttpResponseMessage response = await web.PostAsync("https://jiggmin2.com/api/usergroup_api.php?", content);
-                string responseString = await response.Content.ReadAsStringAsync();
-                int[] additionalGroups = Array.ConvertAll(Extensions.GetBetween(responseString, "\",\"additionalgroups\":\"", "\"}").Split(","),
-                                      delegate (string s) { return int.Parse(s); });
-                RequestOptions options = new RequestOptions()
-                {
-                    AuditLogReason = "JV2 Verify"
-                };
-                Database.VerifyJV2(Context.User, jv2Id);
-                await guild.GetUser(Context.User.Id).AddRoleAsync(guild.Roles.Where(x => x.Name.ToUpper() == "JV2 Verified".ToUpper()).First(), options);
-                options.AuditLogReason = "JV2 Role Sync";
-                if (!(additionalGroups.Contains(18) || additionalGroups.Contains(17)))
-                {
-                    await ReplyAsync($"{Context.User.Mention} you have successfully linked your JV2 account to your Discord account.");
-                }
-                else if (additionalGroups.Contains(18) && additionalGroups.Contains(17))
-                {
-                    await ReplyAsync($"{Context.User.Mention} you have successfully linked your JV2 account to your Discord account.\nYou have also been added to the Beta Testers and Contest Judges role.");
-                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.Roles.Where(x => x.Name.ToUpper() == "Beta Testers".ToUpper()).First(), options);
-                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.Roles.Where(x => x.Name.ToUpper() == "Contest Judges".ToUpper()).First(), options);
-                }
-                else if (additionalGroups.Contains(18))
-                {
-                    await ReplyAsync($"{Context.User.Mention} you have successfully linked your JV2 account to your Discord account.\nYou have also been added to the Beta Testers role.");
-                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.Roles.Where(x => x.Name.ToUpper() == "Beta Testers".ToUpper()).First(), options);
-                }
-                else if (additionalGroups.Contains(17))
-                {
-                    await ReplyAsync($"{Context.User.Mention} you have successfully linked your JV2 account to your Discord account.\nYou have also been added to the Contest Judges role.");
-                    await guild.GetUser(Context.User.Id).AddRoleAsync(guild.Roles.Where(x => x.Name.ToUpper() == "Contest Judges".ToUpper()).First(), options);
-                }
-            }
-        }
-
         [Command("verify", RunMode = RunMode.Async)]
         [Alias("verifyme")]
         [Summary("Verifies a user on the server.")]
@@ -422,7 +344,7 @@ namespace FredBotNETCore.Modules.Public
         [RequireContext(ContextType.DM)]
         public async Task Verified([Remainder] string username)
         {
-            SocketGuild guild = CommandHandler._client.GetGuild(528679522707701760);
+            SocketGuild guild = Context.Client.GetGuild(528679522707701760);
             if (string.IsNullOrWhiteSpace(username))
             {
                 EmbedBuilder embed = new EmbedBuilder()
@@ -432,163 +354,164 @@ namespace FredBotNETCore.Modules.Public
                 embed.Title = "Command: /verifycomplete";
                 embed.Description = "**Description:** Verify your PR2 account.\n**Usage:** /verifycomplete [PR2 username]\n**Example:** /verifycomplete Jiggmin";
                 await ReplyAsync("", false, embed.Build());
-                return;
             }
-            SocketGuildUser user = null;
-            try
+            else
             {
-                user = guild.GetUser(Context.User.Id);
-            }
-            catch
-            {
-                await ReplyAsync($"{Context.User.Mention} you are not a memeber of **{Format.Sanitize(guild.Name)}**.");
-            }
-            StreamReader pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
-            Dictionary<string, string> values = new Dictionary<string, string>
+                SocketGuildUser user = null;
+                try
+                {
+                    user = guild.GetUser(Context.User.Id);
+                }
+                catch
+                {
+                    await ReplyAsync($"{Context.User.Mention} you are not a memeber of **{Format.Sanitize(guild.Name)}**.");
+                }
+                string pr2token = File.ReadAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
+                Dictionary<string, string> values = new Dictionary<string, string>
                 {
                     { "count", "10" },
                     { "start", "0" },
-                    { "token", pr2token.ReadLine() }
+                    { "token", pr2token }
                 };
-            pr2token.Close();
-            HttpClient web = new HttpClient();
-            FormUrlEncodedContent content = new FormUrlEncodedContent(values);
-            HttpResponseMessage response = await web.PostAsync("https://pr2hub.com/messages_get.php?", content);
-            string responseString = await response.Content.ReadAsStringAsync();
-            string[] pms = responseString.Split('}');
-            int tries = 0;
-            foreach (string message_id in pms)
-            {
-                string name = Extensions.GetBetween(message_id, "name\":\"", "\",\"group");
-                if (name.ToLower().Equals(username.ToLower()))
+                HttpClient web = new HttpClient();
+                FormUrlEncodedContent content = new FormUrlEncodedContent(values);
+                HttpResponseMessage response = await web.PostAsync("https://pr2hub.com/messages_get.php?", content);
+                string responseString = await response.Content.ReadAsStringAsync();
+                string[] pms = responseString.Split('}');
+                int tries = 0;
+                foreach (string message_id in pms)
                 {
-                    string message = Extensions.GetBetween(message_id, "message\":\"", "\",\"time");
-                    if (message.Equals(Context.Channel.Id.ToString()))
+                    string name = Extensions.GetBetween(message_id, "name\":\"", "\",\"group");
+                    if (name.ToLower().Equals(username.ToLower()))
                     {
-                        List<string> result = Database.CheckExistingUser(user);
-                        if (result.Count() <= 0)
+                        string message = Extensions.GetBetween(message_id, "message\":\"", "\",\"time");
+                        if (message.Equals(Context.Channel.Id.ToString()))
                         {
-                            Database.EnterUser(user);
-                        }
-                        if (int.Parse(Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + name), "{\"rank\":", ",\"hats\":")) < 15)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} your PR2 account must be at least rank 15 if you want to link it to your Discord account.");
-                            return;
-                        }
-                        result = Database.CheckForVerified(user, "Not verified");
-                        bool isVerified = false;
-                        if (result.Count() <= 0)
-                        {
-                            isVerified = true;
-                        }
-                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                        {
-                            Name = "User Verify",
-                            IconUrl = guild.IconUrl
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = $"ID: {Context.User.Id}"
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Author = author,
-                            Color = new Color(0, 255, 0),
-                            Footer = footer
-                        };
-                        embed.WithCurrentTimestamp();
-                        if (isVerified)
-                        {
-                            string pr2name = Database.GetPR2Name(user);
-                            if (pr2name.Equals(username, StringComparison.InvariantCultureIgnoreCase))
+                            List<string> result = Database.CheckExistingUser(user);
+                            if (result.Count() <= 0)
                             {
-                                await ReplyAsync($"{Context.User.Mention} that is already your verified account.");
-                                return;
+                                Database.EnterUser(user);
                             }
-                            ulong id = Database.GetDiscordID(username);
-                            if (id != 0)
+                            if (int.Parse(Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + name), "{\"rank\":", ",\"hats\":")) < 15)
                             {
-                                await ReplyAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{Format.Sanitize(username)}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
-                                return;
+                                await ReplyAsync($"{Context.User.Mention} your PR2 account must be at least rank 15 if you want to link it to your Discord account.");
                             }
-                            Database.VerifyUser(user, username);
-                            SocketTextChannel channel = guild.GetTextChannel(Extensions.GetLogChannel());
-                            embed.Description = $"{Context.User.Mention} changed their verified account from **{Format.Sanitize(pr2name)}** to **{Format.Sanitize(username)}**.";
-                            await channel.SendMessageAsync("", false, embed.Build());
-                            if (!user.Username.Equals(username))
+                            else
                             {
-                                RequestOptions options = new RequestOptions()
+                                result = Database.CheckForVerified(user, "Not verified");
+                                bool isVerified = false;
+                                if (result.Count() <= 0)
                                 {
-                                    AuditLogReason = "Setting nickname to PR2 name."
+                                    isVerified = true;
+                                }
+                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                {
+                                    Name = "User Verify",
+                                    IconUrl = guild.IconUrl
                                 };
-                                await user.ModifyAsync(x => x.Nickname = username, options);
+                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                {
+                                    Text = $"ID: {Context.User.Id}"
+                                };
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Author = author,
+                                    Color = new Color(0, 255, 0),
+                                    Footer = footer
+                                };
+                                embed.WithCurrentTimestamp();
+                                if (isVerified)
+                                {
+                                    string pr2name = Database.GetPR2Name(user);
+                                    if (pr2name.Equals(username, StringComparison.InvariantCultureIgnoreCase))
+                                    {
+                                        await ReplyAsync($"{Context.User.Mention} that is already your verified account.");
+                                        return;
+                                    }
+                                    ulong id = Database.GetDiscordID(username);
+                                    if (id != 0)
+                                    {
+                                        await ReplyAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{Format.Sanitize(username)}**. Please contact an admin on the {Format.Sanitize(guild.Name)} Discord Server for futher assistance.");
+                                        return;
+                                    }
+                                    Database.VerifyUser(user, username);
+                                    SocketTextChannel channel = guild.GetTextChannel(Extensions.GetLogChannel());
+                                    embed.Description = $"{Context.User.Mention} changed their verified account from **{Format.Sanitize(pr2name)}** to **{Format.Sanitize(username)}**.";
+                                    await channel.SendMessageAsync("", false, embed.Build());
+                                    if (!user.Username.Equals(username))
+                                    {
+                                        RequestOptions options = new RequestOptions()
+                                        {
+                                            AuditLogReason = "Setting nickname to PR2 name."
+                                        };
+                                        await user.ModifyAsync(x => x.Nickname = username, options);
+                                    }
+                                    await ReplyAsync($"{Context.User.Mention} you have successfully changed your verified account from **{Format.Sanitize(pr2name)}** to **{Format.Sanitize(username)}**.");
+                                }
+                                else
+                                {
+                                    ulong id = Database.GetDiscordID(username);
+                                    if (id != 0)
+                                    {
+                                        await ReplyAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{Format.Sanitize(username)}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
+                                        return;
+                                    }
+                                    Database.VerifyUser(user, username);
+                                    SocketTextChannel channel = guild.GetTextChannel(Extensions.GetLogChannel());
+                                    embed.Description = $"Verified {Context.User.Mention} who is **{Format.Sanitize(username)}** on PR2.";
+                                    await channel.SendMessageAsync("", false, embed.Build());
+                                    IEnumerable<SocketRole> role = guild.Roles.Where(input => input.Name.ToUpper() == "Verified".ToUpper());
+                                    RequestOptions options = new RequestOptions()
+                                    {
+                                        AuditLogReason = "Verifying User."
+                                    };
+                                    await user.AddRolesAsync(role, options);
+                                    if (!user.Username.Equals(username))
+                                    {
+                                        options.AuditLogReason = "Setting nickname to PR2 name.";
+                                        await user.ModifyAsync(x => x.Nickname = username, options);
+                                    }
+                                    await ReplyAsync($"{Context.User.Mention} you have successfully verified your PR2 Account.");
+                                }
+                                WebClient wc = new WebClient();
+                                wc.Headers.Add("Referer", "https://pr2hub.com/");
+                                System.Collections.Specialized.NameValueCollection reqparm = new System.Collections.Specialized.NameValueCollection
+                                {
+                                    { "message", $"Hey {username}! Thank you for verifying your PR2 Account with Fred the G. Cactus on the Discord Server. You verified your PR2 Account with the Discord Account {Context.User.Username}#{Context.User.Discriminator} ({Context.User.Id}). If you did not do this you should change your password and your email on your account as well to make sure it is secure." },
+                                    { "to_name", username },
+                                    { "token", pr2token }
+                                };
+                                byte[] responsebytes = wc.UploadValues("https://pr2hub.com/message_send.php", "POST", reqparm);
+                                responseString = Encoding.UTF8.GetString(responsebytes);
+                                while (responseString.Contains("Error: You've sent 4 messages in the past 60 seconds. Please wait a bit before sending another message.") || responseString.Contains("Error: Slow down a bit, yo."))
+                                {
+                                    await Task.Delay(10000);
+                                    response = await web.PostAsync("https://pr2hub.com/message_send.php?", content);
+                                    responseString = await response.Content.ReadAsStringAsync();
+                                }
+                                break;
                             }
-                            await ReplyAsync($"{Context.User.Mention} you have successfully changed your verified account from **{Format.Sanitize(pr2name)}** to **{Format.Sanitize(username)}**.");
                         }
                         else
                         {
-                            ulong id = Database.GetDiscordID(username);
-                            if (id != 0)
-                            {
-                                await ReplyAsync($"{Context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{Format.Sanitize(username)}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
-                                return;
-                            }
-                            Database.VerifyUser(user, username);
-                            SocketTextChannel channel = guild.GetTextChannel(Extensions.GetLogChannel());
-                            embed.Description = $"Verified {Context.User.Mention} who is **{Format.Sanitize(username)}** on PR2.";
-                            await channel.SendMessageAsync("", false, embed.Build());
-                            IEnumerable<SocketRole> role = guild.Roles.Where(input => input.Name.ToUpper() == "Verified".ToUpper());
-                            RequestOptions options = new RequestOptions()
-                            {
-                                AuditLogReason = "Verifying User."
-                            };
-                            await user.AddRolesAsync(role, options);
-                            if (!user.Username.Equals(username))
-                            {
-                                options.AuditLogReason = "Setting nickname to PR2 name.";
-                                await user.ModifyAsync(x => x.Nickname = username, options);
-                            }
-                            await ReplyAsync($"{Context.User.Mention} you have successfully verified your PR2 Account.");
+                            await ReplyAsync($"{Context.User.Mention} I found a PM from {Format.Sanitize(username)} but it did not say what I was " +
+                                $"expecting it to say ({Context.Channel.Id}).\nPlease send resend the PM and then do /verifycomplete with your PR2 " +
+                                $"name after.");
+                            break;
                         }
-                        WebClient wc = new WebClient();
-                        wc.Headers.Add("Referer", "https://pr2hub.com/");
-                        pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
-                        System.Collections.Specialized.NameValueCollection reqparm = new System.Collections.Specialized.NameValueCollection
-                            {
-                                { "message", $"Hey {username}! Thank you for verifying your PR2 Account with Fred the G. Cactus on the Discord Server. You verified your PR2 Account with the Discord Account {Context.User.Username}#{Context.User.Discriminator} ({Context.User.Id}). If you did not do this you should change your password and your email on your account as well to make sure it is secure." },
-                                { "to_name", username },
-                                { "token", pr2token.ReadLine() }
-                            };
-                        pr2token.Close();
-                        byte[] responsebytes = wc.UploadValues("https://pr2hub.com/message_send.php", "POST", reqparm);
-                        responseString = Encoding.UTF8.GetString(responsebytes);
-                        while (responseString.Contains("Error: You've sent 4 messages in the past 60 seconds. Please wait a bit before sending another message.") || responseString.Contains("Error: Slow down a bit, yo."))
-                        {
-                            await Task.Delay(10000);
-                            response = await web.PostAsync("https://pr2hub.com/message_send.php?", content);
-                            responseString = await response.Content.ReadAsStringAsync();
-                        }
-                        break;
                     }
-                    else
+                    else if (tries == 10)
                     {
-                        await ReplyAsync($"{Context.User.Mention} I found a PM from {Format.Sanitize(username)} but it did not say what I was " +
-                            $"expecting it to say ({Context.Channel.Id}).\nPlease send resend the PM and then do /verifycomplete with your PR2 " +
-                            $"name after.");
+                        await ReplyAsync($"{Context.User.Mention} , something went wrong in the verification process. " +
+                            $"Make sure you typed your PR2 name correctly, or actually sent the PM.");
                         break;
                     }
+                    tries = tries + 1;
                 }
-                else if (tries == 10)
+                if (responseString.Equals("{\"error\":\"Could not find a valid login token. Please log in again.\"}"))
                 {
-                    await ReplyAsync($"{Context.User.Mention} , something went wrong in the verification process. " +
-                        $"Make sure you typed your PR2 name correctly, or actually sent the PM.");
-                    break;
+                    await ReplyAsync($"{Context.User.Mention} the token of FredTheG.CactusBot has expired. Please contact a PR2 Staff Member so that they can update it.");
                 }
-                tries = tries + 1;
-            }
-            if (responseString.Equals("{\"error\":\"Could not find a valid login token. Please log in again.\"}"))
-            {
-                await ReplyAsync($"{Context.User.Mention} the token of FredTheG.CactusBot has expired. Please contact a PR2 Staff Member so that they can update it.");
             }
         }
 
@@ -682,14 +605,11 @@ namespace FredBotNETCore.Modules.Public
                 double deg = weather.Wind.Deg;
                 string[] directions = new string[]
                 {
-                        "North", "NorthEast", "East", "SouthEast", "South", "SouthWest", "West", "NorthWest", "North"
+                    "North", "NorthEast", "East", "SouthEast", "South", "SouthWest", "West", "NorthWest", "North"
                 };
                 int index = Convert.ToInt32(Math.Floor((deg + 23) / 45));
                 string direction = directions[index];
                 int all = weather.Clouds.All;
-                //int type = weather.Sys.Type;
-                //int id = weather.Sys.Id;
-                //double message = weather.Sys.Message;
                 string country = weather.Sys.Country;
                 int sunrise = weather.Sys.Sunrise;
                 int sunset = weather.Sys.Sunset;
@@ -758,33 +678,43 @@ namespace FredBotNETCore.Modules.Public
             if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 HttpClient web = new HttpClient();
-                string text = await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt");
-
-                string levelname = Extensions.GetBetween(text, "hint\":\"", "\"");
-                string person = Extensions.GetBetween(text, "finder_name\":\"", "\"");
-                if (person.Length < 1)
+                string text = null;
+                try
                 {
-                    await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!");
+                    text = await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt");
                 }
-                else
+                catch (HttpRequestException)
                 {
-                    ulong userID = Convert.ToUInt64(Database.GetUserID(person));
-                    if (userID != 1)
+                    await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                }
+                if (text != null)
+                {
+                    string levelname = Extensions.GetBetween(text, "hint\":\"", "\"");
+                    string person = Extensions.GetBetween(text, "finder_name\":\"", "\"");
+                    if (person.Length < 1)
                     {
-                        SocketGuild guild = CommandHandler._client.GetGuild(528679522707701760);
-                        try
-                        {
-                            IUser user = guild.GetUser(userID);
-                            await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!!");
-                        }
-                        catch (NullReferenceException)
-                        {
-                            await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))}**!!");
-                        }
+                        await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!");
                     }
                     else
                     {
-                        await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))}**!!");
+                        ulong userID = Convert.ToUInt64(Database.GetUserID(person));
+                        if (userID != 1)
+                        {
+                            SocketGuild guild = Context.Client.GetGuild(528679522707701760);
+                            if (Extensions.UserInGuild(null, guild, userID.ToString()) != null)
+                            {
+                                SocketGuildUser user = guild.GetUser(userID);
+                                await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!!");
+                            }
+                            else
+                            {
+                                await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))}**!!");
+                            }
+                        }
+                        else
+                        {
+                            await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))}**!!");
+                        }
                     }
                 }
             }
@@ -865,59 +795,69 @@ namespace FredBotNETCore.Modules.Public
                         {
                             foreach (string pr2user in pr2users)
                             {
-                                string pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2user);
-
-                                string rank = Extensions.GetBetween(pr2info, "\"rank\":", ",\"hats\":");
-                                string hats = Extensions.GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
-                                string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
-                                string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
-                                string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
-                                string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
-                                string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
-                                string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
-                                if (group == "0")
+                                string pr2info = null;
+                                try
                                 {
-                                    group = "Guest";
+                                    pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2user);
                                 }
-                                if (group == "1")
+                                catch (HttpRequestException)
                                 {
-                                    group = "Member";
+                                    await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
                                 }
-                                if (group == "2")
+                                if (pr2info != null)
                                 {
-                                    group = "[Moderator](https://pr2hub.com/staff.php)";
+                                    string rank = Extensions.GetBetween(pr2info, "\"rank\":", ",\"hats\":");
+                                    string hats = Extensions.GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
+                                    string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
+                                    string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
+                                    string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
+                                    string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
+                                    string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
+                                    string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
+                                    if (group == "0")
+                                    {
+                                        group = "Guest";
+                                    }
+                                    if (group == "1")
+                                    {
+                                        group = "Member";
+                                    }
+                                    if (group == "2")
+                                    {
+                                        group = "[Moderator](https://pr2hub.com/staff.php)";
+                                    }
+                                    if (group == "3")
+                                    {
+                                        group = "[Admin](https://pr2hub.com/staff.php)";
+                                    }
+                                    if (createdat.Contains("1970"))
+                                    {
+                                        createdat = "Age of Heroes";
+                                    }
+                                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                    {
+                                        Name = $"-- {name} --",
+                                        Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(name)
+                                    };
+                                    embed.WithAuthor(author);
+                                    if (guild.Length < 1)
+                                    {
+                                        embed.Description = $"{status}\n**Group:** {group}\n**Guild:** none\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                                    }
+                                    else
+                                    {
+                                        embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(guild))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                                    }
+                                    if (pr2info.Contains(value: "{\"error\":\""))
+                                    {
+                                        await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(Uri.UnescapeDataString(pr2user))}** does not exist or could not be found.");
+                                    }
+                                    else
+                                    {
+                                        await ReplyAsync("", false, embed.Build());
+                                    }
+                                    await Task.Delay(1000);
                                 }
-                                if (group == "3")
-                                {
-                                    group = "[Admin](https://pr2hub.com/staff.php)";
-                                }
-                                if (createdat.Contains("1970"))
-                                {
-                                    createdat = "Age of Heroes";
-                                }
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = $"-- {name} --",
-                                    Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(name)
-                                };
-                                embed.WithAuthor(author);
-                                if (guild.Length < 1)
-                                {
-                                    embed.Description = $"{status}\n**Group:** {group}\n**Guild:** none\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
-                                }
-                                else
-                                {
-                                    embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(guild))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
-                                }
-                                if (pr2info.Contains(value: "{\"error\":\""))
-                                {
-                                    await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(Uri.UnescapeDataString(pr2user))}** does not exist or could not be found.");
-                                }
-                                else
-                                {
-                                    await ReplyAsync("", false, embed.Build());
-                                }
-                                await Task.Delay(1000);
                             }
                         }
                         else
@@ -928,55 +868,66 @@ namespace FredBotNETCore.Modules.Public
                     }
                     else
                     {
-                        string pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
-                        if (pr2info.Contains(value: "{\"error\":\""))
+                        string pr2info = null;
+                        try
                         {
-                            await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(Uri.UnescapeDataString(pr2name))}** does not exist or could not be found.");
-                            return;
+                            pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
                         }
-                        string rank = Extensions.GetBetween(pr2info, "\"rank\":", ",\"hats\":");
-                        string hats = Extensions.GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
-                        string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
-                        string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
-                        string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
-                        string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
-                        string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
-                        string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
-                        if (group == "0")
+                        catch (HttpRequestException)
                         {
-                            group = "Guest";
+                            await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
                         }
-                        if (group == "1")
+                        if (pr2info != null)
                         {
-                            group = "Member";
+                            if (pr2info.Contains(value: "{\"error\":\""))
+                            {
+                                await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(Uri.UnescapeDataString(pr2name))}** does not exist or could not be found.");
+                                return;
+                            }
+                            string rank = Extensions.GetBetween(pr2info, "\"rank\":", ",\"hats\":");
+                            string hats = Extensions.GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
+                            string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
+                            string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
+                            string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
+                            string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
+                            string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
+                            string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
+                            if (group == "0")
+                            {
+                                group = "Guest";
+                            }
+                            if (group == "1")
+                            {
+                                group = "Member";
+                            }
+                            if (group == "2")
+                            {
+                                group = "[Moderator](https://pr2hub.com/staff.php)";
+                            }
+                            if (group == "3")
+                            {
+                                group = "[Admin](https://pr2hub.com/staff.php)";
+                            }
+                            if (createdat.Contains("1970"))
+                            {
+                                createdat = "Age of Heroes";
+                            }
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = $"-- {name} --",
+                                Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(pr2name)
+                            };
+                            embed.WithAuthor(author);
+                            if (guild.Length < 1)
+                            {
+                                embed.Description = $"{status}\n**Group:** {group}\n**Guild:** none\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                            }
+                            else
+                            {
+                                embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(guild))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                            }
+                            await ReplyAsync("", false, embed.Build());
                         }
-                        if (group == "2")
-                        {
-                            group = "[Moderator](https://pr2hub.com/staff.php)";
-                        }
-                        if (group == "3")
-                        {
-                            group = "[Admin](https://pr2hub.com/staff.php)";
-                        }
-                        if (createdat.Contains("1970"))
-                        {
-                            createdat = "Age of Heroes";
-                        }
-                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                        {
-                            Name = $"-- {name} --",
-                            Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(pr2name)
-                        };
-                        embed.WithAuthor(author);
-                        if (guild.Length < 1)
-                        {
-                            embed.Description = $"{status}\n**Group:** {group}\n**Guild:** none\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
-                        }
-                        else
-                        {
-                            embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(guild))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
-                        }
-                        await ReplyAsync("", false, embed.Build());
                     }
                 }
             }
@@ -1018,55 +969,66 @@ namespace FredBotNETCore.Modules.Public
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
 
-                    string pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + id);
-                    if (pr2info.Contains(value: "{\"error\":\""))
+                    string pr2info = null;
+                    try
                     {
-                        await ReplyAsync($"{Context.User.Mention} the user with ID **{id}** does not exist or could not be found.");
-                        return;
+                        await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + id);
                     }
-                    string rank = Extensions.GetBetween(pr2info, "\"rank\":", ",\"hats\":");
-                    string hats = Extensions.GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
-                    string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
-                    string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
-                    string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
-                    string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
-                    string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
-                    string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
-                    if (group == "0")
+                    catch (HttpRequestException)
                     {
-                        group = "Guest";
+                        await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
-                    if (group == "1")
+                    if (pr2info != null)
                     {
-                        group = "Member";
+                        if (pr2info.Contains(value: "{\"error\":\""))
+                        {
+                            await ReplyAsync($"{Context.User.Mention} the user with ID **{id}** does not exist or could not be found.");
+                            return;
+                        }
+                        string rank = Extensions.GetBetween(pr2info, "\"rank\":", ",\"hats\":");
+                        string hats = Extensions.GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
+                        string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
+                        string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
+                        string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
+                        string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
+                        string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
+                        string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
+                        if (group == "0")
+                        {
+                            group = "Guest";
+                        }
+                        if (group == "1")
+                        {
+                            group = "Member";
+                        }
+                        if (group == "2")
+                        {
+                            group = "[Moderator](https://pr2hub.com/staff.php)";
+                        }
+                        if (group == "3")
+                        {
+                            group = "[Admin](https://pr2hub.com/staff.php)";
+                        }
+                        if (createdat.Contains("1970"))
+                        {
+                            createdat = "Age of Heroes";
+                        }
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = $"-- {name} --",
+                            Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(name)
+                        };
+                        embed.WithAuthor(author);
+                        if (guild.Length < 1)
+                        {
+                            embed.Description = $"{status}\n**Group:** {group}\n**Guild:** none\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                        }
+                        else
+                        {
+                            embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(guild))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
+                        }
+                        await ReplyAsync("", false, embed.Build());
                     }
-                    if (group == "2")
-                    {
-                        group = "[Moderator](https://pr2hub.com/staff.php)";
-                    }
-                    if (group == "3")
-                    {
-                        group = "[Admin](https://pr2hub.com/staff.php)";
-                    }
-                    if (createdat.Contains("1970"))
-                    {
-                        createdat = "Age of Heroes";
-                    }
-                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                    {
-                        Name = $"-- {name} --",
-                        Url = "https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(name)
-                    };
-                    embed.WithAuthor(author);
-                    if (guild.Length < 1)
-                    {
-                        embed.Description = $"{status}\n**Group:** {group}\n**Guild:** none\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
-                    }
-                    else
-                    {
-                        embed.Description = $"{status}\n**Group:** {group}\n**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(guild))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild)})\n**Rank:** {rank}\n**Hats:** {hats}\n**Joined:** {createdat}\n**Active:** {lastlogin}";
-                    }
-                    await ReplyAsync("", false, embed.Build());
                 }
             }
             else
@@ -1116,15 +1078,23 @@ namespace FredBotNETCore.Modules.Public
                         {
                             Database.EnterUser(user);
                         }
-                        guildname = Database.GetPR2Name(user);
+                        string pr2Name = Database.GetPR2Name(user);
                         if (guildname.Equals("Not verified"))
                         {
                             await ReplyAsync($"{Context.User.Mention} that user has not linked their PR2 account.");
                             return;
                         }
-                        string pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + guildname);
-                        string[] userinfo = pr2userinfo.Split(',');
-                        string guild = userinfo[17].Substring(13).TrimEnd(new char[] { '"', ' ' });
+                        string pr2userinfo = null;
+                        try
+                        {
+                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2Name);
+                        }
+                        catch (HttpRequestException)
+                        {
+                            await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                            return;
+                        }
+                        string guild = Extensions.GetBetween(pr2userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
                         if (guild.Length <= 0)
                         {
                             await ReplyAsync($"{Context.User.Mention} that users account is not a member of a guild.");
@@ -1132,42 +1102,51 @@ namespace FredBotNETCore.Modules.Public
                         }
                         guildname = guild;
                     }
-                    string pr2info = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
-
-                    if (pr2info.Contains(value: "{\"error\":\""))
+                    string pr2info = null;
+                    try
                     {
-                        await ReplyAsync($"{Context.User.Mention} the guild **{Format.Sanitize(guildname)}** does not exist or could not be found.");
-                        return;
+                        pr2info = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
                     }
-                    string name = Extensions.GetBetween(pr2info, "guild_name\":\"", "\",\"creation");
-                    string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
-                    string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
-                    string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0");
-                    string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0");
-                    string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
-                    string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
-                    string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
-                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    catch (HttpRequestException)
                     {
-                        Name = $"-- {name} --",
-                        Url = "https://pr2hub.com/guild_search.php?name=" + guildname.Replace(" ", "%20")
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
+                        await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                    }
+                    if (pr2info != null)
                     {
-                        Author = author,
-                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        IconUrl = Context.User.GetAvatarUrl(),
-                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    embed.ThumbnailUrl = "https://pr2hub.com/emblems/" + guildpic;
-                    embed.Description = $"**Created At:** {createdat}\n**Members:** {members} ({active} active)\n**GP Total:** {gptotal}\n**GP Today:** {gptoday}\n**Description:** {Format.Sanitize(note)}";
-
-                    await ReplyAsync("", false, embed.Build());
+                        if (pr2info.Contains(value: "{\"error\":\""))
+                        {
+                            await ReplyAsync($"{Context.User.Mention} the guild **{Format.Sanitize(guildname)}** does not exist or could not be found.");
+                            return;
+                        }
+                        string name = Extensions.GetBetween(pr2info, "guild_name\":\"", "\",\"creation");
+                        string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
+                        string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
+                        string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0");
+                        string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0");
+                        string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
+                        string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
+                        string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = $"-- {name} --",
+                            Url = "https://pr2hub.com/guild_search.php?name=" + guildname.Replace(" ", "%20")
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            IconUrl = Context.User.GetAvatarUrl(),
+                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.ThumbnailUrl = "https://pr2hub.com/emblems/" + guildpic;
+                        embed.Description = $"**Created At:** {createdat}\n**Members:** {members} ({active} active)\n**GP Total:** {gptotal}\n**GP Today:** {gptoday}\n**Description:** {Format.Sanitize(note)}";
+                        await ReplyAsync("", false, embed.Build());
+                    }
                 }
             }
             else
@@ -1196,41 +1175,51 @@ namespace FredBotNETCore.Modules.Public
                 else
                 {
                     HttpClient web = new HttpClient();
-                    string pr2info = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&id=" + id);
-                    if (pr2info.Contains(value: "{\"error\":\""))
+                    string pr2info = null;
+                    try
                     {
-                        await ReplyAsync($"{Context.User.Mention} the guild with ID **{id}** does not exist or could not be found.");
-                        return;
+                        pr2info = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&id=" + id);
                     }
-                    string name = Extensions.GetBetween(pr2info, "\"guild_name\":\"", "\",\"");
-                    string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
-                    string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
-                    string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0");
-                    string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0");
-                    string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
-                    string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
-                    string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
-                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    catch (HttpRequestException)
                     {
-                        Name = $"-- {name} --",
-                        Url = "https://pr2hub.com/guild_search.php?id=" + id
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
+                        await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                    }
+                    if (pr2info != null)
                     {
-                        Author = author,
-                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        IconUrl = Context.User.GetAvatarUrl(),
-                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    embed.ThumbnailUrl = "https://pr2hub.com/emblems/" + guildpic;
-                    embed.Description = $"**Created At:** {createdat}\n**Members:** {members} ({active} active)\n**GP Total:** {gptotal}\n**GP Today:** {gptoday}\n**Description:** {Format.Sanitize(note)}";
-
-                    await ReplyAsync("", false, embed.Build());
+                        if (pr2info.Contains(value: "{\"error\":\""))
+                        {
+                            await ReplyAsync($"{Context.User.Mention} the guild with ID **{id}** does not exist or could not be found.");
+                            return;
+                        }
+                        string name = Extensions.GetBetween(pr2info, "\"guild_name\":\"", "\",\"");
+                        string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
+                        string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
+                        string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0");
+                        string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0");
+                        string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
+                        string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
+                        string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = $"-- {name} --",
+                            Url = "https://pr2hub.com/guild_search.php?id=" + id
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            IconUrl = Context.User.GetAvatarUrl(),
+                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.ThumbnailUrl = "https://pr2hub.com/emblems/" + guildpic;
+                        embed.Description = $"**Created At:** {createdat}\n**Members:** {members} ({active} active)\n**GP Total:** {gptotal}\n**GP Today:** {gptoday}\n**Description:** {Format.Sanitize(note)}";
+                        await ReplyAsync("", false, embed.Build());
+                    }
                 }
             }
             else
@@ -1378,7 +1367,7 @@ namespace FredBotNETCore.Modules.Public
             SocketGuild guild;
             if (Context.Channel is IDMChannel)
             {
-                guild = CommandHandler._client.GetGuild(528679522707701760);
+                guild = Context.Client.GetGuild(528679522707701760);
                 user = guild.GetUser(Context.User.Id);
             }
             else if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
@@ -1402,96 +1391,89 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                try
+                if (Extensions.RoleInGuild(Context.Message, Context.Guild, roleName) != null)
                 {
-                    if (Extensions.RoleInGuild(Context.Message, Context.Guild, roleName) != null)
+                    SocketRole role = Extensions.RoleInGuild(Context.Message, Context.Guild, roleName);
+                    string joinableRoles = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"));
+                    if (joinableRoles.Contains(role.Id.ToString()))
                     {
-                        SocketRole role = Extensions.RoleInGuild(Context.Message, Context.Guild, roleName);
-                        string joinableRoles = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"));
-                        if (joinableRoles.Contains(role.Id.ToString()))
+                        if (user.Roles.Any(e => e.Name.ToUpperInvariant() == roleName.ToUpperInvariant()))
                         {
-                            if (user.Roles.Any(e => e.Name.ToUpperInvariant() == roleName.ToUpperInvariant()))
+                            EmbedBuilder embed = new EmbedBuilder()
                             {
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                                };
-                                RequestOptions options = new RequestOptions()
-                                {
-                                    AuditLogReason = "Removing Joinable Role"
-                                };
-                                await user.RemoveRoleAsync(role, options);
+                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                            };
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = "Removing Joinable Role"
+                            };
+                            await user.RemoveRoleAsync(role, options);
 
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    IconUrl = Context.User.GetAvatarUrl(),
-                                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                                };
-                                embed.WithFooter(footer);
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = $"{role.Name} Remove"
-                                };
-                                embed.WithAuthor(author);
-                                embed.WithCurrentTimestamp();
-                                if (Context.Channel is IDMChannel)
-                                {
-                                    embed.Description = $"**You have been removed from the {Format.Sanitize(role.Name)} role.**";
-                                }
-                                else
-                                {
-                                    embed.Description = $"**{Context.User.Mention} has been removed from the {Format.Sanitize(role.Name)} role({role.Mention}).**";
-                                }
-                                await ReplyAsync("", false, embed.Build());
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = Context.User.GetAvatarUrl(),
+                                Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                            };
+                            embed.WithFooter(footer);
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = $"{role.Name} Remove"
+                            };
+                            embed.WithAuthor(author);
+                            embed.WithCurrentTimestamp();
+                            if (Context.Channel is IDMChannel)
+                            {
+                                embed.Description = $"**You have been removed from the {Format.Sanitize(role.Name)} role.**";
                             }
                             else
                             {
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                                };
-                                RequestOptions options = new RequestOptions()
-                                {
-                                    AuditLogReason = "Adding Joinable Role"
-                                };
-                                await user.AddRoleAsync(role, options);
-
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    IconUrl = Context.User.GetAvatarUrl(),
-                                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                                };
-                                embed.WithFooter(footer);
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = $"{role.Name} Add"
-                                };
-                                embed.WithAuthor(author);
-                                embed.WithCurrentTimestamp();
-                                if (Context.Channel is IDMChannel)
-                                {
-                                    embed.Description = $"**You have been added to the {Format.Sanitize(role.Name)} role.**";
-                                }
-                                else
-                                {
-                                    embed.Description = $"**{Context.User.Mention} has been added to the {Format.Sanitize(role.Name)} role({role.Mention}).**";
-                                }
-                                await ReplyAsync("", false, embed.Build());
+                                embed.Description = $"**{Context.User.Mention} has been removed from the {Format.Sanitize(role.Name)} role({role.Mention}).**";
                             }
+                            await ReplyAsync("", false, embed.Build());
                         }
                         else
                         {
-                            await ReplyAsync($"{Context.User.Mention} the role **{Format.Sanitize(role.Name)}** is not a joinable role.");
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                            };
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = "Adding Joinable Role"
+                            };
+                            await user.AddRoleAsync(role, options);
+
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = Context.User.GetAvatarUrl(),
+                                Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                            };
+                            embed.WithFooter(footer);
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = $"{role.Name} Add"
+                            };
+                            embed.WithAuthor(author);
+                            embed.WithCurrentTimestamp();
+                            if (Context.Channel is IDMChannel)
+                            {
+                                embed.Description = $"**You have been added to the {Format.Sanitize(role.Name)} role.**";
+                            }
+                            else
+                            {
+                                embed.Description = $"**{Context.User.Mention} has been added to the {Format.Sanitize(role.Name)} role({role.Mention}).**";
+                            }
+                            await ReplyAsync("", false, embed.Build());
                         }
                     }
                     else
                     {
-                        await ReplyAsync($"{Context.User.Mention} the role **{Format.Sanitize(roleName)}** does not exist or could not be found.");
+                        await ReplyAsync($"{Context.User.Mention} the role **{Format.Sanitize(role.Name)}** is not a joinable role.");
                     }
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} the role with ID: **{roleName}** does not exist or could not be found.");
+                    await ReplyAsync($"{Context.User.Mention} the role with name or ID **{Format.Sanitize(roleName)}** does not exist or could not be found.");
                 }
             }
         }
@@ -1504,7 +1486,7 @@ namespace FredBotNETCore.Modules.Public
             SocketGuild guild;
             if (Context.Channel is IDMChannel)
             {
-                guild = CommandHandler._client.GetGuild(528679522707701760);
+                guild = Context.Client.GetGuild(528679522707701760);
             }
             else if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
             {
@@ -1514,7 +1496,6 @@ namespace FredBotNETCore.Modules.Public
             {
                 return;
             }
-            StreamReader joinableRoles = new StreamReader(path: Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"));
             EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
             {
                 IconUrl = guild.IconUrl,
@@ -1525,16 +1506,14 @@ namespace FredBotNETCore.Modules.Public
                 Color = new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)),
                 Author = auth
             };
-            string jRoles = "";
-            string line = joinableRoles.ReadLine();
-            while (line != null)
+            string[] joinableRoles = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt")).Split("\n", StringSplitOptions.RemoveEmptyEntries);
+            string joinableRolesS = "";
+            foreach (string role in joinableRoles)
             {
-                string role = guild.GetRole(Convert.ToUInt64(line)).Name;
-                jRoles = jRoles + Format.Sanitize(role) + "\n";
-                line = joinableRoles.ReadLine();
+                string currentRole = Context.Guild.GetRole(Convert.ToUInt64(role)).Name;
+                joinableRolesS = joinableRolesS + currentRole + "\n";
             }
-            joinableRoles.Close();
-            if (jRoles.Length <= 0)
+            if (joinableRolesS.Length <= 0)
             {
                 await ReplyAsync($"{Context.User.Mention} there are no joinable roles.");
             }
@@ -1543,7 +1522,7 @@ namespace FredBotNETCore.Modules.Public
                 embed.AddField(y =>
                 {
                     y.Name = "Joinable Roles";
-                    y.Value = jRoles;
+                    y.Value = joinableRolesS;
                     y.IsInline = false;
                 });
                 await ReplyAsync("", false, embed.Build());
@@ -1558,78 +1537,85 @@ namespace FredBotNETCore.Modules.Public
             if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 HttpClient web = new HttpClient();
-                string text = await web.GetStringAsync("https://pr2hub.com/guilds_top.php");
-
-                string[] guildlist = text.Split('}');
-                string guild1name = Extensions.GetBetween(guildlist[0], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                string guild1gp = int.Parse(Extensions.GetBetween(guildlist[0], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                string guild2name = Extensions.GetBetween(guildlist[1], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                string guild2gp = int.Parse(Extensions.GetBetween(guildlist[1], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                string guild3name = Extensions.GetBetween(guildlist[2], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                string guild3gp = int.Parse(Extensions.GetBetween(guildlist[2], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                string guild4name = Extensions.GetBetween(guildlist[3], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                string guild4gp = int.Parse(Extensions.GetBetween(guildlist[3], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                string guild5name = Extensions.GetBetween(guildlist[4], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                string guild5gp = int.Parse(Extensions.GetBetween(guildlist[4], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                string guild6name = Extensions.GetBetween(guildlist[5], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                string guild6gp = int.Parse(Extensions.GetBetween(guildlist[5], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                string guild7name = Extensions.GetBetween(guildlist[6], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                string guild7gp = int.Parse(Extensions.GetBetween(guildlist[6], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                string guild8name = Extensions.GetBetween(guildlist[7], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                string guild8gp = int.Parse(Extensions.GetBetween(guildlist[7], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                string guild9name = Extensions.GetBetween(guildlist[8], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                string guild9gp = int.Parse(Extensions.GetBetween(guildlist[8], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                string guild10name = Extensions.GetBetween(guildlist[9], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                string guild10gp = int.Parse(Extensions.GetBetween(guildlist[9], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-
-                EmbedBuilder embed = new EmbedBuilder();
-                embed.WithColor(new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)));
-                embed.AddField(y =>
+                string text = null;
+                try
                 {
-                    y.Name = "Guild";
-                    y.Value = $"[{Format.Sanitize(Uri.UnescapeDataString(guild1name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild1name)})\n" +
-                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild2name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild2name)})\n" +
-                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild3name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild3name)})\n" +
-                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild4name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild4name)})\n" +
-                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild5name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild5name)})\n" +
-                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild6name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild6name)})\n" +
-                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild7name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild7name)})\n" +
-                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild8name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild8name)})\n" +
-                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild9name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild9name)})\n" +
-                              $"[{Format.Sanitize(Uri.UnescapeDataString(guild10name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild10name)})\n";
-                    y.IsInline = true;
-                });
-                embed.AddField(y =>
+                    text = await web.GetStringAsync("https://pr2hub.com/guilds_top.php");
+                }
+                catch (HttpRequestException)
                 {
-                    y.Name = "GP Today";
-                    y.Value = $"{guild1gp}\n" +
-                              $"{guild2gp}\n" +
-                              $"{guild3gp}\n" +
-                              $"{guild4gp}\n" +
-                              $"{guild5gp}\n" +
-                              $"{guild6gp}\n" +
-                              $"{guild7gp}\n" +
-                              $"{guild8gp}\n" +
-                              $"{guild9gp}\n" +
-                              $"{guild10gp}";
-                    y.IsInline = true;
-                });
-
-                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                }
+                if (text != null)
                 {
-                    IconUrl = Context.User.GetAvatarUrl(),
-                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                };
-                embed.WithFooter(footer);
-                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                {
-                    Name = $"PR2 Top 10 Guilds",
-                    Url = "https://pr2hub.com/guilds_top.php"
-                };
-                embed.WithAuthor(author);
-                embed.WithCurrentTimestamp();
-
-                await ReplyAsync("", false, embed.Build());
+                    string[] guildlist = text.Split('}');
+                    string guild1name = Extensions.GetBetween(guildlist[0], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                    string guild1gp = int.Parse(Extensions.GetBetween(guildlist[0], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild2name = Extensions.GetBetween(guildlist[1], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                    string guild2gp = int.Parse(Extensions.GetBetween(guildlist[1], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild3name = Extensions.GetBetween(guildlist[2], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                    string guild3gp = int.Parse(Extensions.GetBetween(guildlist[2], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild4name = Extensions.GetBetween(guildlist[3], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                    string guild4gp = int.Parse(Extensions.GetBetween(guildlist[3], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild5name = Extensions.GetBetween(guildlist[4], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                    string guild5gp = int.Parse(Extensions.GetBetween(guildlist[4], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild6name = Extensions.GetBetween(guildlist[5], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                    string guild6gp = int.Parse(Extensions.GetBetween(guildlist[5], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild7name = Extensions.GetBetween(guildlist[6], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                    string guild7gp = int.Parse(Extensions.GetBetween(guildlist[6], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild8name = Extensions.GetBetween(guildlist[7], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                    string guild8gp = int.Parse(Extensions.GetBetween(guildlist[7], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild9name = Extensions.GetBetween(guildlist[8], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                    string guild9gp = int.Parse(Extensions.GetBetween(guildlist[8], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild10name = Extensions.GetBetween(guildlist[9], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                    string guild10gp = int.Parse(Extensions.GetBetween(guildlist[9], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    EmbedBuilder embed = new EmbedBuilder();
+                    embed.WithColor(new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)));
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Guild";
+                        y.Value = $"[{Format.Sanitize(Uri.UnescapeDataString(guild1name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild1name)})\n" +
+                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild2name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild2name)})\n" +
+                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild3name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild3name)})\n" +
+                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild4name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild4name)})\n" +
+                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild5name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild5name)})\n" +
+                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild6name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild6name)})\n" +
+                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild7name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild7name)})\n" +
+                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild8name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild8name)})\n" +
+                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild9name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild9name)})\n" +
+                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild10name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild10name)})\n";
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "GP Today";
+                        y.Value = $"{guild1gp}\n" +
+                                  $"{guild2gp}\n" +
+                                  $"{guild3gp}\n" +
+                                  $"{guild4gp}\n" +
+                                  $"{guild5gp}\n" +
+                                  $"{guild6gp}\n" +
+                                  $"{guild7gp}\n" +
+                                  $"{guild8gp}\n" +
+                                  $"{guild9gp}\n" +
+                                  $"{guild10gp}";
+                        y.IsInline = true;
+                    });
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        IconUrl = Context.User.GetAvatarUrl(),
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                    };
+                    embed.WithFooter(footer);
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = $"PR2 Top 10 Guilds",
+                        Url = "https://pr2hub.com/guilds_top.php"
+                    };
+                    embed.WithAuthor(author);
+                    embed.WithCurrentTimestamp();
+                    await ReplyAsync("", false, embed.Build());
+                }
             }
             else
             {
@@ -1796,109 +1782,124 @@ namespace FredBotNETCore.Modules.Public
                 else
                 {
                     HttpClient web = new HttpClient();
-                    string text = await web.GetStringAsync("https://pr2hub.com/bans/show_record.php?ban_id=" + id);
-                    if (Extensions.GetBetween(text, "<title>", "</title>").Contains("PR2 Hub - Error Fetching Ban"))
+                    string text = null;
+                    try
                     {
-                        await ReplyAsync($"{Context.User.Mention} the ban with the ID **{id}** does not exist or could not be found.");
-                        return;
+                        text = await web.GetStringAsync("https://pr2hub.com/bans/show_record.php?ban_id=" + id);
                     }
-                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    catch (HttpRequestException)
                     {
-                        Name = $"Ban ID - {id}",
-                        Url = "https://pr2hub.com/bans/show_record.php?ban_id=" + id
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                    }
+                    if (text != null)
                     {
-                        IconUrl = Context.User.GetAvatarUrl(),
-                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Author = author,
-                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    if (Extensions.GetBetween(text, "---------------------------------------------</p><p>--- ", " ---</p><p>--- Reason: ").Contains("This ban has been lifted by "))
-                    {
-                        string liftedMod = Extensions.GetBetween(text, "</p><p>--- This ban has been lifted by ", " ---</p><p>--- Reason: ");
-                        string liftedReason = Extensions.GetBetween(text, $"{liftedMod} ---</p><p>--- Reason: ", " ---</p><p>-----");
-                        string mod = Extensions.GetBetween(text, "</p><p>&nbsp;</p></b><p>", " banned ");
-                        string user = Extensions.GetBetween(text, $"{mod} banned ", " for ");
-                        string length = Extensions.GetBetween(text, $"{user} for ", " on ");
-                        string date = Extensions.GetBetween(text, $"{length} on ", ".</p>");
-                        string reason = Extensions.GetBetween(text, "<p>Reason: ", "</p>");
-                        string expires = Extensions.GetBetween(text, "<p>This ban will expire on ", ".</p>");
-                        liftedMod = $"[{Format.Sanitize(Uri.UnescapeDataString(liftedMod))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(liftedMod)})";
-                        mod = $"[{Format.Sanitize(Uri.UnescapeDataString(mod))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(mod)})";
-                        user = $"[{Format.Sanitize(Uri.UnescapeDataString(user))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(user)})";
-                        if (reason.Length <= 0)
+                        if (Extensions.GetBetween(text, "<title>", "</title>").Contains("PR2 Hub - Error Fetching Ban"))
                         {
-                            reason = "No reason was provided.";
+                            await ReplyAsync($"{Context.User.Mention} the ban with the ID **{id}** does not exist or could not be found.");
+                            return;
                         }
-                        embed.AddField(y =>
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
-                            y.Name = "Lifted Ban";
-                            y.Value = $"{Format.Sanitize("This ban has been lifted by " + liftedMod)}";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
+                            Name = $"Ban ID - {id}",
+                            Url = "https://pr2hub.com/bans/show_record.php?ban_id=" + id
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
-                            y.Name = "Reason";
-                            y.Value = $"{Format.Sanitize(liftedReason)}";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
+                            IconUrl = Context.User.GetAvatarUrl(),
+                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
                         {
-                            y.Name = "Ban Info";
-                            y.Value = Format.Sanitize($"{mod} banned {user} for {length} on {date}.");
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
+                            Author = author,
+                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        if (Extensions.GetBetween(text, "---------------------------------------------</p><p>--- ", " ---</p><p>--- Reason: ").Contains("This ban has been lifted by "))
                         {
-                            y.Name = "Reason";
-                            y.Value = $"{Format.Sanitize(reason)}";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
+                            string liftedMod = Extensions.GetBetween(text, "</p><p>--- This ban has been lifted by ", " ---</p><p>--- Reason: ");
+                            string liftedReason = Extensions.GetBetween(text, $"{liftedMod} ---</p><p>--- Reason: ", " ---</p><p>-----");
+                            string mod = Extensions.GetBetween(text, "</p><p>&nbsp;</p></b><p>", " banned ");
+                            string user = Extensions.GetBetween(text, $"{mod} banned ", " for ");
+                            string length = Extensions.GetBetween(text, $"{user} for ", " on ");
+                            string date = Extensions.GetBetween(text, $"{length} on ", ".</p>");
+                            string reason = Extensions.GetBetween(text, "<p>Reason: ", "</p>");
+                            string expires = Extensions.GetBetween(text, "<p>This ban will expire on ", ".</p>");
+                            liftedMod = $"[{Format.Sanitize(Uri.UnescapeDataString(liftedMod))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(liftedMod)})";
+                            mod = $"[{Format.Sanitize(Uri.UnescapeDataString(mod))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(mod)})";
+                            if (!user.Equals("<i>an IP</i>"))
+                            {
+                                user = $"[{Format.Sanitize(Uri.UnescapeDataString(user))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(user)})";
+                            }
+                            if (reason.Length <= 0)
+                            {
+                                reason = "No reason was provided.";
+                            }
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Lifted Ban";
+                                y.Value = $"{Format.Sanitize("This ban has been lifted by " + liftedMod)}";
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = $"{Format.Sanitize(liftedReason)}";
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Ban Info";
+                                y.Value = Format.Sanitize($"{mod} banned {user} for {length} on {date}.");
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = $"{Format.Sanitize(reason)}";
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Expires";
+                                y.Value = $"{expires}";
+                                y.IsInline = true;
+                            });
+                            await ReplyAsync("", false, embed.Build());
+                        }
+                        else
                         {
-                            y.Name = "Expires";
-                            y.Value = $"{expires}";
-                            y.IsInline = true;
-                        });
-
-                        await ReplyAsync("", false, embed.Build());
-                    }
-                    else
-                    {
-                        string mod = Extensions.GetBetween(text, "<div class='content'><p>", " banned ");
-                        string user = Extensions.GetBetween(text, $"{mod} banned ", " for ");
-                        string length = Extensions.GetBetween(text, $"{user} for ", " on ");
-                        string date = Extensions.GetBetween(text, $"{length} on ", ".</p>");
-                        string reason = Extensions.GetBetween(text, "<p>Reason: ", "</p>");
-                        string expires = Extensions.GetBetween(text, "<p>This ban will expire on ", ".</p>");
-                        mod = $"[{Format.Sanitize(Uri.UnescapeDataString(mod))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(mod)})";
-                        user = $"[{Format.Sanitize(Uri.UnescapeDataString(user))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(user)})";
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Ban Info";
-                            y.Value = Format.Sanitize($"{mod} banned {user} for {length} on {date}.");
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = $"{Format.Sanitize(reason)}";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Expires";
-                            y.Value = $"{expires}";
-                            y.IsInline = true;
-                        });
-
-                        await ReplyAsync("", false, embed.Build());
+                            string mod = Extensions.GetBetween(text, "<div class='content'><p>", " banned ");
+                            string user = Extensions.GetBetween(text, $"{mod} banned ", " for ");
+                            string length = Extensions.GetBetween(text, $"{user} for ", " on ");
+                            string date = Extensions.GetBetween(text, $"{length} on ", ".</p>");
+                            string reason = Extensions.GetBetween(text, "<p>Reason: ", "</p>");
+                            string expires = Extensions.GetBetween(text, "<p>This ban will expire on ", ".</p>");
+                            mod = $"[{Format.Sanitize(Uri.UnescapeDataString(mod))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(mod)})";
+                            if (!user.Equals("<i>an IP</i>"))
+                            {
+                                user = $"[{Format.Sanitize(Uri.UnescapeDataString(user))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(user)})";
+                            }
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Ban Info";
+                                y.Value = Format.Sanitize($"{mod} banned {user} for {length} on {date}.");
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = $"{Format.Sanitize(reason)}";
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Expires";
+                                y.Value = $"{expires}";
+                                y.IsInline = true;
+                            });
+                            await ReplyAsync("", false, embed.Build());
+                        }
                     }
                 }
             }
@@ -1921,39 +1922,47 @@ namespace FredBotNETCore.Modules.Public
                     return;
                 }
                 HttpClient web = new HttpClient();
-                string text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
-
-                string[] pops = text.Split('}');
-                int pop = 0;
-                foreach (string server in pops)
+                string text = null;
+                try
                 {
-                    if (server.Length > 5)
-                    {
-                        int population = Convert.ToInt32(Extensions.GetBetween(server, "population\":\"", "\","));
-                        pop += population;
-                    }
+                    text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
                 }
-
-                EmbedBuilder embed = new EmbedBuilder()
+                catch (HttpRequestException)
                 {
-                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                };
-                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                }
+                if (text != null)
                 {
-                    IconUrl = Context.User.GetAvatarUrl(),
-                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                };
-                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                {
-                    Name = "PR2 Total Online Users",
-                    Url = "https://pr2hub.com/server_status.php"
-                };
-                embed.WithFooter(footer);
-                embed.WithAuthor(author);
-                embed.WithCurrentTimestamp();
-                embed.Description = $"The total number of users on PR2 currently is {pop}";
-
-                await ReplyAsync("", false, embed.Build());
+                    string[] pops = text.Split('}');
+                    int pop = 0;
+                    foreach (string server in pops)
+                    {
+                        if (server.Length > 5)
+                        {
+                            int population = Convert.ToInt32(Extensions.GetBetween(server, "population\":\"", "\","));
+                            pop += population;
+                        }
+                    }
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        IconUrl = Context.User.GetAvatarUrl(),
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                    };
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = "PR2 Total Online Users",
+                        Url = "https://pr2hub.com/server_status.php"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithAuthor(author);
+                    embed.WithCurrentTimestamp();
+                    embed.Description = $"The total number of users on PR2 currently is {pop}";
+                    await ReplyAsync("", false, embed.Build());
+                }
             }
             else
             {
@@ -2009,7 +2018,16 @@ namespace FredBotNETCore.Modules.Public
                             await ReplyAsync($"{Context.User.Mention} that user has not linked their PR2 account.");
                             return;
                         }
-                        string pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
+                        string pr2userinfo = null;
+                        try
+                        {
+                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
+                        }
+                        catch (HttpRequestException)
+                        {
+                            await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                            return;
+                        }
                         string status = Extensions.GetBetween(pr2userinfo, ",\"status\":\"", "\",\"loginDate\":\"");
                         if (status.Equals("offline"))
                         {
@@ -2019,80 +2037,89 @@ namespace FredBotNETCore.Modules.Public
                         status = status.Substring(11);
                         server = status;
                     }
-                    string text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
-                    if (text.ToLower().Contains(server.ToLower()))
+                    string text = null;
+                    try
                     {
-                        string serverInfo = Extensions.GetBetween(text.ToLower(), server.ToLower(), "}");
-                        string pop = Extensions.GetBetween(serverInfo, "\",\"population\":\"", "\",\"status\":\"");
-                        string status = Extensions.GetBetween(serverInfo, "\",\"status\":\"", "\",\"guild_id\":\"");
-                        int tournament = Convert.ToInt32(Extensions.GetBetween(serverInfo, "\",\"tournament\":\"", "\",\"happy_hour\":\""));
-                        int happyHour = Convert.ToInt32(Extensions.GetBetween(serverInfo, "\",\"happy_hour\":\"", "\""));
-                        string hh = "No";
-                        string tourn = "No";
-                        if (happyHour == 1)
-                        {
-                            hh = "Yes";
-                        }
-                        if (tournament == 1)
-                        {
-                            tourn = "Yes";
-                        }
-                        if (status == "open")
-                        {
-                            status = "Open";
-                        }
-                        if (status == "down")
-                        {
-                            status = "Down";
-                        }
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            IconUrl = Context.User.GetAvatarUrl(),
-                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                        };
-                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Server Stats - {server}",
-                            Url = "https://pr2hub.com/server_status.php"
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithAuthor(author);
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Population";
-                            y.Value = $"{pop}";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Status";
-                            y.Value = $"{status}";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Happy Hour";
-                            y.Value = $"{hh}";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Tournament";
-                            y.Value = $"{tourn}";
-                            y.IsInline = true;
-                        });
-                        embed.WithCurrentTimestamp();
-
-                        await ReplyAsync("", false, embed.Build());
+                        text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
                     }
-                    else
+                    catch (HttpRequestException)
                     {
-                        await ReplyAsync($"{Context.User.Mention} the server **{Format.Sanitize(server)}** does not exist or could not be found.");
-                        return;
+                        await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                    }
+                    if (text != null)
+                    {
+                        if (text.ToLower().Contains(server.ToLower()))
+                        {
+                            string serverInfo = Extensions.GetBetween(text.ToLower(), server.ToLower(), "}");
+                            string pop = Extensions.GetBetween(serverInfo, "\",\"population\":\"", "\",\"status\":\"");
+                            string status = Extensions.GetBetween(serverInfo, "\",\"status\":\"", "\",\"guild_id\":\"");
+                            int tournament = Convert.ToInt32(Extensions.GetBetween(serverInfo, "\",\"tournament\":\"", "\",\"happy_hour\":\""));
+                            int happyHour = Convert.ToInt32(Extensions.GetBetween(serverInfo, "\",\"happy_hour\":\"", "\""));
+                            string hh = "No";
+                            string tourn = "No";
+                            if (happyHour == 1)
+                            {
+                                hh = "Yes";
+                            }
+                            if (tournament == 1)
+                            {
+                                tourn = "Yes";
+                            }
+                            if (status == "open")
+                            {
+                                status = "Open";
+                            }
+                            if (status == "down")
+                            {
+                                status = "Down";
+                            }
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = Context.User.GetAvatarUrl(),
+                                Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                            };
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = $"Server Stats - {server}",
+                                Url = "https://pr2hub.com/server_status.php"
+                            };
+                            embed.WithFooter(footer);
+                            embed.WithAuthor(author);
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Population";
+                                y.Value = $"{pop}";
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Status";
+                                y.Value = $"{status}";
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Happy Hour";
+                                y.Value = $"{hh}";
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Tournament";
+                                y.Value = $"{tourn}";
+                                y.IsInline = true;
+                            });
+                            embed.WithCurrentTimestamp();
+                            await ReplyAsync("", false, embed.Build());
+                        }
+                        else
+                        {
+                            await ReplyAsync($"{Context.User.Mention} the server **{Format.Sanitize(server)}** does not exist or could not be found.");
+                        }
                     }
                 }
             }
@@ -2144,15 +2171,23 @@ namespace FredBotNETCore.Modules.Public
                         {
                             Database.EnterUser(user);
                         }
-                        guildname = Database.GetPR2Name(user);
+                        string pr2name = Database.GetPR2Name(user);
                         if (guildname.Equals("Not verified"))
                         {
                             await ReplyAsync($"{Context.User.Mention} that user has not linked their PR2 account.");
                             return;
                         }
-                        string pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + guildname);
-                        string[] userinfo = pr2userinfo.Split(',');
-                        string guild = userinfo[17].Substring(13).TrimEnd(new char[] { '"', ' ' });
+                        string pr2userinfo = null;
+                        try
+                        {
+                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
+                        }
+                        catch (HttpRequestException)
+                        {
+                            await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                            return;
+                        }
+                        string guild = Extensions.GetBetween(pr2userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
                         if (guild.Length <= 0)
                         {
                             await ReplyAsync($"{Context.User.Mention} that users account is not a member of a guild.");
@@ -2160,39 +2195,49 @@ namespace FredBotNETCore.Modules.Public
                         }
                         guildname = guild;
                     }
-                    string text = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
-                    if (text.Contains(value: "{\"error\":\""))
+                    string text = null;
+                    try
                     {
-                        await ReplyAsync($"{Context.User.Mention} the guild **{Format.Sanitize(guildname)}** does not exist or could not be found.");
-                        return;
+                        text = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
                     }
-                    string[] users = Extensions.GetBetween(text, "[", "]").Split('}');
-                    List<string> guildMembers = new List<string>();
-                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    catch (HttpRequestException)
                     {
-                        Url = "https://pr2hub.com/guild_search.php?name=" + Uri.EscapeDataString(guildname),
-                        Name = "Guild Members - " + guildname
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Author = author,
-                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
-                    };
-                    foreach (string user_id in users)
-                    {
-                        string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
-                        guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                        await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    if (text != null)
                     {
-                        IconUrl = Context.User.GetAvatarUrl(),
-                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    embed.Description = $"{string.Join(", ", guildMembers)}";
-
-                    await ReplyAsync("", false, embed.Build());
+                        if (text.Contains(value: "{\"error\":\""))
+                        {
+                            await ReplyAsync($"{Context.User.Mention} the guild **{Format.Sanitize(guildname)}** does not exist or could not be found.");
+                            return;
+                        }
+                        string[] users = Extensions.GetBetween(text, "[", "]").Split('}');
+                        List<string> guildMembers = new List<string>();
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Url = "https://pr2hub.com/guild_search.php?name=" + Uri.EscapeDataString(guildname),
+                            Name = "Guild Members - " + guildname
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
+                        };
+                        foreach (string user_id in users)
+                        {
+                            string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
+                            guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                        }
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            IconUrl = Context.User.GetAvatarUrl(),
+                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.Description = $"{string.Join(", ", guildMembers)}";
+                        await ReplyAsync("", false, embed.Build());
+                    }
                 }
             }
             else
@@ -2221,41 +2266,50 @@ namespace FredBotNETCore.Modules.Public
                 else
                 {
                     HttpClient web = new HttpClient();
-                    string text = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&id=" + id);
-
-                    if (text.Contains(value: "{\"error\":\""))
+                    string text = null;
+                    try
                     {
-                        await ReplyAsync($"{Context.User.Mention} the guild with ID **{id}** does not exist or could not be found.");
-                        return;
+                        text = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&id=" + id);
                     }
-                    string gName = Extensions.GetBetween(text, "\"guild_name\":\"", "\",\"");
-                    string[] users = Extensions.GetBetween(text, "[", "]").Split('}');
-                    List<string> guildMembers = new List<string>();
-                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    catch (HttpRequestException)
                     {
-                        Url = "https://pr2hub.com/guild_search.php?id=" + id,
-                        Name = "Guild Members - " + gName
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Author = author,
-                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
-                    };
-                    foreach (string user_id in users)
-                    {
-                        string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
-                        guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                        await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    if (text != null)
                     {
-                        IconUrl = Context.User.GetAvatarUrl(),
-                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    embed.Description = $"{string.Join(", ", guildMembers)}";
-
-                    await ReplyAsync("", false, embed.Build());
+                        if (text.Contains(value: "{\"error\":\""))
+                        {
+                            await ReplyAsync($"{Context.User.Mention} the guild with ID **{id}** does not exist or could not be found.");
+                            return;
+                        }
+                        string gName = Extensions.GetBetween(text, "\"guild_name\":\"", "\",\"");
+                        string[] users = Extensions.GetBetween(text, "[", "]").Split('}');
+                        List<string> guildMembers = new List<string>();
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Url = "https://pr2hub.com/guild_search.php?id=" + id,
+                            Name = "Guild Members - " + gName
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
+                        };
+                        foreach (string user_id in users)
+                        {
+                            string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
+                            guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                        }
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            IconUrl = Context.User.GetAvatarUrl(),
+                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.Description = $"{string.Join(", ", guildMembers)}";
+                        await ReplyAsync("", false, embed.Build());
+                    }
                 }
             }
             else
@@ -2273,52 +2327,62 @@ namespace FredBotNETCore.Modules.Public
             {
                 HttpClient web = new HttpClient();
                 string hhServers = "", happyHour = "";
-                string text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
-                string[] servers = text.Split('}');
-                foreach (string server_name in servers)
+                string text = null;
+                try
                 {
-                    happyHour = Extensions.GetBetween(server_name, "hour\":\"", "\"");
-                    if (happyHour.Equals("1"))
+                    text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
+                }
+                catch (HttpRequestException)
+                {
+                    await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                }
+                if (text != null)
+                {
+                    string[] servers = text.Split('}');
+                    foreach (string server_name in servers)
                     {
-                        string serverName = Extensions.GetBetween(server_name, "server_name\":\"", "\"");
-                        hhServers = hhServers + serverName + ", ";
+                        happyHour = Extensions.GetBetween(server_name, "hour\":\"", "\"");
+                        if (happyHour.Equals("1"))
+                        {
+                            string serverName = Extensions.GetBetween(server_name, "server_name\":\"", "\"");
+                            hhServers = hhServers + serverName + ", ";
+                        }
                     }
+                    if (hhServers.Length < 1)
+                    {
+                        await ReplyAsync($"{Context.User.Mention} no servers currently have happy hour on them.");
+                        return;
+                    }
+                    hhServers = hhServers.TrimEnd(new char[] { ' ', ',', ',' });
+                    int count = hhServers.Split(',').Length - 1;
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Url = "https://pr2hub.com/server_status.php"
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                        Author = author
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        IconUrl = Context.User.GetAvatarUrl(),
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    if (count == 0)
+                    {
+                        author.Name = $"Happy Hour Server";
+                        embed.Description = $"This server currently has a happy hour on it: {Format.Sanitize(hhServers.TrimEnd(new char[] { ' ', ',' }))}";
+                    }
+                    else
+                    {
+                        author.Name = $"Happy Hour Servers";
+                        embed.Description = $"These are the current servers with happy hour on them: {Format.Sanitize(hhServers)}";
+                    }
+                    await ReplyAsync("", false, embed.Build());
                 }
-                if (hhServers.Length < 1)
-                {
-                    await ReplyAsync($"{Context.User.Mention} no servers currently have happy hour on them.");
-                    return;
-                }
-                hhServers = hhServers.TrimEnd(new char[] { ' ', ',', ',' });
-                int count = hhServers.Split(',').Length - 1;
-                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                {
-                    Url = "https://pr2hub.com/server_status.php"
-                };
-                EmbedBuilder embed = new EmbedBuilder()
-                {
-                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                    Author = author
-                };
-                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                {
-                    IconUrl = Context.User.GetAvatarUrl(),
-                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                };
-                embed.WithFooter(footer);
-                embed.WithCurrentTimestamp();
-                if (count == 0)
-                {
-                    author.Name = $"Happy Hour Server";
-                    embed.Description = $"This server currently has a happy hour on it: {Format.Sanitize(hhServers.TrimEnd(new char[] { ' ', ',' }))}";
-                }
-                else
-                {
-                    author.Name = $"Happy Hour Servers";
-                    embed.Description = $"These are the current servers with happy hour on them: {Format.Sanitize(hhServers)}";
-                }
-
-                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -2345,7 +2409,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    StreamReader pr2token = new StreamReader(path: Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
+                    string pr2token = File.ReadAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
                     Dictionary<string, string> values = new Dictionary<string, string>
                     {
                         { "dir", "desc" },
@@ -2353,177 +2417,187 @@ namespace FredBotNETCore.Modules.Public
                         { "order", "popularity" },
                         { "page", "1" },
                         { "search_str", level },
-                        { "token", pr2token.ReadLine() }
+                        { "token", pr2token }
                     };
-                    pr2token.Close();
                     HttpClient web = new HttpClient();
                     FormUrlEncodedContent content = new FormUrlEncodedContent(values);
-                    HttpResponseMessage response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
-                    string responseString = await response.Content.ReadAsStringAsync();
-                    string version = Extensions.GetBetween(responseString, "&version0=", "&title0=");
-                    string title = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&title0=", "&rating0=")).Replace("+", " ");
-                    string rating = Extensions.GetBetween(responseString, "&rating0=", "&playCount0=");
-                    string plays = int.Parse(Extensions.GetBetween(responseString, "&playCount0=", "&minLevel0=")).ToString("N0");
-                    string minLevel = Extensions.GetBetween(responseString, "&minLevel0=", "&note0=");
-                    string note = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&note0=", "&userName0=")).Replace("+", " ");
-                    string user = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
-                    if (title.Length <= 0)
+                    HttpResponseMessage response = null;
+                    try
                     {
-                        await ReplyAsync($"{Context.User.Mention} the level **{Format.Sanitize(level)}** does not exist or could not be found.");
-                        return;
+                        response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
                     }
-                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    catch (HttpRequestException)
                     {
-                        Name = $"-- {title} --",
-                        Url = "https://pr2hub.com/levels/" + Extensions.GetBetween(responseString, "levelID0=", "&version0=") + ".txt?version=" + version
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                        Author = author
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        IconUrl = Context.User.GetAvatarUrl(),
-                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    embed.Description = $"**By:** {Format.Sanitize(user)}\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n-----";
-                    if (note.Length > 0)
-                    {
-                        embed.Description = embed.Description + $"\n{Format.Sanitize(note)}";
+                        await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
-                    await ReplyAsync("", false, embed.Build());
-                }
-            }
-        }
-
-        [Command("verifyguild", RunMode = RunMode.Async)]
-        [Alias("addguild")]
-        [Summary("Creates a channel for the users guild.")]
-        public async Task VerifyGuild()
-        {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
-            {
-                List<string> result = Database.CheckExistingUser(Context.User);
-                if (result.Count() <= 0)
-                {
-                    Database.EnterUser(Context.User);
-                }
-                string pr2name = Database.GetPR2Name(Context.User);
-                if (pr2name.Equals("Not verified"))
-                {
-                    await ReplyAsync($"{Context.User.Mention} you have not linked your PR2 account.");
-                    return;
-                }
-                HttpClient web = new HttpClient();
-                string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
-                string guild = Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
-                string id = Extensions.GetBetween(userinfo, "\",\"userId\":\"", "\",\"hatColor2\":");
-                string guildinfo = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guild);
-                string owner = Extensions.GetBetween(guildinfo, "\",\"owner_id\":\"", "\",\"note\":\"");
-                if (id.Equals(owner))
-                {
-                    int memberCount = int.Parse(Extensions.GetBetween(guildinfo, "\",\"member_count\":\"", "\",\"emblem\":\""));
-                    if (memberCount < 15)
+                    if (response != null)
                     {
-                        await ReplyAsync($"{Context.User.Mention} you need at least 15 members in your guild.");
-                        return;
-                    }
-                    IReadOnlyCollection<SocketRole> roles = Context.Guild.Roles;
-                    bool exists = false;
-                    foreach (IRole role in roles)
-                    {
-                        if (role.Name == guild)
+                        string responseString = await response.Content.ReadAsStringAsync();
+                        string version = Extensions.GetBetween(responseString, "&version0=", "&title0=");
+                        string title = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&title0=", "&rating0=")).Replace("+", " ");
+                        string rating = Extensions.GetBetween(responseString, "&rating0=", "&playCount0=");
+                        string plays = int.Parse(Extensions.GetBetween(responseString, "&playCount0=", "&minLevel0=")).ToString("N0");
+                        string minLevel = Extensions.GetBetween(responseString, "&minLevel0=", "&note0=");
+                        string note = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&note0=", "&userName0=")).Replace("+", " ");
+                        string user = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
+                        if (title.Length <= 0)
                         {
-                            exists = true;
-                            break;
+                            await ReplyAsync($"{Context.User.Mention} the level **{Format.Sanitize(level)}** does not exist or could not be found.");
+                            return;
                         }
-                    }
-                    if (!exists)
-                    {
-                        Discord.Rest.RestRole guildRole = await Context.Guild.CreateRoleAsync(guild, null, null, false);
-                        SocketRole everyoneRole = Context.Guild.EveryoneRole;
-                        SocketRole mutedRole = Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Muted".ToUpper()).First();
-                        Discord.Rest.RestTextChannel guildChannel = await Context.Guild.CreateTextChannelAsync(guild.Replace(" ", "-"));
-                        await guildChannel.ModifyAsync(x => x.CategoryId = 528704611289399296);
-                        await guildChannel.AddPermissionOverwriteAsync(guildRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Inherit));
-                        await guildChannel.AddPermissionOverwriteAsync(mutedRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Deny));
-                        await guildChannel.AddPermissionOverwriteAsync(everyoneRole, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny));
-                        Discord.Rest.RestVoiceChannel guildVoice = await Context.Guild.CreateVoiceChannelAsync(guild);
-                        await guildVoice.ModifyAsync(x => x.CategoryId = 528704611289399296);
-                        await guildVoice.AddPermissionOverwriteAsync(guildRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Allow));
-                        await guildVoice.AddPermissionOverwriteAsync(mutedRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Deny, speak: PermValue.Deny));
-                        await guildVoice.AddPermissionOverwriteAsync(everyoneRole, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny));
-                        IGuildUser user = Context.Guild.GetUser(Context.User.Id);
-                        RequestOptions options = new RequestOptions()
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
-                            AuditLogReason = "Adding Guild Role"
+                            Name = $"-- {title} --",
+                            Url = "https://pr2hub.com/levels/" + Extensions.GetBetween(responseString, "levelID0=", "&version0=") + ".txt?version=" + version
                         };
-                        await user.AddRoleAsync(guildRole, options);
-                    }
-                    else
-                    {
-                        await ReplyAsync($"{Context.User.Mention} your guild already has a guild channel.");
-                        return;
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                            Author = author
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            IconUrl = Context.User.GetAvatarUrl(),
+                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        embed.Description = $"**By:** {Format.Sanitize(user)}\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n";
+                        if (note.Length > 0)
+                        {
+                            embed.Description = embed.Description + $"-----\n{Format.Sanitize(note)}";
+                        }
+                        await ReplyAsync("", false, embed.Build());
                     }
                 }
-                else
-                {
-                    await ReplyAsync($"{Context.User.Mention} you are not the owner of this guild.");
-                    return;
-                }
-            }
-            else
-            {
-                return;
             }
         }
 
-        [Command("joinguild", RunMode = RunMode.Async)]
-        [Alias("jguild", "guildjoin", "guildj")]
-        [Summary("Adds user to guild role of their guild if it exists.")]
-        public async Task JoinGuild()
-        {
-            if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
-            {
-                List<string> result = Database.CheckExistingUser(Context.User);
-                if (result.Count() <= 0)
-                {
-                    Database.EnterUser(Context.User);
-                }
-                string pr2name = Database.GetPR2Name(Context.User);
-                if (pr2name.Equals("Not verified"))
-                {
-                    await ReplyAsync($"{Context.User.Mention} you have not linked your PR2 account.");
-                    return;
-                }
-                HttpClient web = new HttpClient();
-                string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
-                string guild = Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
-                IReadOnlyCollection<SocketRole> roles = Context.Guild.Roles;
-                foreach (IRole role in roles)
-                {
-                    if (role.Name == guild)
-                    {
-                        SocketGuildUser user = Context.User as SocketGuildUser;
-                        RequestOptions options = new RequestOptions()
-                        {
-                            AuditLogReason = "Adding Guild Role"
-                        };
-                        await user.AddRoleAsync(role, options);
-                        await ReplyAsync($"{Context.User.Mention} you have been added to the guild role **{Format.Sanitize(guild)}**.");
-                        break;
-                    }
-                }
-                await ReplyAsync($"{Context.User.Mention} your guild does not have a guild channel.");
-            }
-            else
-            {
-                return;
-            }
-        }
+        //[Command("verifyguild", RunMode = RunMode.Async)]
+        //[Alias("addguild")]
+        //[Summary("Creates a channel for the users guild.")]
+        //public async Task VerifyGuild()
+        //{
+        //    if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
+        //    {
+        //        List<string> result = Database.CheckExistingUser(Context.User);
+        //        if (result.Count() <= 0)
+        //        {
+        //            Database.EnterUser(Context.User);
+        //        }
+        //        string pr2name = Database.GetPR2Name(Context.User);
+        //        if (pr2name.Equals("Not verified"))
+        //        {
+        //            await ReplyAsync($"{Context.User.Mention} you have not linked your PR2 account.");
+        //            return;
+        //        }
+        //        HttpClient web = new HttpClient();
+        //        string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
+        //        string guild = Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
+        //        string id = Extensions.GetBetween(userinfo, "\",\"userId\":\"", "\",\"hatColor2\":");
+        //        string guildinfo = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guild);
+        //        string owner = Extensions.GetBetween(guildinfo, "\",\"owner_id\":\"", "\",\"note\":\"");
+        //        if (id.Equals(owner))
+        //        {
+        //            int memberCount = int.Parse(Extensions.GetBetween(guildinfo, "\",\"member_count\":\"", "\",\"emblem\":\""));
+        //            if (memberCount < 15)
+        //            {
+        //                await ReplyAsync($"{Context.User.Mention} you need at least 15 members in your guild.");
+        //                return;
+        //            }
+        //            IReadOnlyCollection<SocketRole> roles = Context.Guild.Roles;
+        //            bool exists = false;
+        //            foreach (IRole role in roles)
+        //            {
+        //                if (role.Name == guild)
+        //                {
+        //                    exists = true;
+        //                    break;
+        //                }
+        //            }
+        //            if (!exists)
+        //            {
+        //                Discord.Rest.RestRole guildRole = await Context.Guild.CreateRoleAsync(guild, null, null, false);
+        //                SocketRole everyoneRole = Context.Guild.EveryoneRole;
+        //                SocketRole mutedRole = Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Muted".ToUpper()).First();
+        //                Discord.Rest.RestTextChannel guildChannel = await Context.Guild.CreateTextChannelAsync(guild.Replace(" ", "-"));
+        //                await guildChannel.ModifyAsync(x => x.CategoryId = 528704611289399296);
+        //                await guildChannel.AddPermissionOverwriteAsync(guildRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Inherit));
+        //                await guildChannel.AddPermissionOverwriteAsync(mutedRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Deny));
+        //                await guildChannel.AddPermissionOverwriteAsync(everyoneRole, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny));
+        //                Discord.Rest.RestVoiceChannel guildVoice = await Context.Guild.CreateVoiceChannelAsync(guild);
+        //                await guildVoice.ModifyAsync(x => x.CategoryId = 528704611289399296);
+        //                await guildVoice.AddPermissionOverwriteAsync(guildRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Allow));
+        //                await guildVoice.AddPermissionOverwriteAsync(mutedRole, OverwritePermissions.InheritAll.Modify(PermValue.Deny, PermValue.Inherit, PermValue.Inherit, PermValue.Allow, PermValue.Deny, speak: PermValue.Deny));
+        //                await guildVoice.AddPermissionOverwriteAsync(everyoneRole, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny));
+        //                IGuildUser user = Context.Guild.GetUser(Context.User.Id);
+        //                RequestOptions options = new RequestOptions()
+        //                {
+        //                    AuditLogReason = "Adding Guild Role"
+        //                };
+        //                await user.AddRoleAsync(guildRole, options);
+        //            }
+        //            else
+        //            {
+        //                await ReplyAsync($"{Context.User.Mention} your guild already has a guild channel.");
+        //                return;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            await ReplyAsync($"{Context.User.Mention} you are not the owner of this guild.");
+        //            return;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return;
+        //    }
+        //}
+
+        //[Command("joinguild", RunMode = RunMode.Async)]
+        //[Alias("jguild", "guildjoin", "guildj")]
+        //[Summary("Adds user to guild role of their guild if it exists.")]
+        //public async Task JoinGuild()
+        //{
+        //    if (Extensions.AllowedChannels().Contains(Context.Channel.Id))
+        //    {
+        //        List<string> result = Database.CheckExistingUser(Context.User);
+        //        if (result.Count() <= 0)
+        //        {
+        //            Database.EnterUser(Context.User);
+        //        }
+        //        string pr2name = Database.GetPR2Name(Context.User);
+        //        if (pr2name.Equals("Not verified"))
+        //        {
+        //            await ReplyAsync($"{Context.User.Mention} you have not linked your PR2 account.");
+        //            return;
+        //        }
+        //        HttpClient web = new HttpClient();
+        //        string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
+        //        string guild = Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
+        //        IReadOnlyCollection<SocketRole> roles = Context.Guild.Roles;
+        //        foreach (IRole role in roles)
+        //        {
+        //            if (role.Name == guild)
+        //            {
+        //                SocketGuildUser user = Context.User as SocketGuildUser;
+        //                RequestOptions options = new RequestOptions()
+        //                {
+        //                    AuditLogReason = "Adding Guild Role"
+        //                };
+        //                await user.AddRoleAsync(role, options);
+        //                await ReplyAsync($"{Context.User.Mention} you have been added to the guild role **{Format.Sanitize(guild)}**.");
+        //                break;
+        //            }
+        //        }
+        //        await ReplyAsync($"{Context.User.Mention} your guild does not have a guild channel.");
+        //    }
+        //    else
+        //    {
+        //        return;
+        //    }
+        //}
 
         [Command("servers", RunMode = RunMode.Async)]
         [Alias("sl", "status", "serverstatus", "ss")]
@@ -2538,65 +2612,76 @@ namespace FredBotNETCore.Modules.Public
                     return;
                 }
                 HttpClient web = new HttpClient();
-                string text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
-                string[] serversinfo = text.Split('}');
-                string pop = "", name = "", status = "", happyHour = "";
-                int serverId = 0;
-                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                string text = null;
+                try
                 {
-                    Url = "https://pr2hub.com/server_status.php",
-                    Name = "Server Status"
-                };
-                EmbedBuilder embed = new EmbedBuilder()
-                {
-                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                    Author = author
-                };
-                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                {
-                    IconUrl = Context.User.GetAvatarUrl(),
-                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                };
-                embed.WithFooter(footer);
-                embed.WithCurrentTimestamp();
-                embed.Description = "";
-                foreach (string server_id in serversinfo)
-                {
-                    name = Extensions.GetBetween(server_id, "\",\"server_name\":\"", "\",\"address\":\"");
-                    if (name.Length <= 0)
-                    {
-                        break;
-                    }
-                    pop = Extensions.GetBetween(server_id, "\",\"population\":\"", "\",\"status\":\"");
-                    status = Extensions.GetBetween(server_id, "\",\"status\":\"", "\",\"guild_id\":\"");
-                    happyHour = Extensions.GetBetween(server_id, "\",\"happy_hour\":\"", "\"");
-                    serverId = int.Parse(Extensions.GetBetween(server_id, "\"server_id\":\"", "\",\"server_name\":\""));
-                    if (status.Equals("down", StringComparison.InvariantCultureIgnoreCase) && serverId < 11)
-                    {
-                        embed.Description = embed.Description + name + " (down)\n";
-                    }
-                    else if (happyHour.Equals("1") && serverId < 11)
-                    {
-                        embed.Description = embed.Description + "!! " + name + " (" + pop + " online)\n";
-                    }
-                    else if (happyHour.Equals("1") && serverId > 10)
-                    {
-                        embed.Description = embed.Description + "* !! " + Format.Sanitize(name) + " (" + pop + " online)\n";
-                    }
-                    else if (status.Equals("down", StringComparison.InvariantCultureIgnoreCase) && serverId > 10)
-                    {
-                        embed.Description = embed.Description + "* " + Format.Sanitize(name) + " (down)\n";
-                    }
-                    else if (serverId > 10)
-                    {
-                        embed.Description = embed.Description + "* " + Format.Sanitize(name) + " (" + pop + " online)\n";
-                    }
-                    else
-                    {
-                        embed.Description = embed.Description + name + " (" + pop + " online)\n";
-                    }
+                    text = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
                 }
-                await ReplyAsync("", false, embed.Build());
+                catch (HttpRequestException)
+                {
+                    await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                }
+                if (text != null)
+                {
+                    string[] serversinfo = text.Split('}');
+                    string pop = "", name = "", status = "", happyHour = "";
+                    int serverId = 0;
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Url = "https://pr2hub.com/server_status.php",
+                        Name = "Server Status"
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                        Author = author
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        IconUrl = Context.User.GetAvatarUrl(),
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    embed.Description = "";
+                    foreach (string server_id in serversinfo)
+                    {
+                        name = Extensions.GetBetween(server_id, "\",\"server_name\":\"", "\",\"address\":\"");
+                        if (name.Length <= 0)
+                        {
+                            break;
+                        }
+                        pop = Extensions.GetBetween(server_id, "\",\"population\":\"", "\",\"status\":\"");
+                        status = Extensions.GetBetween(server_id, "\",\"status\":\"", "\",\"guild_id\":\"");
+                        happyHour = Extensions.GetBetween(server_id, "\",\"happy_hour\":\"", "\"");
+                        serverId = int.Parse(Extensions.GetBetween(server_id, "\"server_id\":\"", "\",\"server_name\":\""));
+                        if (status.Equals("down", StringComparison.InvariantCultureIgnoreCase) && serverId < 11)
+                        {
+                            embed.Description = embed.Description + name + " (down)\n";
+                        }
+                        else if (happyHour.Equals("1") && serverId < 11)
+                        {
+                            embed.Description = embed.Description + "!! " + name + " (" + pop + " online)\n";
+                        }
+                        else if (happyHour.Equals("1") && serverId > 10)
+                        {
+                            embed.Description = embed.Description + "* !! " + Format.Sanitize(name) + " (" + pop + " online)\n";
+                        }
+                        else if (status.Equals("down", StringComparison.InvariantCultureIgnoreCase) && serverId > 10)
+                        {
+                            embed.Description = embed.Description + "* " + Format.Sanitize(name) + " (down)\n";
+                        }
+                        else if (serverId > 10)
+                        {
+                            embed.Description = embed.Description + "* " + Format.Sanitize(name) + " (" + pop + " online)\n";
+                        }
+                        else
+                        {
+                            embed.Description = embed.Description + name + " (" + pop + " online)\n";
+                        }
+                    }
+                    await ReplyAsync("", false, embed.Build());
+                }
             }
             else
             {
@@ -2612,45 +2697,56 @@ namespace FredBotNETCore.Modules.Public
             if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 HttpClient web = new HttpClient();
-                string text = await web.GetStringAsync("https://pr2hub.com/staff.php");
-                string[] staff = text.Split("player_search");
-                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                string text = null;
+                try
                 {
-                    Name = "Staff Online",
-                    Url = "https://pr2hub.com/staff.php"
-                };
-                EmbedBuilder embed = new EmbedBuilder()
-                {
-                    Author = author,
-                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
-                };
-                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                {
-                    IconUrl = Context.User.GetAvatarUrl(),
-                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                };
-                embed.WithFooter(footer);
-                embed.WithCurrentTimestamp();
-                embed.Description = "";
-                foreach (string name in staff)
-                {
-                    string status = Extensions.GetBetween(name, "</a></td><td>", "</td><td>");
-                    if (status.Contains("Playing on"))
-                    {
-                        status = Extensions.GetBetween(name, "</a></td><td>Playing on ", "</td><td>");
-                        string pr2Name = Extensions.GetBetween(name, "; text-decoration: underline;'>", "</a></td><td>").Replace("&nbsp;", " ");
-                        embed.Description = embed.Description + "[" + Format.Sanitize(pr2Name) + "](https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(pr2Name) + ")(" + status + "), ";
-                    }
-                };
-                if (embed.Description.Length <= 0)
-                {
-                    await ReplyAsync($"{Context.User.Mention} there is no PR2 Staff online currently.");
-                    return;
+                    text = await web.GetStringAsync("https://pr2hub.com/staff.php");
                 }
-                else
+                catch (HttpRequestException)
                 {
-                    embed.Description = embed.Description.TrimEnd(new char[] { ' ', ',', ',' });
-                    await ReplyAsync("", false, embed.Build());
+                    await ReplyAsync($"{Context.User.Mention} connection to PR2 Hub was not successfull.");
+                }
+                if (text != null)
+                {
+                    string[] staff = text.Split("player_search");
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = "Staff Online",
+                        Url = "https://pr2hub.com/staff.php"
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Author = author,
+                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        IconUrl = Context.User.GetAvatarUrl(),
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    embed.Description = "";
+                    foreach (string name in staff)
+                    {
+                        string status = Extensions.GetBetween(name, "</a></td><td>", "</td><td>");
+                        if (status.Contains("Playing on"))
+                        {
+                            status = Extensions.GetBetween(name, "</a></td><td>Playing on ", "</td><td>");
+                            string pr2Name = Extensions.GetBetween(name, "; text-decoration: underline;'>", "</a></td><td>").Replace("&nbsp;", " ");
+                            embed.Description = embed.Description + "[" + Format.Sanitize(pr2Name) + "](https://pr2hub.com/player_search.php?name=" + Uri.EscapeDataString(pr2Name) + ")(" + status + "), ";
+                        }
+                    };
+                    if (embed.Description.Length <= 0)
+                    {
+                        await ReplyAsync($"{Context.User.Mention} there is no PR2 Staff online currently.");
+                        return;
+                    }
+                    else
+                    {
+                        embed.Description = embed.Description.TrimEnd(new char[] { ' ', ',', ',' });
+                        await ReplyAsync("", false, embed.Build());
+                    }
                 }
             }
             else

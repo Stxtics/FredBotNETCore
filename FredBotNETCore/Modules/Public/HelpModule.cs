@@ -31,6 +31,7 @@ namespace FredBotNETCore.Modules.Public
                 Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
             };
             string help = "**Manager**\n" +
+                "/banlogchannel - Set the ban log channel for moderation actions." +
                 "/notificationschannel - Set the channel for HH and Arti updates.\n" +
                 "/logchannel - Set the log channel for the server.\n" +
                 "/addallowedchannel - Add an allowed channel for PR2 commands.\n" +

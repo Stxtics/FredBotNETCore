@@ -140,43 +140,38 @@ namespace FredBotNETCore
                     {
                         user = message.MentionedUsers.ElementAt(1);
                     }
-                    return user;
                 }
             }
-            if (ulong.TryParse(username, out ulong userid))
+            if (user == null)
             {
-                try
+                if (ulong.TryParse(username, out ulong userId))
                 {
-                    user = guild.GetUser(userid);
-                    return user;
+                    if (guild.Users.Where(x => x.Id == userId).Count() > 0)
+                    {
+                        user = guild.GetUser(userId);
+                    }
                 }
-                catch (Exception)
+            }
+            if (user == null)
+            {
+                string discriminator = null;
+                if (username.Contains("#"))
                 {
-                    return null;
+                    discriminator = username.Split("#").Last();
+                    username = username.Split("#").First();
                 }
-            }
-            string discriminator = null;
-            if (username.Contains("#"))
-            {
-                discriminator = username.Split("#").Last();
-                username = username.Split("#").First();
-            }
-            foreach (SocketGuildUser gUser in guild.Users)
-            {
                 if (discriminator == null)
                 {
-                    if (gUser.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase))
+                    if (guild.Users.Where(x => x.Username.ToUpper() == username.ToUpper()).Count() > 0)
                     {
-                        user = gUser;
-                        break;
+                        user = guild.Users.Where(x => x.Username.ToUpper() == username.ToUpper()).First();
                     }
                 }
                 else
                 {
-                    if (gUser.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase) && gUser.Discriminator.Equals(discriminator))
+                    if (guild.Users.Where(x => x.Username.ToUpper() == username.ToUpper()).Where(x => x.Discriminator == discriminator).Count() > 0)
                     {
-                        user = gUser;
-                        break;
+                        user = guild.Users.Where(x => x.Username.ToUpper() == username.ToUpper()).Where(x => x.Discriminator == discriminator).First();
                     }
                 }
             }
@@ -186,29 +181,28 @@ namespace FredBotNETCore
         public static SocketRole RoleInGuild(SocketUserMessage message, SocketGuild guild, string roleName)
         {
             SocketRole role = null;
-            if (message.MentionedRoles.Count > 0)
+            if (message != null)
             {
-                role = message.MentionedRoles.First();
-                return role;
-            }
-            if (ulong.TryParse(roleName, out ulong roleId))
-            {
-                try
+                if (message.MentionedRoles.Count > 0)
                 {
-                    role = guild.GetRole(roleId);
-                    return role;
-                }
-                catch (Exception)
-                {
-                    return null;
+                    role = message.MentionedRoles.First();
                 }
             }
-            foreach (SocketRole gRole in guild.Roles)
+            if (role == null)
             {
-                if (gRole.Name.Equals(roleName, StringComparison.InvariantCultureIgnoreCase))
+                if (ulong.TryParse(roleName, out ulong roleId))
                 {
-                    role = guild.GetRole(gRole.Id);
-                    break;
+                    if (guild.Roles.Where(x => x.Id == roleId).Count() > 0)
+                    {
+                        role = guild.GetRole(roleId);
+                    }
+                }
+            }
+            if (role == null)
+            {
+                if (guild.Roles.Where(x => x.Name.ToUpper() == roleName.ToUpper()).Count() > 0)
+                {
+                    role = guild.Roles.Where(x => x.Name.ToUpper() == roleName.ToUpper()).First();
                 }
             }
             return role;
@@ -217,29 +211,29 @@ namespace FredBotNETCore
         public static SocketGuildChannel ChannelInGuild(SocketUserMessage message, SocketGuild guild, string channelName)
         {
             SocketGuildChannel channel = null;
-            if (message.MentionedChannels.Count > 0)
+            if (message != null)
             {
-                channel = message.MentionedChannels.First();
-                return channel;
-            }
-            if (ulong.TryParse(channelName, out ulong channelId))
-            {
-                try
+                if (message.MentionedChannels.Count > 0)
                 {
-                    channel = guild.GetChannel(channelId);
+                    channel = message.MentionedChannels.First();
                     return channel;
                 }
-                catch (Exception)
+            }
+            if (channel == null)
+            {
+                if (ulong.TryParse(channelName, out ulong channelId))
                 {
-                    return null;
+                    if (guild.Channels.Where(x => x.Id == channelId).Count() > 0)
+                    {
+                        channel = guild.GetChannel(channelId);
+                    }
                 }
             }
-            foreach (SocketGuildChannel gChannel in guild.Channels)
+            if (channel == null)
             {
-                if (gChannel.Name.Equals(channelName, StringComparison.InvariantCultureIgnoreCase))
+                if (guild.Channels.Where(x => x.Name.ToUpper() == channelName.ToUpper()).Count() > 0)
                 {
-                    channel = guild.GetChannel(gChannel.Id);
-                    break;
+                    channel = guild.Channels.Where(x => x.Name.ToUpper() == channelName.ToUpper()).First();
                 }
             }
             return channel;
@@ -258,6 +252,16 @@ namespace FredBotNETCore
         public static ulong GetLogChannel()
         {
             return ulong.Parse(File.ReadAllText(Path.Combine(downloadPath, "LogChannel.txt")));
+        }
+
+        public static string GetNotificationsChannel()
+        {
+            return File.ReadAllText(Path.Combine(downloadPath, "NotificationsChannel.txt"));
+        }
+
+        public static string GetBanLogChannel()
+        {
+            return File.ReadAllText(Path.Combine(downloadPath, "BanLogChannel.txt"));
         }
 
         public static List<ulong> AllowedChannels()

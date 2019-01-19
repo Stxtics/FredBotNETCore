@@ -141,7 +141,7 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                SocketTextChannel channel = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "pr2-discussion".ToUpper()).First() as SocketTextChannel;
+                SocketTextChannel channel = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetNotificationsChannel().ToUpper()).First() as SocketTextChannel;
                 SocketRole role = Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Macroer".ToUpper()).First() as SocketRole;
                 RequestOptions options = new RequestOptions()
                 {
@@ -153,116 +153,6 @@ namespace FredBotNETCore.Modules
                 await channel.SendMessageAsync($"Servers have just been restarted. Check your macros!! {role.Mention}");
                 Extensions.Purging = false;
                 await role.ModifyAsync(x => x.Mentionable = false, options);
-            }
-        }
-
-        [Command("addrole", RunMode = RunMode.Async)]
-        [Alias("+role", "createrole")]
-        [Summary("Add a new role, with optional color and hoist.")]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
-        [RequireBotPermission(GuildPermission.ManageRoles)]
-        [RequireContext(ContextType.Guild)]
-        public async Task AddRole([Remainder] string settings = null)
-        {
-            if (string.IsNullOrWhiteSpace(settings))
-            {
-                EmbedBuilder embed = new EmbedBuilder()
-                {
-                    Color = new Color(220, 220, 220)
-                };
-                embed.Title = "Command: /addrole";
-                embed.Description = "**Description:** Add a new role, with optional color and hoist.\n**Usage:** /addrole [name] [hex color] [hoist]\n**Example:** /addrole Test #FF0000 true";
-                await ReplyAsync("", false, embed.Build());
-            }
-            else
-            {
-                RequestOptions options = new RequestOptions()
-                {
-                    AuditLogReason = $"Created by: {Context.User.Username}#{Context.User.Discriminator}"
-                };
-                if (settings.Contains("#"))
-                {
-                    string[] settingsSplit = settings.Split("#");
-                    if (settingsSplit[1].Contains("true"))
-                    {
-                        string[] settingsSplit2 = settingsSplit[1].Split(" ");
-                        try
-                        {
-                            System.Drawing.Color color = System.Drawing.Color.FromArgb(int.Parse(settingsSplit2[0].Replace("#", ""), NumberStyles.AllowHexSpecifier));
-                            bool hoisted = Convert.ToBoolean(settingsSplit2[1]);
-                            await Context.Guild.CreateRoleAsync(settingsSplit[0], null, new Color(color.R, color.G, color.B), hoisted, options);
-                            await ReplyAsync($"Created role **{Format.Sanitize(settingsSplit[0])}** with color **#{settingsSplit2[0]}**, and is displayed separately.");
-                        }
-                        catch (FormatException)
-                        {
-                            await Context.Guild.CreateRoleAsync(settings, null, null, false, options);
-                            await ReplyAsync($"Created role **{Format.Sanitize(settings)}**.");
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            System.Drawing.Color color = System.Drawing.Color.FromArgb(int.Parse(settingsSplit[1].Replace("#", ""), NumberStyles.AllowHexSpecifier));
-                            await Context.Guild.CreateRoleAsync(settingsSplit[0], null, new Color(color.R, color.G, color.B), false, options);
-                            await ReplyAsync($"Created role **{Format.Sanitize(settingsSplit[0])}** with color **#{settingsSplit[1]}**.");
-                        }
-                        catch (FormatException)
-                        {
-                            await Context.Guild.CreateRoleAsync(settings, null, null, false, options);
-                            await ReplyAsync($"Created role **{Format.Sanitize(settings)}**.");
-                        }
-                    }
-                }
-                else
-                {
-                    await Context.Guild.CreateRoleAsync(settings);
-                    await ReplyAsync($"Created role **{Format.Sanitize(settings)}**.");
-                }
-            }
-        }
-
-        [Command("delrole", RunMode = RunMode.Async)]
-        [Alias("-role", "deleterole")]
-        [Summary("Delete a role")]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
-        [RequireBotPermission(GuildPermission.ManageRoles)]
-        [RequireContext(ContextType.Guild)]
-        public async Task DelRole([Remainder] string roleName = null)
-        {
-            if (string.IsNullOrWhiteSpace(roleName))
-            {
-                EmbedBuilder embed = new EmbedBuilder()
-                {
-                    Color = new Color(220, 220, 220)
-                };
-                embed.Title = "Command: /delrole";
-                embed.Description = "**Description:** Delete a role.\n**Usage:** /delrole [role]\n**Example:** /delrole Admins";
-                await ReplyAsync("", false, embed.Build());
-            }
-            else
-            {
-                try
-                {
-                    if (Extensions.RoleInGuild(Context.Message, Context.Guild, roleName) != null)
-                    {
-                        SocketRole role = Extensions.RoleInGuild(Context.Message, Context.Guild, roleName);
-                        RequestOptions options = new RequestOptions()
-                        {
-                            AuditLogReason = $"Deleted by: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        await role.DeleteAsync(options);
-                        await ReplyAsync($"Deleted role **{Format.Sanitize(roleName)}**");
-                    }
-                    else
-                    {
-                        await ReplyAsync($"{Context.User.Mention} I could not find role **{Format.Sanitize(roleName)}**.");
-                    }
-                }
-                catch (NullReferenceException)
-                {
-                    await ReplyAsync($"{Context.User.Mention} I could not find role with ID: **{roleName}**.");
-                }
             }
         }
 
@@ -287,51 +177,43 @@ namespace FredBotNETCore.Modules
                 }
                 else
                 {
-                    try
+                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                        SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
+                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"));
+                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                         {
-                            SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                            string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"));
-                            if (currentBlacklistedUsers.Contains(user.Id.ToString()))
-                            {
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
-                                await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is already blacklisted from using music commands.");
-                            }
-                            else
-                            {
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
-                                SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = "Music Blacklist Add",
-                                    IconUrl = Context.Guild.IconUrl
-                                };
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    Text = $"ID: {Context.User.Id}",
-                                    IconUrl = Context.User.GetAvatarUrl()
-                                };
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Author = author,
-                                    Color = new Color(255, 0, 0),
-                                    Footer = footer
-                                };
-                                embed.WithCurrentTimestamp();
-                                embed.Description = $"{Context.User.Mention} blacklisted {user.Mention} from using music commands.";
-                                await ReplyAsync($"{Context.User.Mention} you have successfully blacklisted **{Format.Sanitize(user.Username)}#{user.Discriminator}** from using music commands.");
-                                await log.SendMessageAsync("", false, embed.Build());
-                            }
+                            await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is already blacklisted from using music commands.");
                         }
                         else
                         {
-                            await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Music Blacklist Add",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(255, 0, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} blacklisted {user.Mention} from using music commands.";
+                            await ReplyAsync($"{Context.User.Mention} you have successfully blacklisted **{Format.Sanitize(user.Username)}#{user.Discriminator}** from using music commands.");
+                            await log.SendMessageAsync("", false, embed.Build());
                         }
                     }
-                    catch (NullReferenceException)
+                    else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                     }
                 }
             }
@@ -362,51 +244,44 @@ namespace FredBotNETCore.Modules
                 }
                 else
                 {
-                    try
+                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                        SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
+                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"));
+                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                         {
-                            SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                            string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"));
-                            if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                            currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
-                                currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
-                                SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = "Music Blacklist Remove",
-                                    IconUrl = Context.Guild.IconUrl
-                                };
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    Text = $"ID: {Context.User.Id}",
-                                    IconUrl = Context.User.GetAvatarUrl()
-                                };
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Author = author,
-                                    Color = new Color(0, 255, 0),
-                                    Footer = footer
-                                };
-                                embed.WithCurrentTimestamp();
-                                embed.Description = $"{Context.User.Mention} unblacklisted {user.Mention} from using music commands.";
-                                await ReplyAsync($"{Context.User.Mention} you have successfully removed blacklisted music command user **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
-                                await log.SendMessageAsync("", false, embed.Build());
-                            }
-                            else
+                                Name = "Music Blacklist Remove",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
                             {
-                                await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is not blacklisted from using music commands.");
-                            }
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(0, 255, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} unblacklisted {user.Mention} from using music commands.";
+                            await ReplyAsync($"{Context.User.Mention} you have successfully removed blacklisted music command user **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
                         }
                         else
                         {
-                            await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                            await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is not blacklisted from using music commands.");
                         }
                     }
-                    catch (NullReferenceException)
+                    else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                     }
                 }
             }
@@ -425,7 +300,6 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                StreamReader blacklistedMusic = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     IconUrl = Context.Guild.IconUrl,
@@ -436,15 +310,13 @@ namespace FredBotNETCore.Modules
                     Color = new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)),
                     Author = auth
                 };
+                string[] blacklisted = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt")).Split("\n", StringSplitOptions.RemoveEmptyEntries);
                 string blacklistedUsers = "";
-                string line = blacklistedMusic.ReadLine();
-                while (line != null)
+                foreach (string user in blacklisted)
                 {
-                    string user = Context.Guild.GetUser(Convert.ToUInt64(line)).Username + "#" + Context.Guild.GetUser(Convert.ToUInt64(line)).Discriminator;
-                    blacklistedUsers = blacklistedUsers + user + "\n";
-                    line = blacklistedMusic.ReadLine();
+                    string currentUser = Context.Guild.GetUser(Convert.ToUInt64(user)).Username + "#" + Context.Guild.GetUser(Convert.ToUInt64(user)).Discriminator;
+                    blacklistedUsers = blacklistedUsers + currentUser + "\n";
                 }
-                blacklistedMusic.Close();
                 if (blacklistedUsers.Length <= 0)
                 {
                     await ReplyAsync($"{Context.User.Mention} there are no blacklisted users from music commands.");
@@ -487,57 +359,49 @@ namespace FredBotNETCore.Modules
                 }
                 else
                 {
-                    try
+                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                        SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
+                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"));
+                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                         {
-                            SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                            string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"));
-                            if (currentBlacklistedUsers.Contains(user.Id.ToString()))
-                            {
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
-                                await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is already blacklisted from suggestions.");
-                            }
-                            else
-                            {
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
-                                SocketTextChannel suggestions = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "suggestions".ToUpper()).First() as SocketTextChannel;
-                                RequestOptions options = new RequestOptions()
-                                {
-                                    AuditLogReason = $"Blacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                                };
-                                await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny), options);
-                                SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = "Suggestions Blacklist Add",
-                                    IconUrl = Context.Guild.IconUrl
-                                };
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    Text = $"ID: {Context.User.Id}",
-                                    IconUrl = Context.User.GetAvatarUrl()
-                                };
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Author = author,
-                                    Color = new Color(255, 0, 0),
-                                    Footer = footer
-                                };
-                                embed.WithCurrentTimestamp();
-                                embed.Description = $"{Context.User.Mention} blacklisted {user.Mention} from the suggestions channel.";
-                                await ReplyAsync($"{Context.User.Mention} you have successfully blacklisted **{Format.Sanitize(user.Username)}#{user.Discriminator}** from suggestions.");
-                                await log.SendMessageAsync("", false, embed.Build());
-                            }
+                            await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is already blacklisted from suggestions.");
                         }
                         else
                         {
-                            await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
+                            SocketTextChannel suggestions = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "suggestions".ToUpper()).First() as SocketTextChannel;
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = $"Blacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                            };
+                            await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny), options);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Suggestions Blacklist Add",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(255, 0, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} blacklisted {user.Mention} from the suggestions channel.";
+                            await ReplyAsync($"{Context.User.Mention} you have successfully blacklisted **{Format.Sanitize(user.Username)}#{user.Discriminator}** from suggestions.");
+                            await log.SendMessageAsync("", false, embed.Build());
                         }
                     }
-                    catch (NullReferenceException)
+                    else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                     }
                 }
             }
@@ -568,57 +432,50 @@ namespace FredBotNETCore.Modules
                 }
                 else
                 {
-                    try
+                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                     {
-                        if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                        IUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
+                        string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"));
+                        if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                         {
-                            IUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                            string currentBlacklistedUsers = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"));
-                            if (currentBlacklistedUsers.Contains(user.Id.ToString()))
+                            currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
+                            SocketTextChannel suggestions = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "suggestions".ToUpper()).First() as SocketTextChannel;
+                            RequestOptions options = new RequestOptions()
                             {
-                                currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
-                                SocketTextChannel suggestions = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "suggestions".ToUpper()).First() as SocketTextChannel;
-                                RequestOptions options = new RequestOptions()
-                                {
-                                    AuditLogReason = $"Unblacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                                };
-                                await suggestions.RemovePermissionOverwriteAsync(user, options);
-                                SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = "Suggestions Blacklist Remove",
-                                    IconUrl = Context.Guild.IconUrl
-                                };
-                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                {
-                                    Text = $"ID: {Context.User.Id}",
-                                    IconUrl = Context.User.GetAvatarUrl()
-                                };
-                                EmbedBuilder embed = new EmbedBuilder()
-                                {
-                                    Author = author,
-                                    Color = new Color(0, 255, 0),
-                                    Footer = footer
-                                };
-                                embed.WithCurrentTimestamp();
-                                embed.Description = $"{Context.User.Mention} unblacklisted {user.Mention} from the suggestions channel.";
-                                await ReplyAsync($"{Context.User.Mention} you have successfully removed blacklisted suggestions user **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
-                                await log.SendMessageAsync("", false, embed.Build());
-                            }
-                            else
+                                AuditLogReason = $"Unblacklisting User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                            };
+                            await suggestions.RemovePermissionOverwriteAsync(user, options);
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
-                                await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is not blacklisted from suggestions.");
-                            }
+                                Name = "Suggestions Blacklist Remove",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(0, 255, 0),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} unblacklisted {user.Mention} from the suggestions channel.";
+                            await ReplyAsync($"{Context.User.Mention} you have successfully removed blacklisted suggestions user **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
                         }
                         else
                         {
-                            await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                            await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is not blacklisted from suggestions.");
                         }
                     }
-                    catch (NullReferenceException)
+                    else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                     }
                 }
             }
@@ -637,7 +494,6 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                StreamReader blacklistedsuggestions = new StreamReader(path: Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"));
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
                     IconUrl = Context.Guild.IconUrl,
@@ -648,15 +504,13 @@ namespace FredBotNETCore.Modules
                     Color = new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)),
                     Author = auth
                 };
+                string[] blacklisted = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt")).Split("\n", StringSplitOptions.RemoveEmptyEntries);
                 string blacklistedUsers = "";
-                string line = blacklistedsuggestions.ReadLine();
-                while (line != null)
+                foreach (string user in blacklisted)
                 {
-                    string user = Context.Guild.GetUser(Convert.ToUInt64(line)).Username + "#" + Context.Guild.GetUser(Convert.ToUInt64(line)).Discriminator;
-                    blacklistedUsers = blacklistedUsers + user + "\n";
-                    line = blacklistedsuggestions.ReadLine();
+                    string currentUser = Context.Guild.GetUser(Convert.ToUInt64(user)).Username + "#" + Context.Guild.GetUser(Convert.ToUInt64(user)).Discriminator;
+                    blacklistedUsers = blacklistedUsers + currentUser + "\n";
                 }
-                blacklistedsuggestions.Close();
                 if (blacklistedUsers.Length <= 0)
                 {
                     await ReplyAsync($"{Context.User.Mention} there are no blacklisted suggestions users.");
@@ -697,174 +551,167 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName) != null)
                 {
-                    if (Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName) != null)
+                    SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName);
+                    string type = "Text";
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
-                        SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, channelName);
-                        string type = "Text";
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = "Channel Created"
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                            Footer = footer,
-                            Timestamp = channel.CreatedAt.Date
-                        };
+                        Text = "Channel Created"
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                        Footer = footer,
+                        Timestamp = channel.CreatedAt.Date
+                    };
+                    embed.AddField(y =>
+                    {
+                        y.Name = "ID";
+                        y.Value = channel.Id;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Name";
+                        y.Value = Format.Sanitize(channel.Name);
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Position";
+                        y.Value = channel.Position;
+                        y.IsInline = true;
+                    });
+                    if (channel is SocketVoiceChannel vChannel)
+                    {
+                        type = "Voice";
                         embed.AddField(y =>
                         {
-                            y.Name = "ID";
-                            y.Value = channel.Id;
+                            y.Name = "Type";
+                            y.Value = type;
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
                         {
-                            y.Name = "Name";
-                            y.Value = Format.Sanitize(channel.Name);
+                            y.Name = "Bitrate";
+                            y.Value = vChannel.Bitrate;
                             y.IsInline = true;
                         });
-                        embed.AddField(y =>
+                        if (vChannel.CategoryId != null)
                         {
-                            y.Name = "Position";
-                            y.Value = channel.Position;
-                            y.IsInline = true;
-                        });
-                        if (channel is SocketVoiceChannel vChannel)
-                        {
-                            type = "Voice";
                             embed.AddField(y =>
                             {
-                                y.Name = "Type";
-                                y.Value = type;
+                                y.Name = "Category ID";
+                                y.Value = vChannel.CategoryId;
                                 y.IsInline = true;
                             });
                             embed.AddField(y =>
                             {
-                                y.Name = "Bitrate";
-                                y.Value = vChannel.Bitrate;
+                                y.Name = "Category Name";
+                                y.Value = Format.Sanitize(vChannel.Category.Name);
                                 y.IsInline = true;
                             });
-                            if (vChannel.CategoryId != null)
-                            {
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Category ID";
-                                    y.Value = vChannel.CategoryId;
-                                    y.IsInline = true;
-                                });
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Category Name";
-                                    y.Value = Format.Sanitize(vChannel.Category.Name);
-                                    y.IsInline = true;
-                                });
-                            }
-                            if (vChannel.UserLimit != null)
-                            {
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "User Limit";
-                                    y.Value = vChannel.UserLimit;
-                                    y.IsInline = true;
-                                });
-                            }
-                            else
-                            {
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "User Limit";
-                                    y.Value = "Unlimited";
-                                    y.IsInline = true;
-                                });
-                            }
                         }
-                        else if (channel is SocketCategoryChannel cChannel)
+                        if (vChannel.UserLimit != null)
                         {
-                            type = "Category";
                             embed.AddField(y =>
                             {
-                                y.Name = "Type";
-                                y.Value = type;
+                                y.Name = "User Limit";
+                                y.Value = vChannel.UserLimit;
                                 y.IsInline = true;
                             });
-                            int children = 0;
-                            foreach (SocketGuildChannel gChannel in Context.Guild.Channels)
+                        }
+                        else
+                        {
+                            embed.AddField(y =>
                             {
-                                if (gChannel is SocketTextChannel tChannel)
+                                y.Name = "User Limit";
+                                y.Value = "Unlimited";
+                                y.IsInline = true;
+                            });
+                        }
+                    }
+                    else if (channel is SocketCategoryChannel cChannel)
+                    {
+                        type = "Category";
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Type";
+                            y.Value = type;
+                            y.IsInline = true;
+                        });
+                        int children = 0;
+                        foreach (SocketGuildChannel gChannel in Context.Guild.Channels)
+                        {
+                            if (gChannel is SocketTextChannel tChannel)
+                            {
+                                if (tChannel.CategoryId == cChannel.Id)
                                 {
-                                    if (tChannel.CategoryId == cChannel.Id)
-                                    {
-                                        children++;
-                                    }
-                                }
-                                else if (gChannel is SocketVoiceChannel vChannel2)
-                                {
-                                    if (vChannel2.CategoryId == cChannel.Id)
-                                    {
-                                        children++;
-                                    }
+                                    children++;
                                 }
                             }
-                            embed.AddField(y =>
+                            else if (gChannel is SocketVoiceChannel vChannel2)
                             {
-                                y.Name = "Children";
-                                y.Value = children;
-                                y.IsInline = true;
-                            });
+                                if (vChannel2.CategoryId == cChannel.Id)
+                                {
+                                    children++;
+                                }
+                            }
                         }
-                        else if (channel is SocketTextChannel tChannel)
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Children";
+                            y.Value = children;
+                            y.IsInline = true;
+                        });
+                    }
+                    else if (channel is SocketTextChannel tChannel)
+                    {
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Type";
+                            y.Value = type;
+                            y.IsInline = true;
+                        });
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Mention";
+                            y.Value = $"`{tChannel.Mention.ToString()}`";
+                            y.IsInline = true;
+                        });
+                        if (tChannel.CategoryId != null)
                         {
                             embed.AddField(y =>
                             {
-                                y.Name = "Type";
-                                y.Value = type;
+                                y.Name = "Category ID";
+                                y.Value = tChannel.CategoryId;
                                 y.IsInline = true;
                             });
                             embed.AddField(y =>
                             {
-                                y.Name = "Mention";
-                                y.Value = $"`{tChannel.Mention.ToString()}`";
-                                y.IsInline = true;
-                            });
-                            if (tChannel.CategoryId != null)
-                            {
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Category ID";
-                                    y.Value = tChannel.CategoryId;
-                                    y.IsInline = true;
-                                });
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Category Name";
-                                    y.Value = Format.Sanitize(tChannel.Category.Name);
-                                    y.IsInline = true;
-                                });
-                            }
-                            string nsfw = "No";
-                            if (tChannel.IsNsfw)
-                            {
-                                nsfw = "Yes";
-                            }
-                            embed.AddField(y =>
-                            {
-                                y.Name = "NSFW";
-                                y.Value = nsfw;
+                                y.Name = "Category Name";
+                                y.Value = Format.Sanitize(tChannel.Category.Name);
                                 y.IsInline = true;
                             });
                         }
-                        await ReplyAsync("", false, embed.Build());
+                        string nsfw = "No";
+                        if (tChannel.IsNsfw)
+                        {
+                            nsfw = "Yes";
+                        }
+                        embed.AddField(y =>
+                        {
+                            y.Name = "NSFW";
+                            y.Value = nsfw;
+                            y.IsInline = true;
+                        });
                     }
-                    else
-                    {
-                        await ReplyAsync($"{Context.User.Mention} I could not find channel **{Format.Sanitize(channelName)}**.");
-                    }
+                    await ReplyAsync("", false, embed.Build());
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} the channel with ID: **{channelName}** does not exist or could not be found.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find channel with name or ID **{Format.Sanitize(channelName)}**.");
                 }
             }
         }
@@ -891,17 +738,17 @@ namespace FredBotNETCore.Modules
             StringBuilder sb = new StringBuilder();
             if (time.Days > 0)
             {
-                sb.Append($"{time.Days}d ");  /*Pulls the Uptime in Days*/
+                sb.Append($"{time.Days}d ");
             }
             if (time.Hours > 0)
             {
-                sb.Append($"{time.Hours}h ");  /*Pulls the Uptime in Hours*/
+                sb.Append($"{time.Hours}h ");
             }
             if (time.Minutes > 0)
             {
-                sb.Append($"{time.Minutes}m ");  /*Pulls the Uptime in Minutes*/
+                sb.Append($"{time.Minutes}m ");
             }
-            sb.Append($"{time.Seconds}s ");  /*Pulls the Uptime in Seconds*/
+            sb.Append($"{time.Seconds}s ");
             await ReplyAsync($"Current uptime: **{sb.ToString()}**");
         }
 
@@ -924,111 +771,104 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.RoleInGuild(Context.Message, Context.Guild, roleName) != null)
                 {
-                    if (Extensions.RoleInGuild(Context.Message, Context.Guild, roleName) != null)
+                    SocketRole role = Extensions.RoleInGuild(Context.Message, Context.Guild, roleName);
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
                     {
-                        SocketRole role = Extensions.RoleInGuild(Context.Message, Context.Guild, roleName);
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        Text = "Role Created"
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = role.Color,
+                        ThumbnailUrl = "https://dummyimage.com/80x80/" + Extensions.HexConverter(role.Color) + "/" + Extensions.HexConverter(role.Color),
+                        Footer = footer,
+                        Timestamp = role.CreatedAt.Date
+                    };
+                    embed.AddField(y =>
+                    {
+                        y.Name = "ID";
+                        y.Value = role.Id;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Name";
+                        y.Value = Format.Sanitize(role.Name);
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Color";
+                        y.Value = "`#" + Extensions.HexConverter(role.Color) + "`";
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Mention";
+                        y.Value = $"`{role.Mention.ToString()}`";
+                        y.IsInline = true;
+                    });
+                    int roleMembers = 0;
+                    foreach (IGuildUser user in Context.Guild.Users)
+                    {
+                        IReadOnlyCollection<ulong> roles = user.RoleIds;
+                        foreach (ulong id in roles)
                         {
-                            Text = "Role Created"
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = role.Color,
-                            ThumbnailUrl = "https://dummyimage.com/80x80/" + Extensions.HexConverter(role.Color) + "/" + Extensions.HexConverter(role.Color),
-                            Footer = footer,
-                            Timestamp = role.CreatedAt.Date
-                        };
-                        embed.AddField(y =>
-                        {
-                            y.Name = "ID";
-                            y.Value = role.Id;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Name";
-                            y.Value = Format.Sanitize(role.Name);
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Color";
-                            y.Value = "`#" + Extensions.HexConverter(role.Color) + "`";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Mention";
-                            y.Value = $"`{role.Mention.ToString()}`";
-                            y.IsInline = true;
-                        });
-                        int roleMembers = 0;
-                        foreach (IGuildUser user in Context.Guild.Users)
-                        {
-                            IReadOnlyCollection<ulong> roles = user.RoleIds;
-                            foreach (ulong id in roles)
+                            if (id == role.Id)
                             {
-                                if (id == role.Id)
-                                {
-                                    roleMembers = roleMembers + 1;
-                                    break;
-                                }
+                                roleMembers = roleMembers + 1;
+                                break;
                             }
                         }
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Members";
-                            y.Value = roleMembers;
-                            y.IsInline = true;
-                        });
-                        string hoisted = "";
-                        if (role.IsHoisted)
-                        {
-                            hoisted = "Yes";
-                        }
-                        else
-                        {
-                            hoisted = "No";
-                        }
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Hoisted";
-                            y.Value = hoisted;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Position";
-                            y.Value = role.Position;
-                            y.IsInline = true;
-                        });
-                        string mentionable = "";
-                        if (role.IsMentionable)
-                        {
-                            mentionable = "Yes";
-                        }
-                        else
-                        {
-                            mentionable = "No";
-                        }
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Mentionable";
-                            y.Value = mentionable;
-                            y.IsInline = true;
-                        });
-                        await ReplyAsync("", false, embed.Build());
+                    }
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Members";
+                        y.Value = roleMembers;
+                        y.IsInline = true;
+                    });
+                    string hoisted = "";
+                    if (role.IsHoisted)
+                    {
+                        hoisted = "Yes";
                     }
                     else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find role **{Format.Sanitize(roleName)}**.");
+                        hoisted = "No";
                     }
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Hoisted";
+                        y.Value = hoisted;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Position";
+                        y.Value = role.Position;
+                        y.IsInline = true;
+                    });
+                    string mentionable = "";
+                    if (role.IsMentionable)
+                    {
+                        mentionable = "Yes";
+                    }
+                    else
+                    {
+                        mentionable = "No";
+                    }
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Mentionable";
+                        y.Value = mentionable;
+                        y.IsInline = true;
+                    });
+                    await ReplyAsync("", false, embed.Build());
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find role with ID: **{roleName}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find role with name or ID **{Format.Sanitize(roleName)}**.");
                 }
             }
         }
@@ -1058,29 +898,12 @@ namespace FredBotNETCore.Modules
             };
             embed.WithCurrentTimestamp();
             string roleNames = "", roleMemberCounts = "";
-            foreach (IRole role in Context.Guild.Roles.OrderByDescending(x => x.Position))
+            foreach (SocketRole role in Context.Guild.Roles.OrderByDescending(x => x.Position))
             {
-                int memberCount = 0;
-                if (role.Name.Equals("@everyone"))
+                if (!role.IsEveryone)
                 {
-                    //skip
-                }
-                else
-                {
-                    foreach (IGuildUser user in Context.Guild.Users)
-                    {
-                        IReadOnlyCollection<ulong> roles = user.RoleIds;
-                        foreach (ulong id in roles)
-                        {
-                            if (id == role.Id)
-                            {
-                                memberCount = memberCount + 1;
-                                break;
-                            }
-                        }
-                    }
                     roleNames = roleNames + role.Name + "\n";
-                    roleMemberCounts = roleMemberCounts + memberCount + " members\n";
+                    roleMemberCounts = roleMemberCounts + role.Members.Count() + " members\n";
                 }
             }
             embed.AddField(y =>
@@ -1124,72 +947,59 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
+                    auth.Name = $"Warnings - {user.Username}#{user.Discriminator}";
+                    auth.IconUrl = user.GetAvatarUrl();
+                    warnings = Database.Warnings(user);
+                }
+                else
+                {
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
+                }
+            }
+            if (warnings.Count > 0)
+            {
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(220, 220, 220),
+                    Author = auth
+                };
+                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                {
+                    IconUrl = Context.User.GetAvatarUrl(),
+                    Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                };
+                embed.WithFooter(footer);
+                embed.WithCurrentTimestamp();
+                string warningsS = string.Join("\n", warnings.ToArray());
+                bool first = true;
+                foreach (string warning in warningsS.SplitInParts(1990))
+                {
+                    if (first)
                     {
-                        SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                        auth.Name = $"Warnings - {user.Username}#{user.Discriminator}";
-                        auth.IconUrl = user.GetAvatarUrl();
-                        warnings = Database.Warnings(user);
-                        if (warnings.Count <= 0)
+                        first = false;
+                        embed.Description = warning;
+                        if (warnings.Count == 1)
                         {
-                            await ReplyAsync($"{Context.User.Mention} this user has no warnings.");
-                            return;
+                            await ReplyAsync($"**{warnings.Count}** warning found.", false, embed.Build());
+                        }
+                        else
+                        {
+                            await ReplyAsync($"**{warnings.Count}** warnings found.", false, embed.Build());
                         }
                     }
                     else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
-                        return;
-                    }
-                }
-                catch (NullReferenceException)
-                {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
-                }
-            }
-            EmbedBuilder embed = new EmbedBuilder()
-            {
-                Color = new Color(220, 220, 220),
-                Author = auth
-            };
-            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-            {
-                IconUrl = Context.User.GetAvatarUrl(),
-                Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-            };
-            embed.WithFooter(footer);
-            embed.WithCurrentTimestamp();
-            string temp = "";
-            bool first = true, sent = false;
-            foreach (string warn in warnings)
-            {
-                temp = temp + warn + "\n";
-                if (temp.Length > 2000)
-                {
-                    if (first)
-                    {
-                        await ReplyAsync($"{warnings.Count} Logs Found:", false, embed.Build());
-                        first = false;
-                        sent = true;
-                    }
-                    else
-                    {
+                        embed.Description = warning;
                         await ReplyAsync("", false, embed.Build());
                     }
-                    temp = "";
-                    embed.Description = "";
                 }
-                embed.Description = embed.Description + Format.Sanitize(warn) + "\n";
-            }
-            if (!sent)
-            {
-                await ReplyAsync($"{warnings.Count} Logs Found:", false, embed.Build());
             }
             else
             {
-                await ReplyAsync("", false, embed.Build());
+                await ReplyAsync($"{Context.User.Mention} this user has no warnings.");
             }
         }
 
@@ -1214,7 +1024,6 @@ namespace FredBotNETCore.Modules
                 embed.Title = "Command: /unban";
                 embed.Description = "**Description:** Unban a member\n**Usage:** /unban [user], [optional reason]\n**Example:** /unban @Jiggmin, Appealed!";
                 await ReplyAsync("", false, embed.Build());
-                return;
             }
             else
             {
@@ -1223,7 +1032,7 @@ namespace FredBotNETCore.Modules
                 IReadOnlyCollection<Discord.Rest.RestBan> bans = await Context.Guild.GetBansAsync();
                 foreach (IBan ban in bans)
                 {
-                    if (ban.User.Username == username || ban.User.Id.ToString() == username)
+                    if (ban.User.Username.ToUpper() == username.ToUpper() || ban.User.Id.ToString() == username)
                     {
                         user = ban.User;
                         isBanned = true;
@@ -1231,7 +1040,7 @@ namespace FredBotNETCore.Modules
                 }
                 if (isBanned)
                 {
-                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
+                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
                         Name = $"Case {Database.CaseCount() + 1} | Unban | {user.Username}#{user.Discriminator}",
@@ -1322,96 +1131,89 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
+                    if (Extensions.CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                     {
-                        SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                        if (Extensions.CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
+                        await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                        return;
+                    }
+                    if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
+                    {
+                        await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
+                        return;
+                    }
+                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                    {
+                        Name = $"Case {Database.CaseCount() + 1} | Undeafen | {user.Username}#{user.Discriminator}",
+                        IconUrl = user.GetAvatarUrl(),
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 0, 0),
+                        Author = auth
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {user.Id}"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    embed.AddField(y =>
+                    {
+                        y.Name = "User";
+                        y.Value = user.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Moderator";
+                        y.Value = Context.User.Mention;
+                        y.IsInline = true;
+                    });
+                    await Context.Message.DeleteAsync();
+                    if (reason == null)
+                    {
+                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
+                        await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
+                        try
                         {
-                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                            return;
+                            await user.SendMessageAsync($"You have been undeafened on **{Format.Sanitize(Context.Guild.Name)}** by **{Context.User.Mention}**.");
                         }
-                        if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
+                        catch (Discord.Net.HttpException)
                         {
-                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
-                            return;
-                        }
-                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Case {Database.CaseCount() + 1} | Undeafen | {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl(),
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(220, 0, 0),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = $"ID: {user.Id}"
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        embed.AddField(y =>
-                        {
-                            y.Name = "User";
-                            y.Value = user.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Moderator";
-                            y.Value = Context.User.Mention;
-                            y.IsInline = true;
-                        });
-                        await Context.Message.DeleteAsync();
-                        if (reason == null)
-                        {
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                            await banlog.SendMessageAsync("", false, embed.Build());
-                            await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
-                            await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
-                            try
-                            {
-                                await user.SendMessageAsync($"You have been undeafened on **{Format.Sanitize(Context.Guild.Name)}** by **{Context.User.Mention}**.");
-                            }
-                            catch (Discord.Net.HttpException)
-                            {
-                                //cant send message
-                            }
-                        }
-                        else
-                        {
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Reason";
-                                y.Value = Format.Sanitize(reason);
-                                y.IsInline = true;
-                            });
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                            await banlog.SendMessageAsync("", false, embed.Build());
-                            await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
-                            await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
-                            try
-                            {
-                                await user.SendMessageAsync($"You have been undeafened on **{Format.Sanitize(Context.Guild.Name)}** by **{Context.User.Mention}** with reason **{Format.Sanitize(reason)}**.");
-                            }
-                            catch (Discord.Net.HttpException)
-                            {
-                                //cant send message
-                            }
+                            //cant send message
                         }
                     }
                     else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = Format.Sanitize(reason);
+                            y.IsInline = true;
+                        });
+                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
+                        await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
+                        try
+                        {
+                            await user.SendMessageAsync($"You have been undeafened on **{Format.Sanitize(Context.Guild.Name)}** by **{Context.User.Mention}** with reason **{Format.Sanitize(reason)}**.");
+                        }
+                        catch (Discord.Net.HttpException)
+                        {
+                            //cant send message
+                        }
                     }
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -1441,96 +1243,89 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                     {
-                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
+                        await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                        return;
+                    }
+                    if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
+                    {
+                        await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
+                        return;
+                    }
+                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                    {
+                        Name = $"Case {Database.CaseCount() + 1} | Deafen | {user.Username}#{user.Discriminator}",
+                        IconUrl = user.GetAvatarUrl(),
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 0, 0),
+                        Author = auth
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {user.Id}"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    embed.AddField(y =>
+                    {
+                        y.Name = "User";
+                        y.Value = user.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Moderator";
+                        y.Value = Context.User.Mention;
+                        y.IsInline = true;
+                    });
+                    await Context.Message.DeleteAsync();
+                    if (reason == null)
+                    {
+                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
+                        await user.ModifyAsync(x => x.Deaf = true);
+                        try
                         {
-                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                            return;
+                            await user.SendMessageAsync($"You have been deafened on **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention}.");
                         }
-                        if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
+                        catch (Discord.Net.HttpException)
                         {
-                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
-                            return;
-                        }
-                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Case {Database.CaseCount() + 1} | Deafen | {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl(),
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(220, 0, 0),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = $"ID: {user.Id}"
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        embed.AddField(y =>
-                        {
-                            y.Name = "User";
-                            y.Value = user.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Moderator";
-                            y.Value = Context.User.Mention;
-                            y.IsInline = true;
-                        });
-                        await Context.Message.DeleteAsync();
-                        if (reason == null)
-                        {
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                            await banlog.SendMessageAsync("", false, embed.Build());
-                            await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
-                            await user.ModifyAsync(x => x.Deaf = true);
-                            try
-                            {
-                                await user.SendMessageAsync($"You have been deafened on **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention}.");
-                            }
-                            catch (Discord.Net.HttpException)
-                            {
-                                //cant send message
-                            }
-                        }
-                        else
-                        {
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Reason";
-                                y.Value = Format.Sanitize(reason);
-                                y.IsInline = true;
-                            });
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                            await banlog.SendMessageAsync("", false, embed.Build());
-                            await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
-                            await user.ModifyAsync(x => x.Deaf = true);
-                            try
-                            {
-                                await user.SendMessageAsync($"You have been deafened on **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
-                            }
-                            catch (Discord.Net.HttpException)
-                            {
-                                //cant send message
-                            }
+                            //cant send message
                         }
                     }
                     else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Reason";
+                            y.Value = Format.Sanitize(reason);
+                            y.IsInline = true;
+                        });
+                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
+                        await user.ModifyAsync(x => x.Deaf = true);
+                        try
+                        {
+                            await user.SendMessageAsync($"You have been deafened on **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
+                        }
+                        catch (Discord.Net.HttpException)
+                        {
+                            //cant send message
+                        }
                     }
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -1560,83 +1355,76 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                     {
-                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                            return;
-                        }
-                        if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
-                            return;
-                        }
-                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Case {Database.CaseCount() + 1} | Softban | {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl(),
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(220, 220, 220),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = $"ID: {user.Id}"
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        embed.AddField(y =>
-                        {
-                            y.Name = "User";
-                            y.Value = user.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Moderator";
-                            y.Value = Context.User.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = Format.Sanitize(reason);
-                            y.IsInline = true;
-                        });
-                        await Context.Message.DeleteAsync();
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Softban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was softbanned.");
-                        try
-                        {
-                            await user.SendMessageAsync($"You have been softbanned on **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
-                        }
-                        catch (Discord.Net.HttpException)
-                        {
-                            //cant send message
-                        }
-                        await Context.Guild.AddBanAsync(user, 7, $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}");
-                        RequestOptions options = new RequestOptions()
-                        {
-                            AuditLogReason = $"Softban | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        await Context.Guild.RemoveBanAsync(user, options);
+                        await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                        return;
                     }
-                    else
+                    if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
+                        return;
                     }
+                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                    {
+                        Name = $"Case {Database.CaseCount() + 1} | Softban | {user.Username}#{user.Discriminator}",
+                        IconUrl = user.GetAvatarUrl(),
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220),
+                        Author = auth
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {user.Id}"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    embed.AddField(y =>
+                    {
+                        y.Name = "User";
+                        y.Value = user.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Moderator";
+                        y.Value = Context.User.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = Format.Sanitize(reason);
+                        y.IsInline = true;
+                    });
+                    await Context.Message.DeleteAsync();
+                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Softban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                    await banlog.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was softbanned.");
+                    try
+                    {
+                        await user.SendMessageAsync($"You have been softbanned on **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
+                    }
+                    catch (Discord.Net.HttpException)
+                    {
+                        //cant send message
+                    }
+                    await Context.Guild.AddBanAsync(user, 7, $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}");
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"Softban | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                    };
+                    await Context.Guild.RemoveBanAsync(user, options);
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -1685,9 +1473,11 @@ namespace FredBotNETCore.Modules
                 if (embed.Description.Length <= 0)
                 {
                     await ReplyAsync($"{Context.User.Mention} case could not be found.");
-                    return;
                 }
-                await ReplyAsync("", false, embed.Build());
+                else
+                {
+                    await ReplyAsync("", false, embed.Build());
+                }
             }
         }
 
@@ -1708,79 +1498,67 @@ namespace FredBotNETCore.Modules
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /getcase";
+                embed.Title = "Command: /modlogs";
                 embed.Description = "**Description:** Get a list of mod logs for a user.\n**Usage:** /modlogs [user]\n**Example:** /modlogs @Jiggmin";
                 await ReplyAsync("", false, embed.Build());
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
+                    List<string> modlogs = Database.Modlogs(user);
+                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
-                        SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                        List<string> modlogs = Database.Modlogs(user);
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Mod Logs - {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl()
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(220, 220, 220),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            IconUrl = Context.User.GetAvatarUrl(),
-                            Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        if (modlogs.Count <= 0)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} this user has no priors.");
-                            return;
-                        }
-                        string temp = "";
-                        bool first = true, sent = false;
-                        foreach (string modlog in modlogs)
-                        {
-                            temp = temp + modlog + "\n";
-                            if (temp.Length > 2000)
-                            {
-                                if (first)
-                                {
-                                    await ReplyAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
-                                    first = false;
-                                    sent = true;
-                                }
-                                else
-                                {
-                                    await ReplyAsync("", false, embed.Build());
-                                }
-                                temp = "";
-                                embed.Description = "";
-                            }
-                            embed.Description = embed.Description + modlog + "\n";
-                        }
-                        if (!sent)
-                        {
-                            await ReplyAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
-                        }
-                        else
-                        {
-                            await ReplyAsync("", false, embed.Build());
-                        }
+                        Name = $"Mod Logs - {user.Username}#{user.Discriminator}",
+                        IconUrl = user.GetAvatarUrl()
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220),
+                        Author = auth
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        IconUrl = Context.User.GetAvatarUrl(),
+                        Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    if (modlogs.Count <= 0)
+                    {
+                        await ReplyAsync($"{Context.User.Mention} this user has no priors.");
                     }
                     else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        string modlogsS = string.Join("\n", modlogs.ToArray());
+                        bool first = true;
+                        foreach (string modlog in modlogsS.SplitInParts(1990))
+                        {
+                            if (first)
+                            {
+                                first = false;
+                                embed.Description = modlog;
+                                if (modlogs.Count == 1)
+                                {
+                                    await ReplyAsync($"**{modlogs.Count}** log found.", false, embed.Build());
+                                }
+                                else
+                                {
+                                    await ReplyAsync($"**{modlogs.Count}** logs found.", false, embed.Build());
+                                }
+                            }
+                            else
+                            {
+                                embed.Description = modlog;
+                                await ReplyAsync("", false, embed.Build());
+                            }
+                        }
                     }
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -1802,13 +1580,13 @@ namespace FredBotNETCore.Modules
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /getcase";
+                embed.Title = "Command: /reason";
                 embed.Description = "**Description:** Edit a reason for a mod log.\n**Usage:** /reason [case number] [reason]\n**Example:** /reason 1 Be nice :)";
                 await ReplyAsync("", false, embed.Build());
             }
             else
             {
-                SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
+                SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
                 IAsyncEnumerable<IMessage> messages = banlog.GetMessagesAsync().Flatten().Where(x => x.Embeds.Count > 0);
                 string author = "", iconUrl = "", footerText = "";
                 IUserMessage msgToEdit = null;
@@ -1828,57 +1606,59 @@ namespace FredBotNETCore.Modules
                 if (msgToEdit == null)
                 {
                     await ReplyAsync($"{Context.User.Mention} that case could not be found.");
-                    return;
                 }
-                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                else
                 {
-                    Name = $"{author}",
-                    IconUrl = iconUrl,
-                };
-                EmbedBuilder embed = new EmbedBuilder()
-                {
-                    Color = msgEmbed.Color,
-                    Author = auth
-                };
-                EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                {
-                    Text = $"{footerText}"
-                };
-                foreach (EmbedField field in msgEmbed.Fields)
-                {
-                    if (field.Name.Equals("Reason"))
+                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
-                        embed.AddField(y =>
-                        {
-                            y.Name = field.Name;
-                            y.Value = Format.Sanitize(reason);
-                            y.IsInline = field.Inline;
-                        });
-                    }
-                    else
+                        Name = $"{author}",
+                        IconUrl = iconUrl,
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
                     {
-                        embed.AddField(y =>
+                        Color = msgEmbed.Color,
+                        Author = auth
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"{footerText}"
+                    };
+                    foreach (EmbedField field in msgEmbed.Fields)
+                    {
+                        if (field.Name.Equals("Reason"))
                         {
-                            y.Name = field.Name;
-                            y.Value = field.Value;
-                            y.IsInline = field.Inline;
-                        });
+                            embed.AddField(y =>
+                            {
+                                y.Name = field.Name;
+                                y.Value = Format.Sanitize(reason);
+                                y.IsInline = field.Inline;
+                            });
+                        }
+                        else
+                        {
+                            embed.AddField(y =>
+                            {
+                                y.Name = field.Name;
+                                y.Value = field.Value;
+                                y.IsInline = field.Inline;
+                            });
+                        }
                     }
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    await msgToEdit.ModifyAsync(x => x.Embed = embed.Build());
+                    Database.UpdateReason(caseN, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                    await Context.Message.DeleteAsync();
+                    await ReplyAsync($"{Context.User.Mention} updated case {caseN}.");
+                    embed.Author.Name = "Updated Case";
+                    embed.Author.IconUrl = Context.Guild.IconUrl;
+                    embed.Footer.Text = "ID: " + Context.User.Id;
+                    embed.Footer.IconUrl = Context.User.GetAvatarUrl();
+                    embed.Color = new Color(0, 0, 255);
+                    embed.Fields.Clear();
+                    embed.Description = $"{Context.User.Mention} updated case **{caseN}**.";
+                    await Context.Guild.GetTextChannel(Extensions.GetLogChannel()).SendMessageAsync("", false, embed.Build());
                 }
-                embed.WithFooter(footer);
-                embed.WithCurrentTimestamp();
-                await msgToEdit.ModifyAsync(x => x.Embed = embed.Build());
-                Database.UpdateReason(caseN, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                await Context.Message.DeleteAsync();
-                await ReplyAsync($"Updated case {caseN}.");
-                embed.Author.Name = "Updated Case";
-                embed.Author.IconUrl = Context.Guild.IconUrl;
-                embed.Footer.Text = "ID: " + Context.User.Id;
-                embed.Footer.IconUrl = Context.User.GetAvatarUrl();
-                embed.Color = new Color(0, 0, 255);
-                embed.Fields.Clear();
-                embed.Description = $"{Context.User.Mention} updated case **{caseN}**.";
-                await Context.Guild.GetTextChannel(Extensions.GetLogChannel()).SendMessageAsync("", false, embed.Build());
             }
         }
 
@@ -1905,77 +1685,70 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                     {
-                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                            return;
-                        }
-                        if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
-                            return;
-                        }
-                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Case {Database.CaseCount() + 1} | Warn | {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl(),
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(220, 220, 220),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = $"ID: {user.Id}"
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        embed.AddField(y =>
-                        {
-                            y.Name = "User";
-                            y.Value = user.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Moderator";
-                            y.Value = Context.User.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = Format.Sanitize(reason);
-                            y.IsInline = true;
-                        });
-                        await Context.Message.DeleteAsync();
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Warn", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was warned.");
-                        try
-                        {
-                            await user.SendMessageAsync($"You have been warned on **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
-                        }
-                        catch (Discord.Net.HttpException)
-                        {
-                            //cant send message
-                        }
+                        await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                        return;
                     }
-                    else
+                    if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
+                        return;
+                    }
+                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                    {
+                        Name = $"Case {Database.CaseCount() + 1} | Warn | {user.Username}#{user.Discriminator}",
+                        IconUrl = user.GetAvatarUrl(),
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220),
+                        Author = auth
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {user.Id}"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    embed.AddField(y =>
+                    {
+                        y.Name = "User";
+                        y.Value = user.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Moderator";
+                        y.Value = Context.User.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = Format.Sanitize(reason);
+                        y.IsInline = true;
+                    });
+                    await Context.Message.DeleteAsync();
+                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Warn", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                    await banlog.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was warned.");
+                    try
+                    {
+                        await user.SendMessageAsync($"You have been warned on **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
+                    }
+                    catch (Discord.Net.HttpException)
+                    {
+                        //cant send message
                     }
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -1991,7 +1764,6 @@ namespace FredBotNETCore.Modules
             IUserMessage message = null;
             IEmbed msgEmbed = null;
             EmbedBuilder embed = new EmbedBuilder();
-            string item = null;
             int winners = 0;
             foreach (IMessage msg in messages)
             {
@@ -2059,7 +1831,7 @@ namespace FredBotNETCore.Modules
                     }
                     embed.Description = $"Winners: {description}";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
-                    await ReplyAsync($"The winners of the {item} are {description.Substring(0, description.Length - 2)} !");
+                    await ReplyAsync($"The winners of the {embed.Title} are {description.Substring(0, description.Length - 2)} !");
                 }
             }
             else
@@ -2099,6 +1871,7 @@ namespace FredBotNETCore.Modules
                 embed.WithColor(new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)));
                 embed.WithFooter(footer);
                 embed.WithTitle(msgEmbed.Title);
+                embed.WithTimestamp(msgEmbed.Timestamp.Value);
                 IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999).FlattenAsync();
                 winners = int.Parse(Extensions.GetBetween(msgEmbed.Footer.Value.Text, "Winners: ", " | Ended at"));
                 if (users.Count() <= 1)
@@ -2321,59 +2094,51 @@ namespace FredBotNETCore.Modules
                     embed.Title = "Command: /promote";
                     embed.Description = "**Description:** Annonce a PR2 promotion.\n**Usage:** /promote [type] [user]\n**Example:** /promote temp @Jiggmin";
                     await ReplyAsync("", false, embed.Build());
-                    return;
                 }
-                try
+                else if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    if (type.Equals("temp", StringComparison.InvariantCultureIgnoreCase) || type.Equals("temporary", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (type.Equals("temp", StringComparison.InvariantCultureIgnoreCase) || type.Equals("temporary", StringComparison.InvariantCultureIgnoreCase))
+                        await Context.Message.DeleteAsync();
+                        await ReplyAsync($"*{Context.User.Mention} has promoted {user.Mention} to a temporary moderator! " +
+                        $"May they reign in hours of peace and prosperity! " +
+                        $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
+                    }
+                    else if (type.Equals("trial", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        await Context.Message.DeleteAsync();
+                        await ReplyAsync($"*{Context.User.Mention} has promoted {user.Mention} to a trial moderator! " +
+                        $"May they reign in days of peace and prosperity! " +
+                        $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
+                        IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "PR2 Staff Member".ToUpper());
+                        RequestOptions options = new RequestOptions()
                         {
-                            await Context.Message.DeleteAsync();
-                            await ReplyAsync($"*{Context.User.Mention} has promoted {user.Mention} to a temporary moderator! " +
-                            $"May they reign in hours of peace and prosperity! " +
-                            $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
-                        }
-                        else if (type.Equals("trial", StringComparison.InvariantCultureIgnoreCase))
+                            AuditLogReason = $"New PR2 Staff Member | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                        };
+                        await user.AddRolesAsync(role, options);
+                    }
+                    else if (type.Equals("perm", StringComparison.InvariantCultureIgnoreCase) || type.Equals("permanent", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        await Context.Message.DeleteAsync();
+                        await ReplyAsync($"*{Context.User.Mention} has promoted {user.Mention} to a permanent moderator! " +
+                        $"May they reign in 1,000 years of peace and prosperity! " +
+                        $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
+                        IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "PR2 Staff Member".ToUpper());
+                        RequestOptions options = new RequestOptions()
                         {
-                            await Context.Message.DeleteAsync();
-                            await ReplyAsync($"*{Context.User.Mention} has promoted {user.Mention} to a trial moderator! " +
-                            $"May they reign in days of peace and prosperity! " +
-                            $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
-                            IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "PR2 Staff Member".ToUpper());
-                            RequestOptions options = new RequestOptions()
-                            {
-                                AuditLogReason = $"New PR2 Staff Member | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                            };
-                            await user.AddRolesAsync(role, options);
-                        }
-                        else if (type.Equals("perm", StringComparison.InvariantCultureIgnoreCase) || type.Equals("permanent", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            await Context.Message.DeleteAsync();
-                            await ReplyAsync($"*{Context.User.Mention} has promoted {user.Mention} to a permanent moderator! " +
-                            $"May they reign in 1,000 years of peace and prosperity! " +
-                            $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
-                            IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "PR2 Staff Member".ToUpper());
-                            RequestOptions options = new RequestOptions()
-                            {
-                                AuditLogReason = $"New PR2 Staff Member | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                            };
-                            await user.AddRolesAsync(role, options);
-                        }
-                        else
-                        {
-                            await ReplyAsync($"{Context.User.Mention} the promotion type **{Format.Sanitize(type)}** was not recognised.");
-                        }
+                            AuditLogReason = $"New PR2 Staff Member | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                        };
+                        await user.AddRolesAsync(role, options);
                     }
                     else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} the promotion type **{Format.Sanitize(type)}** was not recognised.");
                     }
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -2399,18 +2164,16 @@ namespace FredBotNETCore.Modules
                 embed.Title = "Command: /untemp";
                 embed.Description = "**Description:** Untemp a user.\n**Usage:** /untemp [user]\n**Example:** /untemp @Jiggmin";
                 await ReplyAsync("", false, embed.Build());
-                return;
             }
-            try
+            else if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
             {
-                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                if (!user.Roles.Any(e => e.Name == "Temp Mod"))
                 {
-                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                    if (!user.Roles.Any(e => e.Name == "Temp Mod"))
-                    {
-                        await ReplyAsync($"{Context.User.Mention} this user is not a temp mod.");
-                        return;
-                    }
+                    await ReplyAsync($"{Context.User.Mention} this user is not a temp mod.");
+                }
+                else
+                {
                     IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
                     RequestOptions options = new RequestOptions()
                     {
@@ -2420,14 +2183,10 @@ namespace FredBotNETCore.Modules
                     await Context.Message.DeleteAsync();
                     await ReplyAsync($"{Context.User.Mention} has removed temp mod from {user.Mention}");
                 }
-                else
-                {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
-                }
             }
-            catch (NullReferenceException)
+            else
             {
-                await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
             }
         }
 
@@ -2455,16 +2214,15 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    if (!user.Roles.Any(e => e.Name == "Muted"))
                     {
-                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (!user.Roles.Any(e => e.Name == "Muted"))
-                        {
-                            await ReplyAsync($"{Context.User.Mention} this user is not muted.");
-                            return;
-                        }
+                        await ReplyAsync($"{Context.User.Mention} this user is not muted.");
+                    }
+                    else
+                    {
                         IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
                         RequestOptions options = new RequestOptions();
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
@@ -2528,21 +2286,17 @@ namespace FredBotNETCore.Modules
                             }
                         }
                         await Context.Message.DeleteAsync();
-                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
+                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
                         await banlog.SendMessageAsync("", false, embed.Build());
                         await user.RemoveRolesAsync(role, options);
                         await ReplyAsync($"Unmuted **{Format.Sanitize(user.Username)}#{user.Discriminator}**");
                         string mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace("\n" + user.Id.ToString(), string.Empty);
                         File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
                     }
-                    else
-                    {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
-                    }
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -2567,74 +2321,70 @@ namespace FredBotNETCore.Modules
             using (Process process = Process.GetCurrentProcess())
             {
                 EmbedBuilder embed = new EmbedBuilder();
-                Discord.Rest.RestApplication application = await Context.Client.GetApplicationInfoAsync();  /*for lib version*/
-                embed.ImageUrl = application.IconUrl;  /*pulls bot Avatar. Not needed can be removed*/
+                Discord.Rest.RestApplication application = await Context.Client.GetApplicationInfoAsync();
+                embed.ImageUrl = application.IconUrl;
                 embed.WithCurrentTimestamp();
-                embed.Title = "__**Bot Info**__";
-                embed.WithColor(new Color(0x4900ff))  /*Hexacode colours*/
-
-                .AddField(y =>  /*Adds a Field*/
+                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
-                    /*new embed field*/
-                    y.Name = "Author.";  /*Field name here*/
-                    y.Value = Format.Sanitize(application.Owner.Username); application.Owner.Id.ToString();  /*Pulls the owner's name*/
+                    Name = "Bot Info"
+                };
+                embed.WithAuthor(auth);
+                embed.WithColor(new Color(0x4900ff))
+                .AddField(y =>
+                {
+                    y.Name = "Author.";
+                    y.Value = Format.Sanitize(application.Owner.Username); application.Owner.Id.ToString();
                     y.IsInline = false;
                 })
-
-                .AddField(y =>  /*add new field, rinse and repeat*/
+                .AddField(y =>
                 {
                     y.Name = "Uptime.";
-                    TimeSpan time = DateTime.Now - process.StartTime;  /*Subtracts current time and start time to get Uptime*/
+                    TimeSpan time = DateTime.Now - process.StartTime;
                     StringBuilder sb = new StringBuilder();
                     if (time.Days > 0)
                     {
-                        sb.Append($"{time.Days}d ");  /*Pulls the Uptime in Days*/
+                        sb.Append($"{time.Days}d ");
                     }
                     if (time.Hours > 0)
                     {
-                        sb.Append($"{time.Hours}h ");  /*Pulls the Uptime in Hours*/
+                        sb.Append($"{time.Hours}h ");
                     }
                     if (time.Minutes > 0)
                     {
-                        sb.Append($"{time.Minutes}m ");  /*Pulls the Uptime in Minutes*/
+                        sb.Append($"{time.Minutes}m ");
                     }
-                    sb.Append($"{time.Seconds}s ");  /*Pulls the Uptime in Seconds*/
+                    sb.Append($"{time.Seconds}s ");
                     y.Value = sb.ToString();
                     y.IsInline = true;
                 })
-
                 .AddField(y =>
                 {
-                    y.Name = "Discord.net version";  /*Title*/
-                    y.Value = DiscordConfig.Version;  /*pulls discord lib version*/
+                    y.Name = "Discord.net version";
+                    y.Value = DiscordConfig.Version;
                     y.IsInline = true;
                 })
-
                 .AddField(y =>
                 {
                     y.Name = "Server Amount";
-                    y.Value = Context.Client.Guilds.Count.ToString();  /*Numbers of servers the bot is in*/
+                    y.Value = Context.Client.Guilds.Count.ToString();
                     y.IsInline = false;
                 })
-
                 .AddField(y =>
                 {
                     y.Name = "Heap Size";
-                    y.Value = Extensions.GetHeapSize();   /*pulls ram usage of modules/heaps*/
+                    y.Value = Extensions.GetHeapSize();
                     y.IsInline = true;
                 })
-
                 .AddField(y =>
                 {
                     y.Name = "Number Of Users";
-                    y.Value = Context.Client.Guilds.Sum(g => g.Users.Count).ToString();  /*Counts users*/
+                    y.Value = Context.Client.Guilds.Sum(g => g.Users.Count).ToString();
                     y.IsInline = true;
                 })
-
                 .AddField(y =>
                 {
                     y.Name = "Channels";
-                    y.Value = Context.Client.Guilds.Sum(g => g.Channels.Count).ToString();  /*Gets Number of channels*/
+                    y.Value = Context.Client.Guilds.Sum(g => g.Channels.Count).ToString();
                     y.IsInline = true;
                 });
                 EmbedFooterBuilder footer = new EmbedFooterBuilder()
@@ -2643,7 +2393,6 @@ namespace FredBotNETCore.Modules
                     Text = $"{Context.User.Username}#{Context.User.Discriminator}({Context.User.Id})"
                 };
                 embed.WithFooter(footer);
-
                 await ReplyAsync("", false, embed.Build());
             }
         }
@@ -2657,126 +2406,113 @@ namespace FredBotNETCore.Modules
         {
             if (username == null)
             {
-                username = Context.User.Username;
+                username = Context.User.Mention.ToString();
             }
-            try
+            if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
             {
-                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                string createdMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.CreatedAt.Month);
+                string createdDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.CreatedAt.DayOfWeek);
+                string date = $"{createdDay}, {createdMonth} {user.CreatedAt.Day}, {user.CreatedAt.Year} {user.CreatedAt.DateTime.ToString("h:mm tt")}";
+                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
-                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                    string createdMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.CreatedAt.Month);
-                    string createdDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.CreatedAt.DayOfWeek);
-                    string date = $"{createdDay}, {createdMonth} {user.CreatedAt.Day}, {user.CreatedAt.Year} {user.CreatedAt.DateTime.ToString("h:mm tt")}"; // Shows the date the account was made
-                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder() // Shows the Name of the user
-                    {
-                        Name = user.Username + "#" + user.Discriminator,
-                        IconUrl = user.GetAvatarUrl(),
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
+                    Name = user.Username + "#" + user.Discriminator,
+                    IconUrl = user.GetAvatarUrl(),
+                };
+                EmbedBuilder embed = new EmbedBuilder()
 
-                    {
-                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                        Author = auth
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        IconUrl = Context.User.GetAvatarUrl(),
-                        Text = $"ID: {user.Id}"
-                    };
-                    embed.Description = $"{user.Mention}";
-                    string roleList = "";
-                    IOrderedEnumerable<SocketGuildUser> guildUsers = Context.Guild.Users.OrderBy(x => x.JoinedAt);
-                    int position = 0;
-                    string joinedMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.JoinedAt.Value.Month);
-                    string joinedDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.JoinedAt.Value.DayOfWeek);
-                    string joined = $"{joinedDay}, {joinedMonth} {user.JoinedAt.Value.Day}, {user.JoinedAt.Value.Year} {user.JoinedAt.Value.LocalDateTime.ToString("h:mm tt")}";
-                    string pr2name = Database.GetPR2Name(user);
-                    if (pr2name == null || pr2name.Length <= 0)
-                    {
-                        pr2name = "N/A";
-                    }
-                    foreach (SocketGuildUser member in guildUsers)
-                    {
-                        if (member.Id == user.Id)
-                        {
-                            position = guildUsers.ToList().IndexOf(member) + 1;
-                        }
-                    }
-                    foreach (SocketRole role in user.Roles)
-                    {
-                        if (!role.IsEveryone)
-                        {
-                            roleList = roleList + role.Mention + " ";
-                        }
-                    }
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Status";
-                        y.Value = user.Status;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Joined";
-                        y.Value = joined;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Join Position";
-                        y.Value = position;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Registered";
-                        y.Value = date;
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "PR2 Name";
-                        y.Value = Format.Sanitize(pr2name);
-                        y.IsInline = true;
-                    });
-                    embed.AddField(y =>
-                    {
-                        y.Name = "JV2 Name";
-                        y.Value = "N/A";
-                        y.IsInline = true;
-                    });
-                    if ((user.Roles.Count - 1) > 0)
-                    {
-                        embed.AddField(y =>
-                        {
-                            y.Name = $"Roles [{user.Roles.Count - 1}]";
-                            y.Value = roleList;
-                            y.IsInline = false;
-                        });
-                    }
-                    if (Context.Guild.Id == 528679522707701760)
-                    {
-                        embed.AddField(y =>
-                        {
-                            y.Name = $"Priors";
-                            y.Value = Database.Modlogs(user).Count;
-                            y.IsInline = false;
-                        });
-                    }
-                    embed.ThumbnailUrl = user.GetAvatarUrl();
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-
-                    await ReplyAsync("", false, embed.Build());
-                }
-                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                    Author = auth
+                };
+                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                {
+                    IconUrl = Context.User.GetAvatarUrl(),
+                    Text = $"ID: {user.Id}"
+                };
+                embed.Description = $"{user.Mention}";
+                string roleList = "";
+                IOrderedEnumerable<SocketGuildUser> guildUsers = Context.Guild.Users.OrderBy(x => x.JoinedAt);
+                int position = 0;
+                string joinedMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.JoinedAt.Value.Month);
+                string joinedDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.JoinedAt.Value.DayOfWeek);
+                string joined = $"{joinedDay}, {joinedMonth} {user.JoinedAt.Value.Day}, {user.JoinedAt.Value.Year} {user.JoinedAt.Value.LocalDateTime.ToString("h:mm tt")}";
+                string pr2name = Database.GetPR2Name(user);
+                if (pr2name == null || pr2name.Length <= 0)
+                {
+                    pr2name = "N/A";
                 }
+                position = guildUsers.ToList().IndexOf(user);
+                foreach (SocketRole role in user.Roles)
+                {
+                    if (!role.IsEveryone)
+                    {
+                        roleList = roleList + role.Mention + " ";
+                    }
+                }
+                embed.AddField(y =>
+                {
+                    y.Name = "Status";
+                    y.Value = user.Status;
+                    y.IsInline = true;
+                });
+                embed.AddField(y =>
+                {
+                    y.Name = "Joined";
+                    y.Value = joined;
+                    y.IsInline = true;
+                });
+                embed.AddField(y =>
+                {
+                    y.Name = "Join Position";
+                    y.Value = position;
+                    y.IsInline = true;
+                });
+                embed.AddField(y =>
+                {
+                    y.Name = "Registered";
+                    y.Value = date;
+                    y.IsInline = true;
+                });
+                embed.AddField(y =>
+                {
+                    y.Name = "PR2 Name";
+                    y.Value = Format.Sanitize(pr2name);
+                    y.IsInline = true;
+                });
+                embed.AddField(y =>
+                {
+                    y.Name = "JV2 Name";
+                    y.Value = "N/A";
+                    y.IsInline = true;
+                });
+                if ((user.Roles.Count - 1) > 0)
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = $"Roles [{user.Roles.Count - 1}]";
+                        y.Value = roleList;
+                        y.IsInline = false;
+                    });
+                }
+                if (Context.Guild.Id == 528679522707701760)
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = $"Priors";
+                        y.Value = Database.Modlogs(user).Count;
+                        y.IsInline = false;
+                    });
+                }
+                embed.ThumbnailUrl = user.GetAvatarUrl();
+                embed.WithFooter(footer);
+                embed.WithCurrentTimestamp();
+
+                await ReplyAsync("", false, embed.Build());
             }
-            catch (NullReferenceException)
+            else
             {
-                await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
             }
         }
 
@@ -2788,7 +2524,7 @@ namespace FredBotNETCore.Modules
         public async Task ServerInfo()
         {
             SocketGuild gld = Context.Guild as SocketGuild;
-            EmbedAuthorBuilder auth = new EmbedAuthorBuilder() // Shows the Name of the user
+            EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
             {
                 Name = gld.Name,
                 IconUrl = gld.IconUrl,
@@ -2947,38 +2683,31 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    await Context.Message.DeleteAsync();
+                    IAsyncEnumerable<IMessage> usermessages = Context.Channel.GetMessagesAsync().Flatten().Where(x => x.Author == user).Take(delete);
+                    if (delete == 1)
                     {
-                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        await Context.Message.DeleteAsync();
-                        IAsyncEnumerable<IMessage> usermessages = Context.Channel.GetMessagesAsync().Flatten().Where(x => x.Author == user).Take(delete);
-                        if (delete == 1)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
-                            Extensions.Purging = true;
-                            await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
-                            embed2.Description = $"{Context.User.Mention} purged **{amount}** message in {channel.Mention} from {user.Mention}.";
-                        }
-                        else
-                        {
-                            await ReplyAsync($"{Context.User.Mention} deleted {amount} messages from {user.Mention} in {channel.Mention} .");
-                            Extensions.Purging = true;
-                            await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
-                            embed2.Description = $"{Context.User.Mention} purged **{amount}** messages in {channel.Mention} from {user.Mention}.";
-                        }
-                        await log.SendMessageAsync("", false, embed2.Build());
-                        Extensions.Purging = false;
+                        await ReplyAsync($"{Context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
+                        Extensions.Purging = true;
+                        await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
+                        embed2.Description = $"{Context.User.Mention} purged **{amount}** message in {channel.Mention} from {user.Mention}.";
                     }
                     else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} deleted {amount} messages from {user.Mention} in {channel.Mention} .");
+                        Extensions.Purging = true;
+                        await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
+                        embed2.Description = $"{Context.User.Mention} purged **{amount}** messages in {channel.Mention} from {user.Mention}.";
                     }
+                    await log.SendMessageAsync("", false, embed2.Build());
+                    Extensions.Purging = false;
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -2995,7 +2724,6 @@ namespace FredBotNETCore.Modules
             {
                 return;
             }
-
             if (username == null || reason == null)
             {
                 EmbedBuilder embed = new EmbedBuilder()
@@ -3008,82 +2736,75 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                     {
-                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                            return;
-                        }
-                        if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
-                            return;
-                        }
-                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Case {Database.CaseCount() + 1} | Kick | {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl(),
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(255, 0, 0),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = $"ID: {user.Id}"
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        embed.AddField(y =>
-                        {
-                            y.Name = "User";
-                            y.Value = user.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Moderator";
-                            y.Value = Context.User.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = Format.Sanitize(reason);
-                            y.IsInline = true;
-                        });
-                        await Context.Message.DeleteAsync();
-                        RequestOptions options = new RequestOptions()
-                        {
-                            AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        try
-                        {
-                            await user.SendMessageAsync($"You have been kicked from **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
-                        }
-                        catch (Discord.Net.HttpException)
-                        {
-                            //cant send message
-                        }
-                        await user.KickAsync(null, options);
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Kick", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was kicked.");
-                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                        return;
                     }
-                    else
+                    if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
+                        return;
                     }
+                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                    {
+                        Name = $"Case {Database.CaseCount() + 1} | Kick | {user.Username}#{user.Discriminator}",
+                        IconUrl = user.GetAvatarUrl(),
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(255, 0, 0),
+                        Author = auth
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {user.Id}"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    embed.AddField(y =>
+                    {
+                        y.Name = "User";
+                        y.Value = user.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Moderator";
+                        y.Value = Context.User.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = Format.Sanitize(reason);
+                        y.IsInline = true;
+                    });
+                    await Context.Message.DeleteAsync();
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                    };
+                    try
+                    {
+                        await user.SendMessageAsync($"You have been kicked from **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
+                    }
+                    catch (Discord.Net.HttpException)
+                    {
+                        //cant send message
+                    }
+                    await user.KickAsync(null, options);
+                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Kick", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                    await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was kicked.");
+                    await banlog.SendMessageAsync("", false, embed.Build());
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -3112,82 +2833,75 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                     {
-                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                            return;
-                        }
-                        if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
-                            return;
-                        }
-                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Case {Database.CaseCount() + 1} | Ban | {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl(),
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(220, 220, 220),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = $"ID: {user.Id}"
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        embed.AddField(y =>
-                        {
-                            y.Name = "User";
-                            y.Value = user.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Moderator";
-                            y.Value = Context.User.Mention;
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = Format.Sanitize(reason);
-                            y.IsInline = true;
-                        });
-                        await Context.Message.DeleteAsync();
-                        RequestOptions options = new RequestOptions()
-                        {
-                            AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        try
-                        {
-                            await user.SendMessageAsync($"You have been banned from **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
-                        }
-                        catch (Discord.Net.HttpException)
-                        {
-                            //cant send message
-                        }
-                        await Context.Guild.AddBanAsync(user, 1, null, options);
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Ban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was banned.");
-                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                        return;
                     }
-                    else
+                    if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
+                        return;
                     }
+                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                    {
+                        Name = $"Case {Database.CaseCount() + 1} | Ban | {user.Username}#{user.Discriminator}",
+                        IconUrl = user.GetAvatarUrl(),
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220),
+                        Author = auth
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {user.Id}"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    embed.AddField(y =>
+                    {
+                        y.Name = "User";
+                        y.Value = user.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Moderator";
+                        y.Value = Context.User.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = Format.Sanitize(reason);
+                        y.IsInline = true;
+                    });
+                    await Context.Message.DeleteAsync();
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                    };
+                    try
+                    {
+                        await user.SendMessageAsync($"You have been banned from **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
+                    }
+                    catch (Discord.Net.HttpException)
+                    {
+                        //cant send message
+                    }
+                    await Context.Guild.AddBanAsync(user, 1, null, options);
+                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Ban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                    await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was banned.");
+                    await banlog.SendMessageAsync("", false, embed.Build());
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -3216,172 +2930,166 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                try
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                     {
-                        SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                        if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
-                            return;
-                        }
-                        if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
-                        {
-                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
-                            return;
-                        }
-                        double minutes = Math.Round(Convert.ToDouble(time), 0);
-                        EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
-                        {
-                            Name = $"Case {Database.CaseCount() + 1} | Mute | {user.Username}#{user.Discriminator}",
-                            IconUrl = user.GetAvatarUrl(),
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(255, 0, 0),
-                            Author = auth
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            Text = $"ID: {user.Id}"
-                        };
-                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
-                        IEnumerable<IRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
-                        RequestOptions options = new RequestOptions()
-                        {
-                            AuditLogReason = $"Muting User | Reason: {reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                        };
-                        await user.AddRolesAsync(role, options);
-                        embed.WithCurrentTimestamp();
-                        embed.WithFooter(footer);
+                        await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                        return;
+                    }
+                    if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
+                    {
+                        await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
+                        return;
+                    }
+                    double minutes = Math.Round(Convert.ToDouble(time), 0);
+                    EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                    {
+                        Name = $"Case {Database.CaseCount() + 1} | Mute | {user.Username}#{user.Discriminator}",
+                        IconUrl = user.GetAvatarUrl(),
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(255, 0, 0),
+                        Author = auth
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {user.Id}"
+                    };
+                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    IEnumerable<IRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"Muting User | Reason: {reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                    };
+                    await user.AddRolesAsync(role, options);
+                    embed.WithCurrentTimestamp();
+                    embed.WithFooter(footer);
+                    embed.AddField(y =>
+                    {
+                        y.Name = "User";
+                        y.Value = user.Mention;
+                        y.IsInline = true;
+                    });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Moderator";
+                        y.Value = Context.User.Mention;
+                        y.IsInline = true;
+                    });
+                    if (minutes == 1)
+                    {
                         embed.AddField(y =>
                         {
-                            y.Name = "User";
-                            y.Value = user.Mention;
+                            y.Name = "Length";
+                            y.Value = $"{minutes} minute";
                             y.IsInline = true;
-                        });
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Moderator";
-                            y.Value = Context.User.Mention;
-                            y.IsInline = true;
-                        });
-                        if (minutes == 1)
-                        {
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Length";
-                                y.Value = $"{minutes} minute";
-                                y.IsInline = true;
-                            });
-                        }
-                        else
-                        {
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Length";
-                                y.Value = $"{minutes} minutes";
-                                y.IsInline = true;
-                            });
-                        }
-                        embed.AddField(y =>
-                        {
-                            y.Name = "Reason";
-                            y.Value = Format.Sanitize(reason);
-                            y.IsInline = true;
-                        });
-                        await Context.Message.DeleteAsync();
-                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was muted.");
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        try
-                        {
-                            if (minutes == 1)
-                            {
-                                await user.SendMessageAsync($"You have been muted in **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} for **{Format.Sanitize(reason)}** and for a length of **{minutes}** minute.");
-                            }
-                            else
-                            {
-                                await user.SendMessageAsync($"You have been muted in **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} for **{Format.Sanitize(reason)}** and for a length of **{minutes}** minutes.");
-                            }
-                        }
-                        catch (Discord.Net.HttpException)
-                        {
-                            //cant send message
-                        }
-                        string mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"));
-                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers + user.Id.ToString() + "\n");
-                        int mutetime = Convert.ToInt32(minutes) * 60000;
-                        Task task = Task.Run(async () =>
-                        {
-                            await Task.Delay(mutetime);
-                            SocketGuildUser usr = user as SocketGuildUser;
-                            if (usr.Roles.Any(e => e.Name.ToUpperInvariant() == "Muted".ToUpperInvariant()))
-                            {
-                                options.AuditLogReason = "Unmuting User | Reason: Mute expired";
-                                await user.RemoveRolesAsync(role, options);
-                                EmbedAuthorBuilder auth2 = new EmbedAuthorBuilder()
-                                {
-                                    Name = $"Case {Database.CaseCount() + 1} | Unmute | {user.Username}#{user.Discriminator}",
-                                    IconUrl = user.GetAvatarUrl(),
-                                };
-                                EmbedBuilder embed2 = new EmbedBuilder()
-                                {
-                                    Color = new Color(0, 255, 0),
-                                    Author = auth2
-                                };
-                                EmbedFooterBuilder footer2 = new EmbedFooterBuilder()
-                                {
-                                    Text = $"ID: {user.Id}"
-                                };
-                                embed2.WithCurrentTimestamp();
-                                embed2.WithFooter(footer2);
-                                embed2.AddField(y =>
-                                {
-                                    y.Name = "User";
-                                    y.Value = user.Mention;
-                                    y.IsInline = true;
-                                });
-                                embed2.AddField(y =>
-                                {
-                                    y.Name = "Moderator";
-                                    y.Value = Context.Client.CurrentUser.Mention;
-                                    y.IsInline = true;
-                                });
-                                embed2.AddField(y =>
-                                {
-                                    y.Name = "Reason";
-                                    y.Value = "Auto";
-                                    y.IsInline = true;
-                                });
-                                await banlog.SendMessageAsync("", false, embed2.Build());
-                                try
-                                {
-                                    await user.SendMessageAsync($"You are now unmuted in **{Format.Sanitize(Context.Guild.Name)}**.");
-                                }
-                                catch (Discord.Net.HttpException)
-                                {
-                                    //cant send message
-                                }
-                                Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: Context.Client.CurrentUser.Username + "#" + Context.Client.CurrentUser.Discriminator, reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                                mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace("\n" + user.Id.ToString(), string.Empty);
-                                File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
-                            }
-                            else
-                            {
-                                return;
-                            }
                         });
                     }
                     else
                     {
-                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        embed.AddField(y =>
+                        {
+                            y.Name = "Length";
+                            y.Value = $"{minutes} minutes";
+                            y.IsInline = true;
+                        });
                     }
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Reason";
+                        y.Value = Format.Sanitize(reason);
+                        y.IsInline = true;
+                    });
+                    await Context.Message.DeleteAsync();
+                    await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was muted.");
+                    await banlog.SendMessageAsync("", false, embed.Build());
+                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                    try
+                    {
+                        if (minutes == 1)
+                        {
+                            await user.SendMessageAsync($"You have been muted in **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} for **{Format.Sanitize(reason)}** and for a length of **{minutes}** minute.");
+                        }
+                        else
+                        {
+                            await user.SendMessageAsync($"You have been muted in **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} for **{Format.Sanitize(reason)}** and for a length of **{minutes}** minutes.");
+                        }
+                    }
+                    catch (Discord.Net.HttpException)
+                    {
+                        //cant send message
+                    }
+                    string mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"));
+                    File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers + user.Id.ToString() + "\n");
+                    int mutetime = Convert.ToInt32(minutes) * 60000;
+                    Task task = Task.Run(async () =>
+                    {
+                        await Task.Delay(mutetime);
+                        SocketGuildUser usr = user as SocketGuildUser;
+                        if (usr.Roles.Any(e => e.Name.ToUpperInvariant() == "Muted".ToUpperInvariant()))
+                        {
+                            options.AuditLogReason = "Unmuting User | Reason: Mute expired";
+                            await user.RemoveRolesAsync(role, options);
+                            EmbedAuthorBuilder auth2 = new EmbedAuthorBuilder()
+                            {
+                                Name = $"Case {Database.CaseCount() + 1} | Unmute | {user.Username}#{user.Discriminator}",
+                                IconUrl = user.GetAvatarUrl(),
+                            };
+                            EmbedBuilder embed2 = new EmbedBuilder()
+                            {
+                                Color = new Color(0, 255, 0),
+                                Author = auth2
+                            };
+                            EmbedFooterBuilder footer2 = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {user.Id}"
+                            };
+                            embed2.WithCurrentTimestamp();
+                            embed2.WithFooter(footer2);
+                            embed2.AddField(y =>
+                            {
+                                y.Name = "User";
+                                y.Value = user.Mention;
+                                y.IsInline = true;
+                            });
+                            embed2.AddField(y =>
+                            {
+                                y.Name = "Moderator";
+                                y.Value = Context.Client.CurrentUser.Mention;
+                                y.IsInline = true;
+                            });
+                            embed2.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = "Auto";
+                                y.IsInline = true;
+                            });
+                            await banlog.SendMessageAsync("", false, embed2.Build());
+                            try
+                            {
+                                await user.SendMessageAsync($"You are now unmuted in **{Format.Sanitize(Context.Guild.Name)}**.");
+                            }
+                            catch (Discord.Net.HttpException)
+                            {
+                                //cant send message
+                            }
+                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: Context.Client.CurrentUser.Username + "#" + Context.Client.CurrentUser.Discriminator, reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace(user.Id.ToString() + "\n", string.Empty);
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
+                        }
+                        else
+                        {
+                            mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace(user.Id.ToString() + "\n", string.Empty);
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
+                        }
+                    });
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
             }
         }
@@ -3407,62 +3115,54 @@ namespace FredBotNETCore.Modules
                 embed.Title = "Command: /temp";
                 embed.Description = "**Description:** Temp mod a memeber.\n**Usage:** /temp [user] [time]\n**Example:** /temp @Jiggmin 60";
                 await ReplyAsync("", false, embed.Build());
-                return;
             }
-            try
+            else if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
             {
-                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                if (user.Id == Context.User.Id)
                 {
-                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                    if (user.Id == Context.User.Id)
-                    {
-                        await ReplyAsync($"{Context.User.Mention} you cannot temp mod yourself.");
-                        return;
-                    }
-                    double minutes = Math.Round(Convert.ToDouble(time), 0);
-                    SocketTextChannel roles = user.Guild.Channels.Where(x => x.Name.ToUpper() == "Welcome".ToUpper()).First() as SocketTextChannel;
+                    await ReplyAsync($"{Context.User.Mention} you cannot temp mod yourself.");
+                    return;
+                }
+                double minutes = Math.Round(Convert.ToDouble(time), 0);
+                SocketTextChannel roles = user.Guild.Channels.Where(x => x.Name.ToUpper() == "Welcome".ToUpper()).First() as SocketTextChannel;
 
-                    IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
-                    RequestOptions options = new RequestOptions()
-                    {
-                        AuditLogReason = $"Temp Modding User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                    };
-                    await user.AddRolesAsync(role, options);
-                    await Context.Message.DeleteAsync();
-                    if (time.Equals("1"))
-                    {
-                        await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minute. " +
-                                    $"May they reign in a minute of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
-                    }
-                    else if (minutes <= 60)
-                    {
-                        await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
-                                    $"May they reign in minutes of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
-                    }
-                    else
-                    {
-                        await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
-                                    $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
-                    }
-                    int temptime = Convert.ToInt32(minutes) * 60000;
-                    Task task = Task.Run(async () =>
-                    {
-                        await Task.Delay(temptime);
-                        if (user.Roles.Any(e => e.Name.ToUpperInvariant() == "Temp Mod".ToUpperInvariant()))
-                        {
-                            options.AuditLogReason = "Untemp Modding User | Reason: Temp Time Over";
-                            await user.RemoveRolesAsync(role, options);
-                        }
-                    });
+                IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
+                RequestOptions options = new RequestOptions()
+                {
+                    AuditLogReason = $"Temp Modding User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
+                };
+                await user.AddRolesAsync(role, options);
+                await Context.Message.DeleteAsync();
+                if (time.Equals("1"))
+                {
+                    await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minute. " +
+                                $"May they reign in a minute of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
+                }
+                else if (minutes <= 60)
+                {
+                    await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
+                                $"May they reign in minutes of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
                 }
                 else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                    await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
+                                $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
                 }
+                int temptime = Convert.ToInt32(minutes) * 60000;
+                Task task = Task.Run(async () =>
+                {
+                    await Task.Delay(temptime);
+                    if (user.Roles.Any(e => e.Name.ToUpperInvariant() == "Temp Mod".ToUpperInvariant()))
+                    {
+                        options.AuditLogReason = "Untemp Modding User | Reason: Temp Time Over";
+                        await user.RemoveRolesAsync(role, options);
+                    }
+                });
             }
-            catch (NullReferenceException)
+            else
             {
-                await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
             }
         }
     }
