@@ -191,7 +191,6 @@ namespace FredBotNETCore
                         justConnected = false;
                         return;
                     }
-                    Console.WriteLine("1");
                     await UpdateHappyHourAsync(serverName, isOn);
                     break;
             }
