@@ -31,12 +31,12 @@ namespace FredBotNETCore.Modules.Public
                 Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
             };
             string help = "**Manager**\n" +
+                "/notificationschannel - Set the channel for HH and Arti updates.\n" +
                 "/logchannel - Set the log channel for the server.\n" +
                 "/addallowedchannel - Add an allowed channel for PR2 commands.\n" +
                 "/removeallowedchannel - Removes an allowed channel for PR2 commands.\n" +
                 "/listallowedchannels - Lists allowed channels for PR2 commands.\n" +
                 "/resetpr2name - Used to reset a users PR2 Name.\n" +
-                "/clearwarn - Clear warnings for a user.\n" +
                 "/addmod - Add a server mod or role.\n" +
                 "/delmod - Delete a server mod or role.\n" +
                 "/listmods - List server mod roles and users.\n" +
@@ -76,7 +76,7 @@ namespace FredBotNETCore.Modules.Public
                 "/modlogs - Gets all priors for user mentioned.\n" +
                 "/getcase - Gets info on a case number.\n" +
                 "/endgiveaway - Ends the most recent giveaway.\n" +
-                "/giveaway - Creates a giveaway. Usage: channel, time, item\n" +
+                "/giveaway - Creates a giveaway. Usage: channel, time, winners, item\n" +
                 "/repick - Repicks a winner for most recent giveaway in channel\n" +
                 "/userinfo - Returns info of a user -mention needed.\n" +
                 "/guildinfo - Returns info about the discord server.\n" +
@@ -122,7 +122,7 @@ namespace FredBotNETCore.Modules.Public
                 "/qremove - Remove song from queue.\n" +
                 "/come - Brings bot to voice channel.\n" +
                 "/forceskip - Skips the current song.\n" +
-                "/voicelatency - Gets bot latency to voice channel.\n" +
+                "/volume - Set volume of the music.\n" +
                 "**Music**\n" +
                 "/add - Adds a song to the queue.\n" +
                 "/skip - Vote to skip current song.\n" +

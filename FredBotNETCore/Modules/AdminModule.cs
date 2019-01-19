@@ -1100,7 +1100,7 @@ namespace FredBotNETCore.Modules
                                 else
                                 {
                                     allowed = true;
-                                }                            
+                                }
                             }
                             else if (channels.Count() == 1)
                             {
