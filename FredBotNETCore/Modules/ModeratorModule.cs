@@ -2406,7 +2406,7 @@ namespace FredBotNETCore.Modules
         {
             if (username == null)
             {
-                username = Context.User.Mention.ToString();
+                username = Context.User.Username + "#" + Context.User.Discriminator;
             }
             if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
             {

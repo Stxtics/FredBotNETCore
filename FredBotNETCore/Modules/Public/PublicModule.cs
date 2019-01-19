@@ -1831,6 +1831,10 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 user = $"[{Format.Sanitize(Uri.UnescapeDataString(user))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(user)})";
                             }
+                            else
+                            {
+                                user = "an IP";
+                            }
                             if (reason.Length <= 0)
                             {
                                 reason = "No reason was provided.";
@@ -1879,6 +1883,10 @@ namespace FredBotNETCore.Modules.Public
                             if (!user.Equals("<i>an IP</i>"))
                             {
                                 user = $"[{Format.Sanitize(Uri.UnescapeDataString(user))}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(user)})";
+                            }
+                            else
+                            {
+                                user = "an IP";
                             }
                             embed.AddField(y =>
                             {
