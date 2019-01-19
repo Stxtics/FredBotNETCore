@@ -58,14 +58,14 @@ namespace FredBotNETCore.Modules.Public
                         Description = "**Description:** Add a song to the music queue.\n**Usage:** /add [url]\n**Example:** /add https://www.youtube.com/watch?v=ifFNeqzB5os",
                         Color = new Color(220, 220, 220)
                     };
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync("", false, embed.Build());
                 }
                 else
                 {
                     SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                     if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                        await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                     }
                     else
                     {
@@ -77,7 +77,7 @@ namespace FredBotNETCore.Modules.Public
                         }
                         if (audioService.Queue(Context.Guild.Id) != null && audioService.Queue(Context.Guild.Id).Item1.Items.Count() >= 20)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue is full.");
+                            await ReplyAsync($"{Context.User.Mention} the queue is full.");
                         }
                         else if (result && (url.Contains("youtube.com/") || url.Contains("youtu.be/")))
                         {
@@ -106,7 +106,7 @@ namespace FredBotNETCore.Modules.Public
                             }
                             if (id == null || id.Length <= 0)
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a video ID in that URL.");
+                                await ReplyAsync($"{Context.User.Mention} I could not find a video ID in that URL.");
                                 return;
                             }
                             string jsonResponse = myDownloader.DownloadString(
@@ -116,15 +116,15 @@ namespace FredBotNETCore.Modules.Public
                             LavaTrack track = await audioService.GetTrackFromYoutube(title);
                             if (track == null)
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a song with that URL.");
+                                await ReplyAsync($"{Context.User.Mention} I could not find a song with that URL.");
                             }
                             else if (track.Length.Minutes > 10 || (track.Length.Minutes == 10 && track.Length.Seconds > 0))
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
+                                await ReplyAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
                             }
                             else if (audioService.Queue(Context.Guild.Id).Item1.Items.Any(x => x.Uri.Equals(track.Uri)))
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
+                                await ReplyAsync($"{Context.User.Mention} that video is already in the queue.");
                             }
                             else
                             {
@@ -182,7 +182,7 @@ namespace FredBotNETCore.Modules.Public
                                     ThumbnailUrl = thumbnails.High.Url
                                 };
                                 embed.WithCurrentTimestamp();
-                                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                                await ReplyAsync("", false, embed.Build());
                                 if (audioService.NowPlaying(Context.Guild.Id) != null && audioService.Playing(Context.Guild.Id) || audioService.Paused(Context.Guild.Id))
                                 {
                                     audioService.QueueAdd(Context.Guild.Id, track, Context.User);
@@ -191,13 +191,13 @@ namespace FredBotNETCore.Modules.Public
                                 {
                                     await audioService.Play(Context.Guild.Id, track);
                                     audioService.SetNowPlayingUser(Context.User);
-                                    await Context.Channel.SendMessageAsync($"Now playing: **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) requested by **{Context.User.Username}#{Context.User.Discriminator}**.");
+                                    await ReplyAsync($"Now playing: **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) requested by **{Context.User.Username}#{Context.User.Discriminator}**.");
                                 }
                             }
                         }
                         else if (result)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that URL is not supported. Use a youtube URL or search for the song.");
+                            await ReplyAsync($"{Context.User.Mention} that URL is not supported. Use a youtube URL or search for the song.");
                         }
                         else
                         {
@@ -221,15 +221,15 @@ namespace FredBotNETCore.Modules.Public
                             LavaTrack track = await audioService.GetTrackFromYoutube(url);
                             if (track == null)
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a song with that title.");
+                                await ReplyAsync($"{Context.User.Mention} I could not find a song with that title.");
                             }
                             else if (track.Length.Minutes > 10 || (track.Length.Minutes == 10 && track.Length.Seconds > 0))
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
+                                await ReplyAsync($"{Context.User.Mention} the maximum song length is 10 minutes.");
                             }
                             else if (audioService.Queue(Context.Guild.Id).Item1.Items.Any(x => x.Uri.Equals(track.Uri)))
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} that video is already in the queue.");
+                                await ReplyAsync($"{Context.User.Mention} that video is already in the queue.");
                             }
                             else
                             {
@@ -270,7 +270,7 @@ namespace FredBotNETCore.Modules.Public
                                     ThumbnailUrl = thumbnails.High.Url
                                 };
                                 embed.WithCurrentTimestamp();
-                                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                                await ReplyAsync("", false, embed.Build());
                                 if (audioService.NowPlaying(Context.Guild.Id) != null && audioService.Playing(Context.Guild.Id) || audioService.Paused(Context.Guild.Id))
                                 {
                                     audioService.QueueAdd(Context.Guild.Id, track, Context.User);
@@ -279,7 +279,7 @@ namespace FredBotNETCore.Modules.Public
                                 {
                                     await audioService.Play(Context.Guild.Id, track);
                                     audioService.SetNowPlayingUser(Context.User);
-                                    await Context.Channel.SendMessageAsync($"Now playing: **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) requested by **{Context.User.Username}#{Context.User.Discriminator}**.");
+                                    await ReplyAsync($"Now playing: **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) requested by **{Context.User.Username}#{Context.User.Discriminator}**.");
                                 }
                             }
                         }
@@ -307,7 +307,7 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else
                 {
@@ -316,7 +316,7 @@ namespace FredBotNETCore.Modules.Public
                         Tuple<LavaQueue<LavaTrack>, List<SocketUser>> queue = audioService.Queue(Context.Guild.Id);
                         if (queue.Item1.Items.Count() <= 0)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue is currently empty.");
+                            await ReplyAsync($"{Context.User.Mention} the queue is currently empty.");
                         }
                         else
                         {
@@ -345,12 +345,12 @@ namespace FredBotNETCore.Modules.Public
                                 count++;
                                 index++;
                             }
-                            await Context.Channel.SendMessageAsync("", false, embed.Build());
+                            await ReplyAsync("", false, embed.Build());
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} nothing is playing right now. Use /play to play a song.");
+                        await ReplyAsync($"{Context.User.Mention} nothing is playing right now. Use /play to play a song.");
                     }
                 }
             }
@@ -376,17 +376,17 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else
                 {
                     if (audioService.Loop())
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue will now loop.");
+                        await ReplyAsync($"{Context.User.Mention} the queue will now loop.");
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue will no longer loop.");
+                        await ReplyAsync($"{Context.User.Mention} the queue will no longer loop.");
                     }
                 }
             }
@@ -408,7 +408,7 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else
                 {
@@ -416,17 +416,17 @@ namespace FredBotNETCore.Modules.Public
                     {
                         if (audioService.Paused(Context.Guild.Id))
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the music is already paused.");
+                            await ReplyAsync($"{Context.User.Mention} the music is already paused.");
                         }
                         else
                         {
                             await audioService.Pause(Context.Guild.Id);
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} paused the music.");
+                            await ReplyAsync($"{Context.User.Mention} paused the music.");
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is nothing to pause.");
+                        await ReplyAsync($"{Context.User.Mention} there is nothing to pause.");
                     }
                 }
             }
@@ -451,7 +451,7 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else
                 {
@@ -460,16 +460,16 @@ namespace FredBotNETCore.Modules.Public
                         if (audioService.Paused(Context.Guild.Id))
                         {
                             await audioService.Resume(Context.Guild.Id);
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} resumed the music.");
+                            await ReplyAsync($"{Context.User.Mention} resumed the music.");
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the music is already playing.");
+                            await ReplyAsync($"{Context.User.Mention} the music is already playing.");
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is nothing to resume.");
+                        await ReplyAsync($"{Context.User.Mention} there is nothing to resume.");
                     }
                 }
             }
@@ -493,7 +493,7 @@ namespace FredBotNETCore.Modules.Public
                     if (user.Roles.Any(e => e.Name.ToUpperInvariant() == "Discord Staff".ToUpperInvariant()) && audioService.Paused(Context.Guild.Id))
                     {
                         await audioService.Resume(Context.Guild.Id);
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} resumed the music.");
+                        await ReplyAsync($"{Context.User.Mention} resumed the music.");
                     }
                     else
                     {
@@ -532,22 +532,22 @@ namespace FredBotNETCore.Modules.Public
                         Description = "**Description:** Remove a song from the queue.\n**Usage:** /qremove [position]\n**Example:** /qremove 1",
                         Color = new Color(220, 220, 220)
                     };
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync("", false, embed.Build());
                 }
                 else
                 {
                     if (Context.Guild.CurrentUser.VoiceChannel == null || audioService.Queue(Context.Guild.Id).Item1.Items.Count() <= 0)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is nothing in the queue.");
+                        await ReplyAsync($"{Context.User.Mention} there is nothing in the queue.");
                     }
                     else if (audioService.Queue(Context.Guild.Id).Item1.Items.Count() < pos)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is not that many items in the queue.");
+                        await ReplyAsync($"{Context.User.Mention} there is not that many items in the queue.");
                     }
                     else
                     {
                         Tuple<LavaTrack, SocketUser> removedTrack = audioService.QueueRemove(Context.Guild.Id, pos - 1);
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} removed **{Format.Sanitize(removedTrack.Item1.Title)}** queued by **{Format.Sanitize(removedTrack.Item2.Username)}#{removedTrack.Item2.Discriminator}** from the queue.");
+                        await ReplyAsync($"{Context.User.Mention} removed **{Format.Sanitize(removedTrack.Item1.Title)}** queued by **{Format.Sanitize(removedTrack.Item2.Username)}#{removedTrack.Item2.Discriminator}** from the queue.");
 
                     }
                 }
@@ -574,18 +574,18 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else
                 {
                     if (Context.Guild.CurrentUser.VoiceChannel == null || audioService.Queue(Context.Guild.Id).Item1.Items.Count() <= 0)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} the queue is already empty.");
+                        await ReplyAsync($"{Context.User.Mention} the queue is already empty.");
                     }
                     else
                     {
                         audioService.QueueClear(Context.Guild.Id);
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} cleared the queue.");
+                        await ReplyAsync($"{Context.User.Mention} cleared the queue.");
                     }
                 }
             }
@@ -611,16 +611,16 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else if (Context.Guild.CurrentUser.VoiceChannel != null && Context.Guild.CurrentUser.VoiceChannel.Id == 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I am already in the Music voice channel.");
+                    await ReplyAsync($"{Context.User.Mention} I am already in the Music voice channel.");
                 }
                 else
                 {
                     await audioService.Connect(_voiceChannel, Context.Channel);
-                    await Context.Channel.SendMessageAsync($"Joined voice channel **{Format.Sanitize(_voiceChannel.Name)}**.");
+                    await ReplyAsync($"Joined voice channel **{Format.Sanitize(_voiceChannel.Name)}**.");
                 }
             }
             else
@@ -644,17 +644,17 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else
                 {
                     if (Context.Guild.CurrentUser.VoiceChannel == null || audioService.NowPlaying(Context.Guild.Id) == null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is nothing to skip.");
+                        await ReplyAsync($"{Context.User.Mention} there is nothing to skip.");
                     }
                     else if (audioService.GetSkippedUsers().Contains(Context.User))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have already voted to skip this song.");
+                        await ReplyAsync($"{Context.User.Mention} you have already voted to skip this song.");
                     }
                     else
                     {
@@ -670,17 +670,17 @@ namespace FredBotNETCore.Modules.Public
                             SocketUser user = audioService.GetNowPlayingUser();
                             LavaTrack nowPlaying = audioService.NowPlaying(Context.Guild.Id);
                             await audioService.Skip(Context.Guild.Id);
-                            await Context.Channel.SendMessageAsync($"**{Format.Sanitize(nowPlaying.Title)}** requested by **{user.Username}#{user.Discriminator}** was skipped.");
+                            await ReplyAsync($"**{Format.Sanitize(nowPlaying.Title)}** requested by **{user.Username}#{user.Discriminator}** was skipped.");
                         }
                         else
                         {
                             if (votesNeeded - audioService.GetSkippedUsers().Count == 1)
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} voted to skip **{Format.Sanitize(audioService.NowPlaying(Context.Guild.Id).Title)}**. {votesNeeded - audioService.GetSkippedUsers().Count} more vote needed to skip.");
+                                await ReplyAsync($"{Context.User.Mention} voted to skip **{Format.Sanitize(audioService.NowPlaying(Context.Guild.Id).Title)}**. {votesNeeded - audioService.GetSkippedUsers().Count} more vote needed to skip.");
                             }
                             else
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} voted to skip **{Format.Sanitize(audioService.NowPlaying(Context.Guild.Id).Title)}**. {votesNeeded - audioService.GetSkippedUsers().Count} more votes needed to skip.");
+                                await ReplyAsync($"{Context.User.Mention} voted to skip **{Format.Sanitize(audioService.NowPlaying(Context.Guild.Id).Title)}**. {votesNeeded - audioService.GetSkippedUsers().Count} more votes needed to skip.");
                             }
                         }
                     }
@@ -708,20 +708,20 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else
                 {
                     if (Context.Guild.CurrentUser.VoiceChannel == null || audioService.NowPlaying(Context.Guild.Id) == null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is nothing to skip.");
+                        await ReplyAsync($"{Context.User.Mention} there is nothing to skip.");
                     }
                     else
                     {
                         LavaTrack nowPlaying = audioService.NowPlaying(Context.Guild.Id);
                         SocketUser user = audioService.GetNowPlayingUser();
                         await audioService.Skip(Context.Guild.Id);
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} force skipped **{Format.Sanitize(nowPlaying.Title)}** requested by **{user.Username}#{user.Discriminator}**.");
+                        await ReplyAsync($"{Context.User.Mention} force skipped **{Format.Sanitize(nowPlaying.Title)}** requested by **{user.Username}#{user.Discriminator}**.");
                     }
                 }
             }
@@ -746,13 +746,13 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else
                 {
                     if (Context.Guild.CurrentUser.VoiceChannel == null || audioService.NowPlaying(Context.Guild.Id) == null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} nothing is playing right now.");
+                        await ReplyAsync($"{Context.User.Mention} nothing is playing right now.");
                     }
                     else
                     {
@@ -812,7 +812,7 @@ namespace FredBotNETCore.Modules.Public
                             ThumbnailUrl = thumbnails.High.Url
                         };
                         embed.WithCurrentTimestamp();
-                        await Context.Channel.SendMessageAsync("", false, embed.Build());
+                        await ReplyAsync("", false, embed.Build());
                     }
                 }
             }
@@ -837,13 +837,13 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else
                 {
                     if (Context.Guild.CurrentUser.VoiceChannel == null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is no music playing.");
+                        await ReplyAsync($"{Context.User.Mention} there is no music playing.");
                     }
                     else
                     {
@@ -874,25 +874,25 @@ namespace FredBotNETCore.Modules.Public
                 SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
                 if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
                 }
                 else
                 {
                     if (Context.Guild.CurrentUser.VoiceChannel == null)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} there is no music to set the volume of.");
+                        await ReplyAsync($"{Context.User.Mention} there is no music to set the volume of.");
                     }
                     else
                     {
                         if (volume >= 150 || volume <= 0)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} volume must be between 0 and 150.");
+                            await ReplyAsync($"{Context.User.Mention} volume must be between 0 and 150.");
                         }
                         else
                         {
                             int currentVolume = audioService.GetVolume(Context.Guild.Id);
                             await audioService.SetVolume(Context.Guild.Id, volume);
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} set the volume from **{currentVolume}** to **{volume}**.");
+                            await ReplyAsync($"{Context.User.Mention} set the volume from **{currentVolume}** to **{volume}**.");
                         }
                     }
                 }

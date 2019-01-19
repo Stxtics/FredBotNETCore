@@ -45,7 +45,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.WithCurrentTimestamp();
                 embed.Description = $"{Context.User.Mention} changed the token of FredTheG.CactusBot on PR2.";
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the token was successfully changed from **{Format.Sanitize(currentToken)}** to **{Format.Sanitize(newToken)}**.");
+                await ReplyAsync($"{Context.User.Mention} the token was successfully changed from **{Format.Sanitize(currentToken)}** to **{Format.Sanitize(newToken)}**.");
                 await log.SendMessageAsync("", false, embed.Build());
                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"), newToken);
             }
@@ -92,7 +92,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /addrole";
                 embed.Description = "**Description:** Add a new role, with optional color and hoist.\n**Usage:** /addrole [name] [hex color] [hoist]\n**Example:** /addrole Test #FF0000 true";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -111,12 +111,12 @@ namespace FredBotNETCore.Modules
                             System.Drawing.Color color = System.Drawing.Color.FromArgb(int.Parse(settingsSplit2[0].Replace("#", ""), NumberStyles.AllowHexSpecifier));
                             bool hoisted = Convert.ToBoolean(settingsSplit2[1]);
                             await Context.Guild.CreateRoleAsync(settingsSplit[0], null, new Color(color.R, color.G, color.B), hoisted, options);
-                            await Context.Channel.SendMessageAsync($"Created role **{Format.Sanitize(settingsSplit[0])}** with color **#{settingsSplit2[0]}**, and is displayed separately.");
+                            await ReplyAsync($"Created role **{Format.Sanitize(settingsSplit[0])}** with color **#{settingsSplit2[0]}**, and is displayed separately.");
                         }
                         catch (FormatException)
                         {
                             await Context.Guild.CreateRoleAsync(settings, null, null, false, options);
-                            await Context.Channel.SendMessageAsync($"Created role **{Format.Sanitize(settings)}**.");
+                            await ReplyAsync($"Created role **{Format.Sanitize(settings)}**.");
                         }
                     }
                     else
@@ -125,19 +125,19 @@ namespace FredBotNETCore.Modules
                         {
                             System.Drawing.Color color = System.Drawing.Color.FromArgb(int.Parse(settingsSplit[1].Replace("#", ""), NumberStyles.AllowHexSpecifier));
                             await Context.Guild.CreateRoleAsync(settingsSplit[0], null, new Color(color.R, color.G, color.B), false, options);
-                            await Context.Channel.SendMessageAsync($"Created role **{Format.Sanitize(settingsSplit[0])}** with color **#{settingsSplit[1]}**.");
+                            await ReplyAsync($"Created role **{Format.Sanitize(settingsSplit[0])}** with color **#{settingsSplit[1]}**.");
                         }
                         catch (FormatException)
                         {
                             await Context.Guild.CreateRoleAsync(settings, null, null, false, options);
-                            await Context.Channel.SendMessageAsync($"Created role **{Format.Sanitize(settings)}**.");
+                            await ReplyAsync($"Created role **{Format.Sanitize(settings)}**.");
                         }
                     }
                 }
                 else
                 {
                     await Context.Guild.CreateRoleAsync(settings);
-                    await Context.Channel.SendMessageAsync($"Created role **{Format.Sanitize(settings)}**.");
+                    await ReplyAsync($"Created role **{Format.Sanitize(settings)}**.");
                 }
             }
         }
@@ -158,7 +158,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /delrole";
                 embed.Description = "**Description:** Delete a role.\n**Usage:** /delrole [role]\n**Example:** /delrole Admins";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -172,16 +172,16 @@ namespace FredBotNETCore.Modules
                             AuditLogReason = $"Deleted by: {Context.User.Username}#{Context.User.Discriminator}"
                         };
                         await role.DeleteAsync(options);
-                        await Context.Channel.SendMessageAsync($"Deleted role **{Format.Sanitize(roleName)}**");
+                        await ReplyAsync($"Deleted role **{Format.Sanitize(roleName)}**");
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{Format.Sanitize(roleName)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find role **{Format.Sanitize(roleName)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: **{roleName}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find role with ID: **{roleName}**.");
                 }
             }
         }
@@ -203,7 +203,7 @@ namespace FredBotNETCore.Modules
                     };
                     embed.Title = "Command: /blacklistmusic";
                     embed.Description = "**Description:** Blacklist a user from using music commands.\n**Usage:** /blacklistmusic [user]\n**Example:** /blacklistmusic Jiggmin";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync("", false, embed.Build());
                 }
                 else
                 {
@@ -216,7 +216,7 @@ namespace FredBotNETCore.Modules
                             if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                             {
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is already blacklisted from using music commands.");
+                                await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is already blacklisted from using music commands.");
                             }
                             else
                             {
@@ -240,18 +240,18 @@ namespace FredBotNETCore.Modules
                                 };
                                 embed.WithCurrentTimestamp();
                                 embed.Description = $"{Context.User.Mention} blacklisted {user.Mention} from using music commands.";
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted **{Format.Sanitize(user.Username)}#{user.Discriminator}** from using music commands.");
+                                await ReplyAsync($"{Context.User.Mention} you have successfully blacklisted **{Format.Sanitize(user.Username)}#{user.Discriminator}** from using music commands.");
                                 await log.SendMessageAsync("", false, embed.Build());
                             }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                            await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                         }
                     }
                     catch (NullReferenceException)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -278,7 +278,7 @@ namespace FredBotNETCore.Modules
                     };
                     embed.Title = "Command: /unblacklistmusic";
                     embed.Description = "**Description:** Unblacklist a user from using music commands.\n**Usage:** /unblacklistmusic [user]\n**Example:** /unblacklistmusic Jiggmin";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync("", false, embed.Build());
                 }
                 else
                 {
@@ -311,22 +311,22 @@ namespace FredBotNETCore.Modules
                                 };
                                 embed.WithCurrentTimestamp();
                                 embed.Description = $"{Context.User.Mention} unblacklisted {user.Mention} from using music commands.";
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully removed blacklisted music command user **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
+                                await ReplyAsync($"{Context.User.Mention} you have successfully removed blacklisted music command user **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
                                 await log.SendMessageAsync("", false, embed.Build());
                             }
                             else
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is not blacklisted from using music commands.");
+                                await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is not blacklisted from using music commands.");
                             }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                            await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                         }
                     }
                     catch (NullReferenceException)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -367,7 +367,7 @@ namespace FredBotNETCore.Modules
                 blacklistedMusic.Close();
                 if (blacklistedUsers.Length <= 0)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} there are no blacklisted users from music commands.");
+                    await ReplyAsync($"{Context.User.Mention} there are no blacklisted users from music commands.");
                 }
                 else
                 {
@@ -377,7 +377,7 @@ namespace FredBotNETCore.Modules
                         y.Value = Format.Sanitize(blacklistedUsers);
                         y.IsInline = false;
                     });
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync("", false, embed.Build());
                 }
             }
             else
@@ -403,7 +403,7 @@ namespace FredBotNETCore.Modules
                     };
                     embed.Title = "Command: /blacklistsuggestions";
                     embed.Description = "**Description:** Blacklist a user from using the /suggest command.\n**Usage:** /blacklistsuggestions [user]\n**Example:** /blacklistsuggestions Jiggmin";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync("", false, embed.Build());
                 }
                 else
                 {
@@ -416,7 +416,7 @@ namespace FredBotNETCore.Modules
                             if (currentBlacklistedUsers.Contains(user.Id.ToString()))
                             {
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedSuggestions.txt"), currentBlacklistedUsers);
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is already blacklisted from suggestions.");
+                                await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is already blacklisted from suggestions.");
                             }
                             else
                             {
@@ -446,18 +446,18 @@ namespace FredBotNETCore.Modules
                                 };
                                 embed.WithCurrentTimestamp();
                                 embed.Description = $"{Context.User.Mention} blacklisted {user.Mention} from the suggestions channel.";
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully blacklisted **{Format.Sanitize(user.Username)}#{user.Discriminator}** from suggestions.");
+                                await ReplyAsync($"{Context.User.Mention} you have successfully blacklisted **{Format.Sanitize(user.Username)}#{user.Discriminator}** from suggestions.");
                                 await log.SendMessageAsync("", false, embed.Build());
                             }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                            await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                         }
                     }
                     catch (NullReferenceException)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -484,7 +484,7 @@ namespace FredBotNETCore.Modules
                     };
                     embed.Title = "Command: /unblacklistsuggestions";
                     embed.Description = "**Description:** Unblacklist a user from using the /suggest command.\n**Usage:** /unblacklistsuggestions [user]\n**Example:** /unblacklistsuggestions Jiggmin";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync("", false, embed.Build());
                 }
                 else
                 {
@@ -523,22 +523,22 @@ namespace FredBotNETCore.Modules
                                 };
                                 embed.WithCurrentTimestamp();
                                 embed.Description = $"{Context.User.Mention} unblacklisted {user.Mention} from the suggestions channel.";
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} you have successfully removed blacklisted suggestions user **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
+                                await ReplyAsync($"{Context.User.Mention} you have successfully removed blacklisted suggestions user **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
                                 await log.SendMessageAsync("", false, embed.Build());
                             }
                             else
                             {
-                                await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is not blacklisted from suggestions.");
+                                await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(user.Username)}** is not blacklisted from suggestions.");
                             }
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                            await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                         }
                     }
                     catch (NullReferenceException)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                     }
                 }
             }
@@ -579,7 +579,7 @@ namespace FredBotNETCore.Modules
                 blacklistedsuggestions.Close();
                 if (blacklistedUsers.Length <= 0)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} there are no blacklisted suggestions users.");
+                    await ReplyAsync($"{Context.User.Mention} there are no blacklisted suggestions users.");
                 }
                 else
                 {
@@ -589,7 +589,7 @@ namespace FredBotNETCore.Modules
                         y.Value = Format.Sanitize(blacklistedUsers);
                         y.IsInline = false;
                     });
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync("", false, embed.Build());
                 }
             }
             else
@@ -613,7 +613,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /channelinfo";
                 embed.Description = "**Description:** Get information about a channel.\n**Usage:** /channelinfo [channel name]\n**Example:** /channelinfo rules";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -775,16 +775,16 @@ namespace FredBotNETCore.Modules
                                 y.IsInline = true;
                             });
                         }
-                        await Context.Channel.SendMessageAsync("", false, embed.Build());
+                        await ReplyAsync("", false, embed.Build());
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find channel **{Format.Sanitize(channelName)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find channel **{Format.Sanitize(channelName)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel with ID: **{channelName}** does not exist or could not be found.");
+                    await ReplyAsync($"{Context.User.Mention} the channel with ID: **{channelName}** does not exist or could not be found.");
                 }
             }
         }
@@ -796,7 +796,7 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task MemberCount()
         {
-            await Context.Channel.SendMessageAsync($"Member count: **{Context.Guild.Users.Count}**.");
+            await ReplyAsync($"Member count: **{Context.Guild.Users.Count}**.");
         }
 
         [Command("uptime", RunMode = RunMode.Async)]
@@ -822,7 +822,7 @@ namespace FredBotNETCore.Modules
                 sb.Append($"{time.Minutes}m ");  /*Pulls the Uptime in Minutes*/
             }
             sb.Append($"{time.Seconds}s ");  /*Pulls the Uptime in Seconds*/
-            await Context.Channel.SendMessageAsync($"Current uptime: **{sb.ToString()}**");
+            await ReplyAsync($"Current uptime: **{sb.ToString()}**");
         }
 
         [Command("roleinfo", RunMode = RunMode.Async)]
@@ -840,7 +840,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /roleinfo";
                 embed.Description = "**Description:** Get information about a role.\n**Usage:** /roleinfo [role name]\n**Example:** /roleinfo Admins";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -939,16 +939,16 @@ namespace FredBotNETCore.Modules
                             y.Value = mentionable;
                             y.IsInline = true;
                         });
-                        await Context.Channel.SendMessageAsync("", false, embed.Build());
+                        await ReplyAsync("", false, embed.Build());
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role **{Format.Sanitize(roleName)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find role **{Format.Sanitize(roleName)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find role with ID: **{roleName}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find role with ID: **{roleName}**.");
                 }
             }
         }
@@ -1015,7 +1015,7 @@ namespace FredBotNETCore.Modules
                 y.Value = roleMemberCounts;
                 y.IsInline = true;
             });
-            await Context.Channel.SendMessageAsync("", false, embed.Build());
+            await ReplyAsync("", false, embed.Build());
         }
 
         [Command("warnings", RunMode = RunMode.Async)]
@@ -1038,7 +1038,7 @@ namespace FredBotNETCore.Modules
                 warnings = Database.Warnings();
                 if (warnings.Count <= 0)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} nobody has been warned on this server.");
+                    await ReplyAsync($"{Context.User.Mention} nobody has been warned on this server.");
                     return;
                 }
             }
@@ -1054,19 +1054,19 @@ namespace FredBotNETCore.Modules
                         warnings = Database.Warnings(user);
                         if (warnings.Count <= 0)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user has no warnings.");
+                            await ReplyAsync($"{Context.User.Mention} this user has no warnings.");
                             return;
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                         return;
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
             EmbedBuilder embed = new EmbedBuilder()
@@ -1090,13 +1090,13 @@ namespace FredBotNETCore.Modules
                 {
                     if (first)
                     {
-                        await Context.Channel.SendMessageAsync($"{warnings.Count} Logs Found:", false, embed.Build());
+                        await ReplyAsync($"{warnings.Count} Logs Found:", false, embed.Build());
                         first = false;
                         sent = true;
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync("", false, embed.Build());
+                        await ReplyAsync("", false, embed.Build());
                     }
                     temp = "";
                     embed.Description = "";
@@ -1105,11 +1105,11 @@ namespace FredBotNETCore.Modules
             }
             if (!sent)
             {
-                await Context.Channel.SendMessageAsync($"{warnings.Count} Logs Found:", false, embed.Build());
+                await ReplyAsync($"{warnings.Count} Logs Found:", false, embed.Build());
             }
             else
             {
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
         }
 
@@ -1133,7 +1133,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /unban";
                 embed.Description = "**Description:** Unban a member\n**Usage:** /unban [user], [optional reason]\n**Example:** /unban @Jiggmin, Appealed!";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
                 return;
             }
             else
@@ -1185,7 +1185,7 @@ namespace FredBotNETCore.Modules
                     {
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unban", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                         await banlog.SendMessageAsync("", false, embed.Build());
-                        await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was unbanned.");
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was unbanned.");
                         RequestOptions options = new RequestOptions()
                         {
                             AuditLogReason = $"No Reason Given | Mod: {Context.User.Username}#{Context.User.Discriminator}"
@@ -1202,7 +1202,7 @@ namespace FredBotNETCore.Modules
                         });
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                         await banlog.SendMessageAsync("", false, embed.Build());
-                        await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was unbanned.");
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was unbanned.");
                         RequestOptions options = new RequestOptions()
                         {
                             AuditLogReason = $"{reason} | Mod: {Context.User.Username}#{Context.User.Discriminator}"
@@ -1212,7 +1212,7 @@ namespace FredBotNETCore.Modules
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} **{Format.Sanitize(username)}** is not banned.");
+                    await ReplyAsync($"{Context.User.Mention} **{Format.Sanitize(username)}** is not banned.");
                 }
             }
         }
@@ -1237,7 +1237,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /undeafen";
                 embed.Description = "**Description:** Undeafen a member\n**Usage:** /undeafen [user], [optional reason]\n**Example:** /undeafen @Jiggmin Listen now!";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
                 return;
             }
             else
@@ -1249,12 +1249,12 @@ namespace FredBotNETCore.Modules
                         SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
                         if (Extensions.CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
                         if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
                         SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
@@ -1291,7 +1291,7 @@ namespace FredBotNETCore.Modules
                         {
                             Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             await banlog.SendMessageAsync("", false, embed.Build());
-                            await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
+                            await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
                             await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
                             try
                             {
@@ -1312,7 +1312,7 @@ namespace FredBotNETCore.Modules
                             });
                             Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             await banlog.SendMessageAsync("", false, embed.Build());
-                            await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
+                            await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
                             await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
                             try
                             {
@@ -1326,12 +1326,12 @@ namespace FredBotNETCore.Modules
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -1356,7 +1356,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /deafen";
                 embed.Description = "**Description:** Deafen a member\n**Usage:** /deafen [user], [optional reason]\n**Example:** /deafen @Jiggmin Don't listen!";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
                 return;
             }
             else
@@ -1368,12 +1368,12 @@ namespace FredBotNETCore.Modules
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
                         if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
                         SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
@@ -1410,7 +1410,7 @@ namespace FredBotNETCore.Modules
                         {
                             Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             await banlog.SendMessageAsync("", false, embed.Build());
-                            await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
+                            await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
                             await user.ModifyAsync(x => x.Deaf = true);
                             try
                             {
@@ -1431,7 +1431,7 @@ namespace FredBotNETCore.Modules
                             });
                             Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                             await banlog.SendMessageAsync("", false, embed.Build());
-                            await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
+                            await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
                             await user.ModifyAsync(x => x.Deaf = true);
                             try
                             {
@@ -1445,12 +1445,12 @@ namespace FredBotNETCore.Modules
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -1475,7 +1475,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /softban";
                 embed.Description = "**Description:** Softban a member (ban and immediate unban to delete user messages)\n**Usage:** /softban [user] [reason]\n**Example:** /softban @Jiggmin Not making Fred admin!";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
                 return;
             }
             else
@@ -1487,12 +1487,12 @@ namespace FredBotNETCore.Modules
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
                         if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
                         SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
@@ -1533,7 +1533,7 @@ namespace FredBotNETCore.Modules
                         await Context.Message.DeleteAsync();
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Softban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                         await banlog.SendMessageAsync("", false, embed.Build());
-                        await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was softbanned.");
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was softbanned.");
                         try
                         {
                             await user.SendMessageAsync($"You have been softbanned on **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
@@ -1551,12 +1551,12 @@ namespace FredBotNETCore.Modules
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -1581,7 +1581,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /getcase";
                 embed.Description = "**Description:** Get info on a case.\n**Usage:** /getcase [case number]\n**Example:** /getcase 1";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -1604,10 +1604,10 @@ namespace FredBotNETCore.Modules
                 embed.Description = Database.GetCase(caseN);
                 if (embed.Description.Length <= 0)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} case could not be found.");
+                    await ReplyAsync($"{Context.User.Mention} case could not be found.");
                     return;
                 }
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
         }
 
@@ -1630,7 +1630,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /getcase";
                 embed.Description = "**Description:** Get a list of mod logs for a user.\n**Usage:** /modlogs [user]\n**Example:** /modlogs @Jiggmin";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -1659,7 +1659,7 @@ namespace FredBotNETCore.Modules
                         embed.WithCurrentTimestamp();
                         if (modlogs.Count <= 0)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user has no priors.");
+                            await ReplyAsync($"{Context.User.Mention} this user has no priors.");
                             return;
                         }
                         string temp = "";
@@ -1671,13 +1671,13 @@ namespace FredBotNETCore.Modules
                             {
                                 if (first)
                                 {
-                                    await Context.Channel.SendMessageAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
+                                    await ReplyAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
                                     first = false;
                                     sent = true;
                                 }
                                 else
                                 {
-                                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                                    await ReplyAsync("", false, embed.Build());
                                 }
                                 temp = "";
                                 embed.Description = "";
@@ -1686,21 +1686,21 @@ namespace FredBotNETCore.Modules
                         }
                         if (!sent)
                         {
-                            await Context.Channel.SendMessageAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
+                            await ReplyAsync($"{modlogs.Count} Logs Found:", false, embed.Build());
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync("", false, embed.Build());
+                            await ReplyAsync("", false, embed.Build());
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -1724,7 +1724,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /getcase";
                 embed.Description = "**Description:** Edit a reason for a mod log.\n**Usage:** /reason [case number] [reason]\n**Example:** /reason 1 Be nice :)";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -1747,7 +1747,7 @@ namespace FredBotNETCore.Modules
                 }
                 if (msgToEdit == null)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} that case could not be found.");
+                    await ReplyAsync($"{Context.User.Mention} that case could not be found.");
                     return;
                 }
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
@@ -1790,7 +1790,7 @@ namespace FredBotNETCore.Modules
                 await msgToEdit.ModifyAsync(x => x.Embed = embed.Build());
                 Database.UpdateReason(caseN, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                 await Context.Message.DeleteAsync();
-                await Context.Channel.SendMessageAsync($"Updated case {caseN}.");
+                await ReplyAsync($"Updated case {caseN}.");
                 embed.Author.Name = "Updated Case";
                 embed.Author.IconUrl = Context.Guild.IconUrl;
                 embed.Footer.Text = "ID: " + Context.User.Id;
@@ -1821,7 +1821,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /warn";
                 embed.Description = "**Description:** Warn a member.\n**Usage:** /warn [user] [reason]\n**Example:** /warn @Jiggmin No flooding";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -1832,12 +1832,12 @@ namespace FredBotNETCore.Modules
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
                         if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
                         SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
@@ -1878,7 +1878,7 @@ namespace FredBotNETCore.Modules
                         await Context.Message.DeleteAsync();
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Warn", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                         await banlog.SendMessageAsync("", false, embed.Build());
-                        await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was warned.");
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was warned.");
                         try
                         {
                             await user.SendMessageAsync($"You have been warned on **{Format.Sanitize(Context.Guild.Name)}** by {Context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
@@ -1890,12 +1890,12 @@ namespace FredBotNETCore.Modules
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -1939,13 +1939,13 @@ namespace FredBotNETCore.Modules
                 IEnumerable<IUser> users = await message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999).FlattenAsync();
                 if (users.Count() <= 1)
                 {
-                    await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
+                    await ReplyAsync("Nobody entered the giveaway.");
                     embed.Description = "Nobody entered the giveaway.";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
                 }
                 else if (users.Count() <= winners)
                 {
-                    await Context.Channel.SendMessageAsync("Not enough users entered the giveaway.");
+                    await ReplyAsync("Not enough users entered the giveaway.");
                     embed.Description = "Not enough users entered the giveaway.";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
                 }
@@ -1958,7 +1958,7 @@ namespace FredBotNETCore.Modules
                     }
                     embed.Description = $"Winner: {randomUser.Mention}";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
-                    await Context.Channel.SendMessageAsync($"The winner of the {embed.Title} is {randomUser.Mention} !");
+                    await ReplyAsync($"The winner of the {embed.Title} is {randomUser.Mention} !");
                 }
                 else
                 {
@@ -1979,12 +1979,12 @@ namespace FredBotNETCore.Modules
                     }
                     embed.Description = $"Winners: {description}";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
-                    await Context.Channel.SendMessageAsync($"The winners of the {item} are {description.Substring(0, description.Length - 2)} !");
+                    await ReplyAsync($"The winners of the {item} are {description.Substring(0, description.Length - 2)} !");
                 }
             }
             else
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
+                await ReplyAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
             }
         }
 
@@ -2023,19 +2023,19 @@ namespace FredBotNETCore.Modules
                 winners = int.Parse(Extensions.GetBetween(msgEmbed.Footer.Value.Text, "Winners: ", " | Ended at"));
                 if (users.Count() <= 1)
                 {
-                    await Context.Channel.SendMessageAsync("Nobody entered the giveaway.");
+                    await ReplyAsync("Nobody entered the giveaway.");
                     embed.Description = $"Nobody entered the giveaway.";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
                 }
                 else if (users.Count() == 2 && winners == 1)
                 {
-                    await Context.Channel.SendMessageAsync("Nobody else can win the giveaway.");
+                    await ReplyAsync("Nobody else can win the giveaway.");
                     embed.Description = $"Nobody else can win the giveaway.";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
                 }
                 else if (users.Count() <= winners)
                 {
-                    await Context.Channel.SendMessageAsync("Not enough users entered the giveaway.");
+                    await ReplyAsync("Not enough users entered the giveaway.");
                     embed.Description = "Not enough users entered the giveaway.";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
                 }
@@ -2049,7 +2049,7 @@ namespace FredBotNETCore.Modules
                     }
                     embed.Description = $"Winner: {randomUser.Mention}";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
-                    await Context.Channel.SendMessageAsync($"The new winner of the {embed.Title} is {randomUser.Mention} !");
+                    await ReplyAsync($"The new winner of the {embed.Title} is {randomUser.Mention} !");
                 }
                 else
                 {
@@ -2070,12 +2070,12 @@ namespace FredBotNETCore.Modules
                     }
                     embed.Description = $"Winners: {description.Substring(0, description.Length - 2)}";
                     await message.ModifyAsync(x => x.Embed = embed.Build());
-                    await Context.Channel.SendMessageAsync($"The new winners of the {embed.Title} are {description.Substring(0, description.Length - 2)} !");
+                    await ReplyAsync($"The new winners of the {embed.Title} are {description.Substring(0, description.Length - 2)} !");
                 }
             }
             else
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
+                await ReplyAsync($"{Context.User.Mention} I could not find a giveaway in this channel.");
             }
         }
 
@@ -2096,7 +2096,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /giveaway";
                 embed.Description = "**Description:** Create a giveaway.\n**Usage:** /giveaway [channel] [time] [winners] [item]\n**Example:** /giveaway pr2-discussion 60 1 Cowboy Hat";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -2111,19 +2111,19 @@ namespace FredBotNETCore.Modules
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the channel `{channel}` is not a text channel so a giveaway cannot happen there.");
+                            await ReplyAsync($"{Context.User.Mention} the channel `{channel}` is not a text channel so a giveaway cannot happen there.");
                             return;
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find text channel `{channel}`.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find text channel `{channel}`.");
                         return;
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find a text channel with ID: `{channel}`.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find a text channel with ID: `{channel}`.");
                     return;
                 }
                 double minutes = Math.Round(Convert.ToDouble(time), 0);
@@ -2147,7 +2147,7 @@ namespace FredBotNETCore.Modules
                 }
                 catch (Discord.Net.HttpException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I do not have permission to speak in that channel.");
+                    await ReplyAsync($"{Context.User.Mention} I do not have permission to speak in that channel.");
                     return;
                 }
                 await message.AddReactionAsync(Emote.Parse("<:artifact:530404386229321749>"));
@@ -2240,7 +2240,7 @@ namespace FredBotNETCore.Modules
                     };
                     embed.Title = "Command: /promote";
                     embed.Description = "**Description:** Annonce a PR2 promotion.\n**Usage:** /promote [type] [user]\n**Example:** /promote temp @Jiggmin";
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync("", false, embed.Build());
                     return;
                 }
                 try
@@ -2251,14 +2251,14 @@ namespace FredBotNETCore.Modules
                         if (type.Equals("temp", StringComparison.InvariantCultureIgnoreCase) || type.Equals("temporary", StringComparison.InvariantCultureIgnoreCase))
                         {
                             await Context.Message.DeleteAsync();
-                            await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a temporary moderator! " +
+                            await ReplyAsync($"*{Context.User.Mention} has promoted {user.Mention} to a temporary moderator! " +
                             $"May they reign in hours of peace and prosperity! " +
                             $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
                         }
                         else if (type.Equals("trial", StringComparison.InvariantCultureIgnoreCase))
                         {
                             await Context.Message.DeleteAsync();
-                            await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a trial moderator! " +
+                            await ReplyAsync($"*{Context.User.Mention} has promoted {user.Mention} to a trial moderator! " +
                             $"May they reign in days of peace and prosperity! " +
                             $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
                             IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "PR2 Staff Member".ToUpper());
@@ -2271,7 +2271,7 @@ namespace FredBotNETCore.Modules
                         else if (type.Equals("perm", StringComparison.InvariantCultureIgnoreCase) || type.Equals("permanent", StringComparison.InvariantCultureIgnoreCase))
                         {
                             await Context.Message.DeleteAsync();
-                            await Context.Channel.SendMessageAsync($"*{Context.User.Mention} has promoted {user.Mention} to a permanent moderator! " +
+                            await ReplyAsync($"*{Context.User.Mention} has promoted {user.Mention} to a permanent moderator! " +
                             $"May they reign in 1,000 years of peace and prosperity! " +
                             $"Make sure you read the moderator guidelines at https://jiggmin2.com/forums/showthread.php?tid=12*");
                             IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "PR2 Staff Member".ToUpper());
@@ -2283,17 +2283,17 @@ namespace FredBotNETCore.Modules
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} the promotion type **{Format.Sanitize(type)}** was not recognised.");
+                            await ReplyAsync($"{Context.User.Mention} the promotion type **{Format.Sanitize(type)}** was not recognised.");
                         }
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -2318,7 +2318,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /untemp";
                 embed.Description = "**Description:** Untemp a user.\n**Usage:** /untemp [user]\n**Example:** /untemp @Jiggmin";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
                 return;
             }
             try
@@ -2328,7 +2328,7 @@ namespace FredBotNETCore.Modules
                     SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                     if (!user.Roles.Any(e => e.Name == "Temp Mod"))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user is not a temp mod.");
+                        await ReplyAsync($"{Context.User.Mention} this user is not a temp mod.");
                         return;
                     }
                     IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
@@ -2338,16 +2338,16 @@ namespace FredBotNETCore.Modules
                     };
                     await user.RemoveRolesAsync(role, options);
                     await Context.Message.DeleteAsync();
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} has removed temp mod from {user.Mention}");
+                    await ReplyAsync($"{Context.User.Mention} has removed temp mod from {user.Mention}");
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                 }
             }
             catch (NullReferenceException)
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
         }
 
@@ -2371,7 +2371,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /unmute";
                 embed.Description = "**Description:** Unmute a user.\n**Usage:** /unmute [user], [optional reason]\n**Example:** /unmute @Jiggmin, Speak now";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -2382,7 +2382,7 @@ namespace FredBotNETCore.Modules
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (!user.Roles.Any(e => e.Name == "Muted"))
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} this user is not muted.");
+                            await ReplyAsync($"{Context.User.Mention} this user is not muted.");
                             return;
                         }
                         IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
@@ -2451,18 +2451,18 @@ namespace FredBotNETCore.Modules
                         SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
                         await banlog.SendMessageAsync("", false, embed.Build());
                         await user.RemoveRolesAsync(role, options);
-                        await Context.Channel.SendMessageAsync($"Unmuted **{Format.Sanitize(user.Username)}#{user.Discriminator}**");
+                        await ReplyAsync($"Unmuted **{Format.Sanitize(user.Username)}#{user.Discriminator}**");
                         string mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace("\n" + user.Id.ToString(), string.Empty);
                         File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -2475,7 +2475,7 @@ namespace FredBotNETCore.Modules
         public async Task Ping()
         {
             DiscordSocketClient client = Context.Client as DiscordSocketClient;
-            await Context.Channel.SendMessageAsync($"**{client.Latency.ToString()} ms**");
+            await ReplyAsync($"**{client.Latency.ToString()} ms**");
         }
 
         [Command("botinfo", RunMode = RunMode.Async)]
@@ -2564,7 +2564,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.WithFooter(footer);
 
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
         }
 
@@ -2687,16 +2687,16 @@ namespace FredBotNETCore.Modules
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
 
-                    await Context.Channel.SendMessageAsync("", false, embed.Build());
+                    await ReplyAsync("", false, embed.Build());
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                 }
             }
             catch (NullReferenceException)
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
         }
 
@@ -2800,7 +2800,7 @@ namespace FredBotNETCore.Modules
             embed.WithFooter(footer);
             embed.ThumbnailUrl = Context.Guild.IconUrl;
 
-            await Context.Channel.SendMessageAsync("", false, embed.Build());
+            await ReplyAsync("", false, embed.Build());
         }
 
         [Command("purge", RunMode = RunMode.Async)]
@@ -2823,7 +2823,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /purge";
                 embed.Description = "**Description:** Delete a number of messages from a channel.\n**Usage:** /purge [amount], [optional user]\n**Example:** /purge 10, @Jiggmin";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
                 return;
             }
             SocketTextChannel channel = Context.Channel as SocketTextChannel, log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
@@ -2849,14 +2849,14 @@ namespace FredBotNETCore.Modules
                 IAsyncEnumerable<IMessage> items = Context.Channel.GetMessagesAsync(delete).Flatten();
                 if (delete == 1)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message in {channel.Mention} .");
+                    await ReplyAsync($"{Context.User.Mention} deleted {amount} message in {channel.Mention} .");
                     Extensions.Purging = true;
                     await (Context.Channel as SocketTextChannel).DeleteMessagesAsync(items.ToEnumerable());
                     embed2.Description = $"{Context.User.Mention} purged **{amount}** message in {channel.Mention}.";
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} messages in {channel.Mention} .");
+                    await ReplyAsync($"{Context.User.Mention} deleted {amount} messages in {channel.Mention} .");
                     Extensions.Purging = true;
                     await (Context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
                     embed2.Description = $"{Context.User.Mention} purged **{amount}** messages in {channel.Mention}.";
@@ -2876,14 +2876,14 @@ namespace FredBotNETCore.Modules
                         IAsyncEnumerable<IMessage> usermessages = Context.Channel.GetMessagesAsync().Flatten().Where(x => x.Author == user).Take(delete);
                         if (delete == 1)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
+                            await ReplyAsync($"{Context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
                             Extensions.Purging = true;
                             await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
                             embed2.Description = $"{Context.User.Mention} purged **{amount}** message in {channel.Mention} from {user.Mention}.";
                         }
                         else
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} deleted {amount} messages from {user.Mention} in {channel.Mention} .");
+                            await ReplyAsync($"{Context.User.Mention} deleted {amount} messages from {user.Mention} in {channel.Mention} .");
                             Extensions.Purging = true;
                             await (Context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
                             embed2.Description = $"{Context.User.Mention} purged **{amount}** messages in {channel.Mention} from {user.Mention}.";
@@ -2893,12 +2893,12 @@ namespace FredBotNETCore.Modules
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -2924,7 +2924,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /kick";
                 embed.Description = "**Description:** Kick a member.\n**Usage:** /kick [user] [reason]\n**Example:** /kick @Jiggmin Be nice :)";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -2935,12 +2935,12 @@ namespace FredBotNETCore.Modules
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
                         if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
                         SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
@@ -2993,17 +2993,17 @@ namespace FredBotNETCore.Modules
                         }
                         await user.KickAsync(null, options);
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Kick", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was kicked.");
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was kicked.");
                         await banlog.SendMessageAsync("", false, embed.Build());
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -3028,7 +3028,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /ban";
                 embed.Description = "**Description:** Ban a member.\n**Usage:** /ban [user] [reason]\n**Example:** /ban @Jiggmin botting";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -3039,12 +3039,12 @@ namespace FredBotNETCore.Modules
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == 383927022583545859)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
                         if (user.Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
                         SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == "ban-log".ToUpper()).First() as SocketTextChannel;
@@ -3097,17 +3097,17 @@ namespace FredBotNETCore.Modules
                         }
                         await Context.Guild.AddBanAsync(user, 1, null, options);
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Ban", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was banned.");
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was banned.");
                         await banlog.SendMessageAsync("", false, embed.Build());
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -3132,7 +3132,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /mute";
                 embed.Description = "**Description:** Mute a member.\n**Usage:** /mute [user] [time] [reason]\n**Example:** /mute @Jiggmin 10 Flooding";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
             }
             else
             {
@@ -3143,12 +3143,12 @@ namespace FredBotNETCore.Modules
                         SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                         if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
+                            await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
                             return;
                         }
                         if ((user as SocketGuildUser).Roles.OrderBy(x => x.Position).Last().Position >= Context.Guild.GetUser(Context.Client.CurrentUser.Id).Roles.OrderBy(x => x.Position).Last().Position)
                         {
-                            await Context.Channel.SendMessageAsync($"{Context.User.Mention} that user is of higher role than me.");
+                            await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                             return;
                         }
                         double minutes = Math.Round(Convert.ToDouble(time), 0);
@@ -3212,7 +3212,7 @@ namespace FredBotNETCore.Modules
                             y.IsInline = true;
                         });
                         await Context.Message.DeleteAsync();
-                        await Context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was muted.");
+                        await ReplyAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was muted.");
                         await banlog.SendMessageAsync("", false, embed.Build());
                         Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", Context.User.Username + "#" + Context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                         try
@@ -3296,12 +3296,12 @@ namespace FredBotNETCore.Modules
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                        await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
                 }
             }
         }
@@ -3326,7 +3326,7 @@ namespace FredBotNETCore.Modules
                 };
                 embed.Title = "Command: /temp";
                 embed.Description = "**Description:** Temp mod a memeber.\n**Usage:** /temp [user] [time]\n**Example:** /temp @Jiggmin 60";
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await ReplyAsync("", false, embed.Build());
                 return;
             }
             try
@@ -3336,7 +3336,7 @@ namespace FredBotNETCore.Modules
                     SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
                     if (user.Id == Context.User.Id)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} you cannot temp mod yourself.");
+                        await ReplyAsync($"{Context.User.Mention} you cannot temp mod yourself.");
                         return;
                     }
                     double minutes = Math.Round(Convert.ToDouble(time), 0);
@@ -3351,17 +3351,17 @@ namespace FredBotNETCore.Modules
                     await Context.Message.DeleteAsync();
                     if (time.Equals("1"))
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minute. " +
+                        await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minute. " +
                                     $"May they reign in a minute of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
                     }
                     else if (minutes <= 60)
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
+                        await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
                                     $"May they reign in minutes of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
                     }
                     else
                     {
-                        await Context.Channel.SendMessageAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
+                        await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
                                     $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
                     }
                     int temptime = Convert.ToInt32(minutes) * 60000;
@@ -3377,12 +3377,12 @@ namespace FredBotNETCore.Modules
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user **{Format.Sanitize(username)}**.");
                 }
             }
             catch (NullReferenceException)
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
         }
     }

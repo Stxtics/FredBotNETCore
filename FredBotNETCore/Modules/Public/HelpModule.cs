@@ -24,7 +24,7 @@ namespace FredBotNETCore.Modules.Public
             Discord.Rest.RestUserMessage msg = null;
             if (!(Context.Channel is IDMChannel))
             {
-                msg = await Context.Channel.SendMessageAsync($"{Context.User.Mention} I've just sent my commands to your DMs. :grinning:");
+                msg = await ReplyAsync($"{Context.User.Mention} I've just sent my commands to your DMs. :grinning:");
             }
             EmbedBuilder embed = new EmbedBuilder()
             {

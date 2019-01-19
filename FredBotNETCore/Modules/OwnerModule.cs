@@ -21,16 +21,16 @@ namespace FredBotNETCore.Modules
                 {
                     SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
                     Database.SetBalance(user, bal);
-                    await Context.Channel.SendMessageAsync($"Successfully set **{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance to **${bal}**.");
+                    await ReplyAsync($"Successfully set **{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance to **${bal}**.");
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync($"{Context.User.Mention} the user **{Format.Sanitize(username)}** does not exist or could not be found.");
+                    await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(username)}** does not exist or could not be found.");
                 }
             }
             catch (NullReferenceException)
             {
-                await Context.Channel.SendMessageAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
             }
         }
 
@@ -42,7 +42,7 @@ namespace FredBotNETCore.Modules
         {
             DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             DateTime date = start.AddSeconds(time).ToLocalTime();
-            await Context.Channel.SendMessageAsync($"{date.Day}/{date.Month}/{date.Year} - {date.TimeOfDay}");
+            await ReplyAsync($"{date.Day}/{date.Month}/{date.Year} - {date.TimeOfDay}");
         }
 
         [Command("leave", RunMode = RunMode.Async)]
@@ -51,7 +51,7 @@ namespace FredBotNETCore.Modules
         [RequireOwner]
         public async Task Leave()
         {
-            await Context.Channel.SendMessageAsync("Leaving the server. Bye :frowning:");
+            await ReplyAsync("Leaving the server. Bye :frowning:");
             await Context.Guild.LeaveAsync();
         }
 
@@ -62,7 +62,7 @@ namespace FredBotNETCore.Modules
         public async Task TurnOff()
         {
 
-            await Context.Channel.SendMessageAsync(":wave:");
+            await ReplyAsync(":wave:");
             Environment.Exit(0);
         }
 
@@ -78,7 +78,7 @@ namespace FredBotNETCore.Modules
             if (result)
             {
                 await CommandHandler._client.SetGameAsync(name, streamUrl, ActivityType.Streaming);
-                await Context.Channel.SendMessageAsync($"Successfully set the game as *Streaming {name} at {streamUrl}*");
+                await ReplyAsync($"Successfully set the game as *Streaming {name} at {streamUrl}*");
                 Console.WriteLine($"{DateTime.Now.ToUniversalTime()}: Game was changed to Streaming {name} at {streamUrl}");
             }
             else
@@ -88,20 +88,20 @@ namespace FredBotNETCore.Modules
                 {
                     gameType = ActivityType.Watching;
                     await CommandHandler._client.SetGameAsync(name, null, gameType);
-                    await Context.Channel.SendMessageAsync($"Successfully set the game as *{type} {name}*");
+                    await ReplyAsync($"Successfully set the game as *{type} {name}*");
                     Console.WriteLine($"{DateTime.Now.ToUniversalTime()}: Game was changed to {type} {name}");
                 }
                 else if (type.Equals("listening", StringComparison.InvariantCultureIgnoreCase))
                 {
                     gameType = ActivityType.Listening;
                     await CommandHandler._client.SetGameAsync(name, null, gameType);
-                    await Context.Channel.SendMessageAsync($"Successfully set the game as *{type} to {name}*");
+                    await ReplyAsync($"Successfully set the game as *{type} to {name}*");
                     Console.WriteLine($"{DateTime.Now.ToUniversalTime()}: Game was changed to {type} to {name}");
                 }
                 else
                 {
                     await CommandHandler._client.SetGameAsync(name, null, gameType);
-                    await Context.Channel.SendMessageAsync($"Successfully set the game as *{type} {name}*");
+                    await ReplyAsync($"Successfully set the game as *{type} {name}*");
                     Console.WriteLine($"{DateTime.Now.ToUniversalTime()}: Game was changed to {type} {name}");
                 }
             }
