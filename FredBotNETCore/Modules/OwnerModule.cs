@@ -11,26 +11,19 @@ namespace FredBotNETCore.Modules
         [Command("setbalance", RunMode = RunMode.Async)]
         [Alias("balanceset")]
         [Summary("Sets balance for a user")]
-        [RequireContext(ContextType.Guild)]
+        [RequireContext(ContextType.DM)]
         [RequireOwner]
         public async Task SetBalance(string username = null, int bal = 0)
         {
-            try
+            if (Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username) != null)
             {
-                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
-                {
-                    SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                    Database.SetBalance(user, bal);
-                    await ReplyAsync($"Successfully set **{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance to **${bal}**.");
-                }
-                else
-                {
-                    await ReplyAsync($"{Context.User.Mention} the user **{Format.Sanitize(username)}** does not exist or could not be found.");
-                }
+                SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
+                Database.SetBalance(user, bal);
+                await ReplyAsync($"{Context.User.Mention} successfully set **{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance to **${bal}**.");
             }
-            catch (NullReferenceException)
+            else
             {
-                await ReplyAsync($"{Context.User.Mention} I could not find user with ID: **{username}**.");
+                await ReplyAsync($"{Context.User.Mention} the user with name or ID **{Format.Sanitize(username)}** does not exist or could not be found.");
             }
         }
 
