@@ -16,6 +16,86 @@ namespace FredBotNETCore.Modules
     [Summary("Module for commands of moderators and up of Jiggmin's Village")]
     public class ModeratorModule : ModuleBase<SocketCommandContext>
     {
+        [Command("setnick", RunMode = RunMode.Async)]
+        [Alias("setnickname")]
+        [Summary("Change the nickname of a user.")]
+        [RequireUserPermission(GuildPermission.ManageNicknames)]
+        [RequireBotPermission(GuildPermission.ManageNicknames)]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetNick(string username = null, [Remainder] string nickname = null)
+        {
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(nickname))
+            {
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /setnick";
+                embed.Description = "**Description:** Change the nickname of a user.\n**Usage:** /setnick [user] [new nickname]\n**Example:** /setnick Jiggmin Jiggy";
+                await ReplyAsync("", false, embed.Build());
+            }
+            else
+            {
+                if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
+                {
+                    SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
+                    if (nickname.Length > 32)
+                    {
+                        await ReplyAsync($"{Context.User.Mention} a users nickname cannot be longer than 32 characters.");
+                    }
+                    else
+                    {
+                        RequestOptions options = new RequestOptions()
+                        {
+                            AuditLogReason = $"Changed by: {Context.User.Username}#{Context.User.Discriminator}"
+                        };
+                        await user.ModifyAsync(x => x.Nickname = nickname, options);
+                        await ReplyAsync($"{Context.User.Mention} successfully set the nickname of **{Format.Sanitize(user.Username)}#{user.Discriminator}** to **{Format.Sanitize(nickname)}**.");
+                    }
+                }
+                else
+                {
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
+                }
+            }
+        }
+
+        [Command("nick", RunMode = RunMode.Async)]
+        [Alias("botnick")]
+        [Summary("Change the bot nickname.")]
+        [RequireUserPermission(GuildPermission.ManageNicknames)]
+        [RequireBotPermission(GuildPermission.ChangeNickname)]
+        [RequireContext(ContextType.Guild)]
+        public async Task Nick([Remainder] string nickname = null)
+        {
+            if (string.IsNullOrWhiteSpace(nickname))
+            {
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(220, 220, 220)
+                };
+                embed.Title = "Command: /nick";
+                embed.Description = "**Description:** Change the bot nickname.\n**Usage:** /nick [new nickname]\n**Example:** /nick Fred";
+                await ReplyAsync("", false, embed.Build());
+            }
+            else
+            {
+                if (nickname.Length > 32)
+                {
+                    await ReplyAsync($"{Context.User.Mention} my nickname cannot be longer than 32 characters.");
+                }
+                else
+                {
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"Changed by: {Context.User.Mention}#{Context.User.Discriminator}"
+                    };
+                    await Context.Guild.GetUser(Context.Client.CurrentUser.Id).ModifyAsync(x => x.Nickname = nickname, options);
+                    await ReplyAsync($"{Context.User.Mention} successfully set my nickname to **{Format.Sanitize(nickname)}**.");
+                }
+            }
+        }
+
         [Command("updatetoken", RunMode = RunMode.Async)]
         [Alias("utoken", "changetoken")]
         [Summary("Updates token used in some commands")]
