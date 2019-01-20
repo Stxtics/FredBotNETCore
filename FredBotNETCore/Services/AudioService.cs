@@ -43,6 +43,7 @@ namespace FredBotNETCore.Services
             player.Queue.TryDequeue(out LavaTrack nextTrack);
             if (nextTrack is null && !QueueLoop)
             {
+                await player.TextChannel.SendMessageAsync("Queue finished.");
                 await Disconnect(player.VoiceChannel.Guild.Id);
                 SkippedUsers.Clear();
                 UserQueue.Clear();
