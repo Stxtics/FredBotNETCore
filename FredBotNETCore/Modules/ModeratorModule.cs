@@ -2143,53 +2143,6 @@ namespace FredBotNETCore.Modules
             }
         }
 
-        [Command("untemp", RunMode = RunMode.Async)]
-        [Alias("removetemp")]
-        [Summary("Removes temp mod from user mentioned")]
-        [RequireBotPermission(GuildPermission.ManageRoles)]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
-        [RequireContext(ContextType.Guild)]
-        public async Task UnTemp([Remainder] string username = null)
-        {
-            if (Context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(username))
-            {
-                EmbedBuilder embed = new EmbedBuilder()
-                {
-                    Color = new Color(220, 220, 220)
-                };
-                embed.Title = "Command: /untemp";
-                embed.Description = "**Description:** Untemp a user.\n**Usage:** /untemp [user]\n**Example:** /untemp @Jiggmin";
-                await ReplyAsync("", false, embed.Build());
-            }
-            else if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
-            {
-                SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                if (!user.Roles.Any(e => e.Name == "Temp Mod"))
-                {
-                    await ReplyAsync($"{Context.User.Mention} this user is not a temp mod.");
-                }
-                else
-                {
-                    IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
-                    RequestOptions options = new RequestOptions()
-                    {
-                        AuditLogReason = $"Untemp Modding User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                    };
-                    await user.RemoveRolesAsync(role, options);
-                    await Context.Message.DeleteAsync();
-                    await ReplyAsync($"{Context.User.Mention} has removed temp mod from {user.Mention}");
-                }
-            }
-            else
-            {
-                await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
-            }
-        }
-
         [Command("unmute", RunMode = RunMode.Async)]
         [Alias("removemute")]
         [Summary("Unmutes a user")]
@@ -3091,78 +3044,6 @@ namespace FredBotNETCore.Modules
                 {
                     await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
                 }
-            }
-        }
-
-        [Command("temp", RunMode = RunMode.Async)]
-        [Alias("tempmod")]
-        [Summary("Makes a user temp mod on the server")]
-        [RequireBotPermission(GuildPermission.ManageRoles)]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
-        [RequireContext(ContextType.Guild)]
-        public async Task Temp(string username = null, string time = null)
-        {
-            if (Context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
-            if (username == null || string.IsNullOrWhiteSpace(time) || !double.TryParse(time, out double num) || Math.Round(Convert.ToDouble(time), 0) < 1)
-            {
-                EmbedBuilder embed = new EmbedBuilder()
-                {
-                    Color = new Color(220, 220, 220)
-                };
-                embed.Title = "Command: /temp";
-                embed.Description = "**Description:** Temp mod a memeber.\n**Usage:** /temp [user] [time]\n**Example:** /temp @Jiggmin 60";
-                await ReplyAsync("", false, embed.Build());
-            }
-            else if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
-            {
-                SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
-                if (user.Id == Context.User.Id)
-                {
-                    await ReplyAsync($"{Context.User.Mention} you cannot temp mod yourself.");
-                    return;
-                }
-                double minutes = Math.Round(Convert.ToDouble(time), 0);
-                SocketTextChannel roles = user.Guild.Channels.Where(x => x.Name.ToUpper() == "Welcome".ToUpper()).First() as SocketTextChannel;
-
-                IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Temp Mod".ToUpper());
-                RequestOptions options = new RequestOptions()
-                {
-                    AuditLogReason = $"Temp Modding User | Mod: {Context.User.Username}#{Context.User.Discriminator}"
-                };
-                await user.AddRolesAsync(role, options);
-                await Context.Message.DeleteAsync();
-                if (time.Equals("1"))
-                {
-                    await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minute. " +
-                                $"May they reign in a minute of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
-                }
-                else if (minutes <= 60)
-                {
-                    await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
-                                $"May they reign in minutes of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
-                }
-                else
-                {
-                    await ReplyAsync($"{Context.User.Mention} has promoted {user.Mention} to a temporary moderator on the discord server for **{time}** minutes. " +
-                                $"May they reign in hours of peace and prosperity! Read more about mods and what they do in {roles.Mention}.");
-                }
-                int temptime = Convert.ToInt32(minutes) * 60000;
-                Task task = Task.Run(async () =>
-                {
-                    await Task.Delay(temptime);
-                    if (user.Roles.Any(e => e.Name.ToUpperInvariant() == "Temp Mod".ToUpperInvariant()))
-                    {
-                        options.AuditLogReason = "Untemp Modding User | Reason: Temp Time Over";
-                        await user.RemoveRolesAsync(role, options);
-                    }
-                });
-            }
-            else
-            {
-                await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
             }
         }
     }
