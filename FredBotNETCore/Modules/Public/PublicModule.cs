@@ -392,7 +392,7 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 Database.EnterUser(user);
                             }
-                            if (int.Parse(Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + name), "{\"rank\":", ",\"hats\":")) < 15)
+                            if (int.Parse(Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + name), "\"rank\":", ",\"hats\":")) < 15)
                             {
                                 await ReplyAsync($"{Context.User.Mention} your PR2 account must be at least rank 15 if you want to link it to your Discord account.");
                             }
