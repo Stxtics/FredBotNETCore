@@ -970,11 +970,10 @@ namespace FredBotNETCore.Modules.Public
                     };
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
-
                     string pr2info = null;
                     try
                     {
-                        await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + id);
+                        pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + id);
                     }
                     catch (HttpRequestException)
                     {
