@@ -31,7 +31,7 @@ namespace FredBotNETCore.Modules.Public
                 Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
             };
             string help = "**Manager**\n" +
-                "/banlogchannel - Set the ban log channel for moderation actions." +
+                "/banlogchannel - Set the ban log channel for moderation actions.\n" +
                 "/notificationschannel - Set the channel for HH and Arti updates.\n" +
                 "/logchannel - Set the log channel for the server.\n" +
                 "/addallowedchannel - Add an allowed channel for PR2 commands.\n" +
@@ -50,6 +50,10 @@ namespace FredBotNETCore.Modules.Public
                 "/addjoinablerole - Add a joinable role.\n" +
                 "/deljoinablerole - Remove a joinable role.\n" +
                 "/rolecolor - Change color of a role.\n" +
+                "/delrole - Delete a role.\n" +
+                "/addrole - Create a role, with optional color and hoist.\n" +
+                "/temp - Adds Temp Mod role to a user.Usage: user, time.\n" +
+                "/untemp - Removes Temp mod role from a user.\n" +
                 "**Moderator**\n" +
                 "/notifymacroers - Mentions macroers in pr2-dicussion about server restart.\n" +
                 "/blacklistmusic - Blacklist a user from using music commands.\n" +
@@ -62,8 +66,6 @@ namespace FredBotNETCore.Modules.Public
                 "/nick - Set bot nickname.\n" +
                 "/setnick - Set nickname of a user.\n" +
                 "/mentionable - Toggle making a role mentionable on/off.\n" +
-                "/delrole - Delete a role.\n" +
-                "/addrole - Create a role, with optional color and hoist.\n" +
                 "/membercount - Get server member count.\n" +
                 "/uptime - Get bot uptime.\n" +
                 "/roleinfo - Get information about a role.\n" +
@@ -84,8 +86,6 @@ namespace FredBotNETCore.Modules.Public
                 "/ping - Gets ping for the bot.\n" +
                 "/botinfo - Gets some info about Fred.\n" +
                 "/purge - Deleted the number of messages specified.Optional user mention.\n" +
-                "/temp - Adds Temp Mod role to a user.Usage: user, time.\n" +
-                "/untemp - Removes Temp mod role from a user.\n" +
                 "/warn - Warns the user mentioned with reason given.\n" +
                 "/mute - Adds Muted role to a user.Usage: user, time, reason.\n" +
                 "/unmute - Unmuted the user mentioned.\n" +
