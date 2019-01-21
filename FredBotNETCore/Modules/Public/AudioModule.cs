@@ -98,7 +98,7 @@ namespace FredBotNETCore.Modules.Public
                                     {
                                         id = url.Split(".be/").Last();
                                     }
-                                    catch(Exception)
+                                    catch (Exception)
                                     {
                                         //no id in url
                                     }
@@ -191,7 +191,7 @@ namespace FredBotNETCore.Modules.Public
                                 {
                                     await audioService.Play(Context.Guild.Id, track);
                                     audioService.SetNowPlayingUser(Context.User);
-                                    await ReplyAsync($"Now playing: **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) requested by **{Context.User.Username}#{Context.User.Discriminator}**.");
+                                    await ReplyAsync($"Now playing: **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) requested by **{Format.Sanitize(Context.User.Username)}#{Context.User.Discriminator}**.");
                                 }
                             }
                         }
@@ -279,7 +279,7 @@ namespace FredBotNETCore.Modules.Public
                                 {
                                     await audioService.Play(Context.Guild.Id, track);
                                     audioService.SetNowPlayingUser(Context.User);
-                                    await ReplyAsync($"Now playing: **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) requested by **{Context.User.Username}#{Context.User.Discriminator}**.");
+                                    await ReplyAsync($"Now playing: **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) requested by **{Format.Sanitize(Context.User.Username)}#{Context.User.Discriminator}**.");
                                 }
                             }
                         }
@@ -341,7 +341,7 @@ namespace FredBotNETCore.Modules.Public
                             int index = 0;
                             foreach (LavaTrack track in queue.Item1.Items)
                             {
-                                embed.Description = embed.Description + $"{count.ToString()}. **{track.Title}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) queued by **{queue.Item2[index].Username}#{queue.Item2[index].Discriminator}**.\n";
+                                embed.Description = embed.Description + $"{count.ToString()}. **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) queued by **{Format.Sanitize(queue.Item2[index].Username)}#{queue.Item2[index].Discriminator}**.\n";
                                 count++;
                                 index++;
                             }
@@ -669,8 +669,8 @@ namespace FredBotNETCore.Modules.Public
                         {
                             SocketUser user = audioService.GetNowPlayingUser();
                             LavaTrack nowPlaying = audioService.NowPlaying(Context.Guild.Id);
+                            await ReplyAsync($"**{Format.Sanitize(nowPlaying.Title)}** requested by **{Format.Sanitize(user.Username)}#{user.Discriminator}** was skipped.");
                             await audioService.Skip(Context.Guild.Id);
-                            await ReplyAsync($"**{Format.Sanitize(nowPlaying.Title)}** requested by **{user.Username}#{user.Discriminator}** was skipped.");
                         }
                         else
                         {
@@ -720,8 +720,8 @@ namespace FredBotNETCore.Modules.Public
                     {
                         LavaTrack nowPlaying = audioService.NowPlaying(Context.Guild.Id);
                         SocketUser user = audioService.GetNowPlayingUser();
+                        await ReplyAsync($"{Context.User.Mention} force skipped **{Format.Sanitize(nowPlaying.Title)}** requested by **{Format.Sanitize(user.Username)}#{user.Discriminator}**.");
                         await audioService.Skip(Context.Guild.Id);
-                        await ReplyAsync($"{Context.User.Mention} force skipped **{Format.Sanitize(nowPlaying.Title)}** requested by **{user.Username}#{user.Discriminator}**.");
                     }
                 }
             }

@@ -1,10 +1,10 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FredBotNETCore.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -287,6 +287,7 @@ namespace FredBotNETCore
             {
                 Severity = LogSeverity.Info
             }).ConfigureAwait(false);
+            node.TrackFinished += AudioService.OnFinished;
         }
 
 

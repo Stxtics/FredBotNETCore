@@ -12,7 +12,7 @@ namespace FredBotNETCore.Services
 {
     public class AudioService
     {
-        private readonly Lavalink _lavalink;
+        private static Lavalink _lavalink;
         private static bool QueueLoop { get; set; } = false;
         private static List<SocketUser> SkippedUsers { get; set; } = new List<SocketUser>();
         private static List<SocketUser> UserQueue { get; set; } = new List<SocketUser>();
@@ -25,18 +25,17 @@ namespace FredBotNETCore.Services
 
         public async Task Connect(IVoiceChannel voiceChannel, IMessageChannel messageChannel)
         {
-            _lavalink.DefaultNode.TrackFinished += OnFinished;
             await _lavalink.DefaultNode.ConnectAsync(voiceChannel, messageChannel);
         }
 
-        public async Task Disconnect(ulong guildId)
+        public static async Task Disconnect(ulong guildId)
         {
             await _lavalink.DefaultNode.DisconnectAsync(guildId);
         }
 
-        private async Task OnFinished(LavaPlayer player, LavaTrack track, TrackReason reason)
+        public static async Task OnFinished(LavaPlayer player, LavaTrack track, TrackReason reason)
         {
-            if (reason is TrackReason.LoadFailed || reason is TrackReason.Cleanup || reason is TrackReason.Replaced)
+            if (reason is TrackReason.LoadFailed || reason is TrackReason.Cleanup || reason is TrackReason.Replaced || reason is TrackReason.Stopped)
             {
                 return;
             }
@@ -114,10 +113,8 @@ namespace FredBotNETCore.Services
         {
             if (_lavalink.DefaultNode.GetPlayer(guildId).Queue.Count == 0)
             {
-                await _lavalink.DefaultNode.GetPlayer(guildId).StopAsync();
-                UserQueue.Clear();
-                SkippedUsers.Clear();
-                NowPlayingUser = null;
+                await _lavalink.DefaultNode.GetPlayer(guildId).TextChannel.SendMessageAsync("Queue finished.");
+                await Stop(guildId);           
             }
             else
             {
