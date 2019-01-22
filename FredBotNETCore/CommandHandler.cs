@@ -208,7 +208,7 @@ namespace FredBotNETCore
                 }
                 SocketGuild Guild = _client.GetGuild(528679522707701760);
                 SocketRole RoleM = Guild.Roles.Where(x => x.Name.ToUpper() == "HH".ToUpper()).First();
-                SocketTextChannel channel = Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetNotificationsChannel().ToUpper()).First() as SocketTextChannel;
+                SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
                 RequestOptions options = new RequestOptions()
                 {
                     AuditLogReason = "Announcing happy hour on " + Name
@@ -222,7 +222,7 @@ namespace FredBotNETCore
         public static async Task AnnouceHintUpdatedAsync(string hint = null, bool newArti = false)
         {
             SocketGuild Guild = _client.GetGuild(528679522707701760);
-            SocketTextChannel channel = Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetNotificationsChannel().ToUpper()).First() as SocketTextChannel;
+            SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
             RequestOptions options = new RequestOptions()
             {
                 AuditLogReason = "Announcing new artifact"
@@ -243,7 +243,7 @@ namespace FredBotNETCore
         public static async Task AnnounceArtifactFoundAsync(string finder = null)
         {
             SocketGuild Guild = _client.GetGuild(528679522707701760);
-            SocketTextChannel channel = Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetNotificationsChannel().ToUpper()).First() as SocketTextChannel;
+            SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
             await channel.SendMessageAsync($"**{finder}** has found the artifact!");
         }
 

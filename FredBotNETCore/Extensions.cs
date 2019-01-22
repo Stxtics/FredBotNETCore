@@ -254,14 +254,14 @@ namespace FredBotNETCore
             return ulong.Parse(File.ReadAllText(Path.Combine(downloadPath, "LogChannel.txt")));
         }
 
-        public static string GetNotificationsChannel()
+        public static ulong GetNotificationsChannel()
         {
-            return File.ReadAllText(Path.Combine(downloadPath, "NotificationsChannel.txt"));
+            return ulong.Parse(File.ReadAllText(Path.Combine(downloadPath, "NotificationsChannel.txt")));
         }
 
-        public static string GetBanLogChannel()
+        public static ulong GetBanLogChannel()
         {
-            return File.ReadAllText(Path.Combine(downloadPath, "BanLogChannel.txt"));
+            return ulong.Parse(File.ReadAllText(Path.Combine(downloadPath, "BanLogChannel.txt")));
         }
 
         public static List<ulong> AllowedChannels()

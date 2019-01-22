@@ -141,7 +141,7 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                SocketTextChannel channel = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetNotificationsChannel().ToUpper()).First() as SocketTextChannel;
+                SocketTextChannel channel = Context.Guild.GetTextChannel(Extensions.GetNotificationsChannel());
                 SocketRole role = Context.Guild.Roles.Where(x => x.Name.ToUpper() == "Macroer".ToUpper()).First() as SocketRole;
                 RequestOptions options = new RequestOptions()
                 {
@@ -1040,7 +1040,7 @@ namespace FredBotNETCore.Modules
                 }
                 if (isBanned)
                 {
-                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    SocketTextChannel banlog = Context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
                         Name = $"Case {Database.CaseCount() + 1} | Unban | {user.Username}#{user.Discriminator}",
@@ -1144,7 +1144,7 @@ namespace FredBotNETCore.Modules
                         await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    SocketTextChannel banlog = Context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
                         Name = $"Case {Database.CaseCount() + 1} | Undeafen | {user.Username}#{user.Discriminator}",
@@ -1256,7 +1256,7 @@ namespace FredBotNETCore.Modules
                         await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    SocketTextChannel banlog = Context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
                         Name = $"Case {Database.CaseCount() + 1} | Deafen | {user.Username}#{user.Discriminator}",
@@ -1368,7 +1368,7 @@ namespace FredBotNETCore.Modules
                         await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    SocketTextChannel banlog = Context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
                         Name = $"Case {Database.CaseCount() + 1} | Softban | {user.Username}#{user.Discriminator}",
@@ -1586,7 +1586,7 @@ namespace FredBotNETCore.Modules
             }
             else
             {
-                SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                SocketTextChannel banlog = Context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
                 IAsyncEnumerable<IMessage> messages = banlog.GetMessagesAsync().Flatten().Where(x => x.Embeds.Count > 0);
                 string author = "", iconUrl = "", footerText = "";
                 IUserMessage msgToEdit = null;
@@ -1698,7 +1698,7 @@ namespace FredBotNETCore.Modules
                         await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    SocketTextChannel banlog = Context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
                         Name = $"Case {Database.CaseCount() + 1} | Warn | {user.Username}#{user.Discriminator}",
@@ -2239,7 +2239,7 @@ namespace FredBotNETCore.Modules
                             }
                         }
                         await Context.Message.DeleteAsync();
-                        SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                        SocketTextChannel banlog = Context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
                         await banlog.SendMessageAsync("", false, embed.Build());
                         await user.RemoveRolesAsync(role, options);
                         await ReplyAsync($"Unmuted **{Format.Sanitize(user.Username)}#{user.Discriminator}**");
@@ -2702,7 +2702,7 @@ namespace FredBotNETCore.Modules
                         await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    SocketTextChannel banlog = Context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
                         Name = $"Case {Database.CaseCount() + 1} | Kick | {user.Username}#{user.Discriminator}",
@@ -2799,7 +2799,7 @@ namespace FredBotNETCore.Modules
                         await ReplyAsync($"{Context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    SocketTextChannel banlog = Context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
                         Name = $"Case {Database.CaseCount() + 1} | Ban | {user.Username}#{user.Discriminator}",
@@ -2911,7 +2911,7 @@ namespace FredBotNETCore.Modules
                     {
                         Text = $"ID: {user.Id}"
                     };
-                    SocketTextChannel banlog = Context.Guild.Channels.Where(x => x.Name.ToUpper() == Extensions.GetBanLogChannel().ToUpper()).First() as SocketTextChannel;
+                    SocketTextChannel banlog = Context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
                     IEnumerable<IRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
                     RequestOptions options = new RequestOptions()
                     {
