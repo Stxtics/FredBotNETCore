@@ -1482,38 +1482,122 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                if (Extensions.ChannelInGuild(Context.Message, Context.Guild, text) != null)
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /logchannel";
+                    embed.Description = "**Description:** Set the log channel for the server.\n**Usage:** /logchannel [channel]\n**Example:** /logchannel #log";
+                    await ReplyAsync("", false, embed.Build());
+                }
+                else if (Extensions.ChannelInGuild(Context.Message, Context.Guild, text) != null)
                 {
                     SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, text);
                     if (channel is SocketTextChannel)
                     {
                         string currentLogChannel = File.ReadAllText(Path.Combine(Extensions.downloadPath, "LogChannel.txt"));
-                        SocketTextChannel log = Context.Guild.GetTextChannel(channel.Id);
-                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        if (currentLogChannel != channel.Id.ToString())
                         {
-                            Name = "Log Channel Changed",
-                            IconUrl = Context.Guild.IconUrl
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            SocketTextChannel log = Context.Guild.GetTextChannel(channel.Id);
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Log Channel Changed",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(0, 0, 255),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} changed the log channel from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.";
+                            await ReplyAsync($"{Context.User.Mention} the log channel was successfully changed from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "LogChannel.txt"), channel.Id.ToString());
+                        }
+                        else
                         {
-                            Text = $"ID: {Context.User.Id}",
-                            IconUrl = Context.User.GetAvatarUrl()
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Author = author,
-                            Color = new Color(0, 0, 255),
-                            Footer = footer
-                        };
-                        embed.WithCurrentTimestamp();
-                        embed.Description = $"{Context.User.Mention} changed the log channel from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.";
-                        await ReplyAsync($"{Context.User.Mention} the log channel was successfully changed from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.");
-                        await log.SendMessageAsync("", false, embed.Build());
-                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "LogChannel.txt"), channel.Id.ToString());
+                            await ReplyAsync($"{Context.User.Mention} that channel is already the log channel.");
+                        }
                     }
                     else
                     {
                         await ReplyAsync($"{Context.User.Mention} the log channel must be a text channel.");
+                    }
+                }
+                else
+                {
+                    await ReplyAsync($"{Context.User.Mention} the channel with name or ID **{Format.Sanitize(text)}** does not exist or could not be found.");
+                }
+            }
+        }
+
+        [Command("notificationschannel", RunMode = RunMode.Async)]
+        [Alias("updatenotificationschannel", "setnotificationschannel")]
+        [Summary("Sets the log channel for PRG")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        public async Task SetNotificationsChannel([Remainder] string text = null)
+        {
+            if (Context.Guild.Id == 528679522707701760)
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /notificationschannel";
+                    embed.Description = "**Description:** Set the channel for HH and Arti messages.\n**Usage:** /notificationschannel [channel]\n**Example:** /notificationschannel #pr2";
+                    await ReplyAsync("", false, embed.Build());
+                }
+                else if (Extensions.ChannelInGuild(Context.Message, Context.Guild, text) != null)
+                {
+                    SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, text);
+                    if (channel is SocketTextChannel)
+                    {
+                        string currentBanLogChannel = File.ReadAllText(Path.Combine(Extensions.downloadPath, "NotificationsChannel.txt"));
+                        if (currentBanLogChannel != channel.Id.ToString())
+                        {
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Notifications Channel Changed",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(0, 0, 255),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} changed the notifications channel from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentBanLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.";
+                            await ReplyAsync($"{Context.User.Mention} the notifications channel was successfully changed from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentBanLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "NotificationsChannel.txt"), channel.Id.ToString());
+                        }
+                        else
+                        {
+                            await ReplyAsync($"{Context.User.Mention} that channel is already the notifications channel.");
+                        }
+                    }
+                    else
+                    {
+                        await ReplyAsync($"{Context.User.Mention} the notifications channel must be a text channel.");
                     }
                 }
                 else
@@ -1532,34 +1616,51 @@ namespace FredBotNETCore.Modules
         {
             if (Context.Guild.Id == 528679522707701760)
             {
-                if (Extensions.ChannelInGuild(Context.Message, Context.Guild, text) != null)
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /banlogchannel";
+                    embed.Description = "**Description:** Set the ban log channel for the server.\n**Usage:** /banlogchannel [channel]\n**Example:** /banlogchannel #ban-log";
+                    await ReplyAsync("", false, embed.Build());
+                }
+                else if (Extensions.ChannelInGuild(Context.Message, Context.Guild, text) != null)
                 {
                     SocketGuildChannel channel = Extensions.ChannelInGuild(Context.Message, Context.Guild, text);
                     if (channel is SocketTextChannel)
                     {
                         string currentBanLogChannel = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BanLogChannel.txt"));
-                        SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
-                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        if (currentBanLogChannel != channel.Id.ToString())
                         {
-                            Name = "Ban Log Channel Changed",
-                            IconUrl = Context.Guild.IconUrl
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = "Ban Log Channel Changed",
+                                IconUrl = Context.Guild.IconUrl
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                Text = $"ID: {Context.User.Id}",
+                                IconUrl = Context.User.GetAvatarUrl()
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Author = author,
+                                Color = new Color(0, 0, 255),
+                                Footer = footer
+                            };
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"{Context.User.Mention} changed the ban log channel from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentBanLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.";
+                            await ReplyAsync($"{Context.User.Mention} the ban log channel was successfully changed from **{Format.Sanitize(Context.Guild.GetTextChannel(ulong.Parse(currentBanLogChannel)).Name)}** to **{Format.Sanitize(channel.Name)}**.");
+                            await log.SendMessageAsync("", false, embed.Build());
+                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "BanLogChannel.txt"), channel.Id.ToString());
+                        }
+                        else
                         {
-                            Text = $"ID: {Context.User.Id}",
-                            IconUrl = Context.User.GetAvatarUrl()
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Author = author,
-                            Color = new Color(0, 0, 255),
-                            Footer = footer
-                        };
-                        embed.WithCurrentTimestamp();
-                        embed.Description = $"{Context.User.Mention} changed the ban log channel from **{Format.Sanitize(currentBanLogChannel)}** to **{Format.Sanitize(channel.Name)}**.";
-                        await ReplyAsync($"{Context.User.Mention} the ban log channel was successfully changed from **{Format.Sanitize(currentBanLogChannel)}** to **{Format.Sanitize(channel.Name)}**.");
-                        await log.SendMessageAsync("", false, embed.Build());
-                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "BanLogChannel.txt"), channel.Name);
+                            await ReplyAsync($"{Context.User.Mention} that channel is already the ban log channel.");
+                        }
                     }
                     else
                     {
