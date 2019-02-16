@@ -2390,11 +2390,12 @@ namespace FredBotNETCore.Modules
                 string joinedMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.JoinedAt.Value.Month);
                 string joinedDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.JoinedAt.Value.DayOfWeek);
                 string joined = $"{joinedDay}, {joinedMonth} {user.JoinedAt.Value.Day}, {user.JoinedAt.Value.Year} {user.JoinedAt.Value.LocalDateTime.ToString("h:mm tt")}";
-                string pr2name = Database.GetPR2Name(user);
-                if (pr2name == null || pr2name.Length <= 0)
+                List<string> result = Database.CheckExistingUser(Context.User);
+                if (result.Count() <= 0)
                 {
-                    pr2name = "N/A";
+                    Database.EnterUser(Context.User);
                 }
+                string pr2name = Database.GetPR2Name(user);
                 position = guildUsers.ToList().IndexOf(user);
                 foreach (SocketRole role in user.Roles)
                 {
@@ -2691,7 +2692,7 @@ namespace FredBotNETCore.Modules
             {
                 if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
                     if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                     {
                         await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");
@@ -2788,7 +2789,7 @@ namespace FredBotNETCore.Modules
             {
                 if (Extensions.UserInGuild(Context.Message, Context.Guild, username) != null)
                 {
-                    SocketGuildUser user = Context.Guild.GetUser(Extensions.UserInGuild(Context.Message, Context.Guild, username).Id);
+                    SocketGuildUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username) as SocketGuildUser;
                     if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == Context.Client.CurrentUser.Id)
                     {
                         await ReplyAsync($"{Context.User.Mention} that user is a mod/admin, I can't do that.");

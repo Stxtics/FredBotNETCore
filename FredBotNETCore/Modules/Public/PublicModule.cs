@@ -33,7 +33,7 @@ namespace FredBotNETCore.Modules.Public
                 Database.EnterUser(Context.User);
             }
             string pr2name = Database.GetPR2Name(Context.User);
-            if (pr2name.Equals("Not verified") || pr2name.Length <= 0)
+            if (pr2name.Equals("Not verified"))
             {
                 await ReplyAsync($"{Context.User.Mention} you need to verify yourself to use this command.");
             }
