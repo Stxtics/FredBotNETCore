@@ -508,7 +508,7 @@ namespace FredBotNETCore.Modules.Public
                     }
                     tries = tries + 1;
                 }
-                if (responseString.Equals("{\"error\":\"Could not find a valid login token. Please log in again.\"}"))
+                if (responseString.Equals("{\"success\":false,\"error\":\"Could not find a valid login token. Please log in again.\"}"))
                 {
                     await ReplyAsync($"{Context.User.Mention} the token of FredTheG.CactusBot has expired. Please contact a PR2 Staff Member so that they can update it.");
                 }
@@ -817,7 +817,7 @@ namespace FredBotNETCore.Modules.Public
                                         string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
                                         string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
                                         string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
-                                        string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
+                                        string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":");
                                         string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
                                         string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
                                         if (group == "0")
@@ -890,7 +890,7 @@ namespace FredBotNETCore.Modules.Public
                                 string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
                                 string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
                                 string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
-                                string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
+                                string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":");
                                 string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
                                 string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
                                 if (group == "0")
@@ -992,7 +992,7 @@ namespace FredBotNETCore.Modules.Public
                             string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
                             string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
                             string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
-                            string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":\"");
+                            string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":");
                             string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
                             string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
                             if (group == "0")
