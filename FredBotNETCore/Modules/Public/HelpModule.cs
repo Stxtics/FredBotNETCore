@@ -94,7 +94,7 @@ namespace FredBotNETCore.Modules.Public
                 "**PR2 Staff Member Only**\n" +
                 "/promote - Says about a PR2 Promotion. PR2 Admins only.\n" +
                 "/updatetoken - Updates token of FredtheG.CactusBot.\n" +
-                "**PR2 Discussion Only**\n" +
+                "**PR2 Channel and DMs Only**\n" +
                 "/hint - Tell you the current hint for the artifact location.\n" +
                 "/view - Gives you info of a PR2 user, or multiple if each name seperated by | .\n" +
                 "/viewid - Same as /view but with user ID instead of username.\n" +
@@ -111,8 +111,6 @@ namespace FredBotNETCore.Modules.Public
                 "/guildmembersid - Gets members for the PR2 guild ID specified.\n" +
                 "/hh - Tells you current servers with happy hour on them.\n" +
                 "/level - Tells you info about a level.\n" +
-                "/verifyguild - Creates a server for your guild if you are owner.\n" +
-                "/joinguild - Adds you to the role of the guild you are in if it exists.\n" +
                 "/servers - Lists all servers how you see them on PR2.\n" +
                 "/staff - Returns all PR2 Staff online is there is any.\n" +
                 "**Music Moderator**\n" +
