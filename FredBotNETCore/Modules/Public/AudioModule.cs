@@ -412,7 +412,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (Context.Guild.CurrentUser.VoiceChannel != null)
+                    if (Context.Guild.CurrentUser.VoiceChannel != null || audioService.NowPlaying(Context.Guild.Id) == null)
                     {
                         if (audioService.Paused(Context.Guild.Id))
                         {
@@ -455,7 +455,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (Context.Guild.CurrentUser.VoiceChannel != null)
+                    if (Context.Guild.CurrentUser.VoiceChannel != null || audioService.NowPlaying(Context.Guild.Id) == null)
                     {
                         if (audioService.Paused(Context.Guild.Id))
                         {
@@ -841,7 +841,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (Context.Guild.CurrentUser.VoiceChannel == null)
+                    if (Context.Guild.CurrentUser.VoiceChannel == null || audioService.NowPlaying(Context.Guild.Id) == null)
                     {
                         await ReplyAsync($"{Context.User.Mention} there is no music playing.");
                     }
@@ -878,7 +878,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (Context.Guild.CurrentUser.VoiceChannel == null)
+                    if (Context.Guild.CurrentUser.VoiceChannel == null || audioService.NowPlaying(Context.Guild.Id) == null)
                     {
                         await ReplyAsync($"{Context.User.Mention} there is no music to set the volume of.");
                     }
@@ -893,6 +893,61 @@ namespace FredBotNETCore.Modules.Public
                             int currentVolume = audioService.GetVolume(Context.Guild.Id);
                             await audioService.SetVolume(Context.Guild.Id, volume);
                             await ReplyAsync($"{Context.User.Mention} set the volume from **{currentVolume}** to **{volume}**.");
+                        }
+                    }
+                }
+            }
+        }
+
+        [Command("seek")]
+        [Alias("goto")]
+        [Summary("Goes to a certain point in a song.")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireContext(ContextType.Guild)]
+        public async Task Seek(string seconds = null)
+        {
+            if (Context.Channel.Id == 528696379325808655 || Context.Channel.Id == 528692074917134346)
+            {
+                if (Blacklisted(Context.User))
+                {
+                    return;
+                }
+                SocketVoiceChannel _voiceChannel = (Context.User as SocketGuildUser).VoiceChannel;
+                if (_voiceChannel == null || _voiceChannel.Id != 528688237812908057)
+                {
+                    await ReplyAsync($"{Context.User.Mention} you need to be in the Music voice channel to use this command.");
+                }
+                else
+                {
+                    if (Context.Guild.CurrentUser.VoiceChannel == null || audioService.NowPlaying(Context.Guild.Id) == null)
+                    {
+                        await ReplyAsync($"{Context.User.Mention} nothing is playing right now.");
+                    }
+                    else
+                    {
+                        if (string.IsNullOrWhiteSpace(seconds) || !int.TryParse(seconds, out int time) || time < 0)
+                        {
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Title = "Command: /seek",
+                                Description = "**Description:** Goto point in song.\n**Usage:** /seek [seconds]\n**Example:** /seek 60",
+                                Color = new Color(220, 220, 220)
+                            };
+                            await ReplyAsync("", false, embed.Build());
+                        }
+                        else
+                        {
+                            LavaTrack nowPlaying = audioService.NowPlaying(Context.Guild.Id);
+                            if (nowPlaying.Length.TotalSeconds < time)
+                            {
+                                await ReplyAsync($"{Context.User.Mention} that point exceeds the songs length.");
+                            }
+                            else
+                            {
+                                TimeSpan timeSpan = new TimeSpan(0, 0, time);
+                                await audioService.Seek(Context.Guild.Id, timeSpan);
+                                await ReplyAsync($"{Context.User.Mention} successfully went to **{timeSpan.Minutes}:{timeSpan.Seconds.ToString("D2")}** in the current song.");
+                            }
                         }
                     }
                 }

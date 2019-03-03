@@ -229,5 +229,10 @@ namespace FredBotNETCore.Services
             }
             return QueueLoop;
         }
+
+        public async Task Seek(ulong guildId, TimeSpan time)
+        {
+            await _lavalink.DefaultNode.GetPlayer(guildId).SeekAsync(time);
+        }
     }
 }
