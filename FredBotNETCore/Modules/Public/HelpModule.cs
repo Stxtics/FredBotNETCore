@@ -122,6 +122,7 @@ namespace FredBotNETCore.Modules.Public
                 "/come - Brings bot to voice channel.\n" +
                 "/forceskip - Skips the current song.\n" +
                 "/volume - Set volume of the music.\n" +
+                "/seek - Go to point in a song.\n" +
                 "**Music**\n" +
                 "/add - Adds a song to the queue.\n" +
                 "/skip - Vote to skip current song.\n" +
