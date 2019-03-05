@@ -412,7 +412,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (Context.Guild.CurrentUser.VoiceChannel != null || audioService.NowPlaying(Context.Guild.Id) == null)
+                    if (Context.Guild.CurrentUser.VoiceChannel != null || audioService.NowPlaying(Context.Guild.Id) != null)
                     {
                         if (audioService.Paused(Context.Guild.Id))
                         {
@@ -455,7 +455,7 @@ namespace FredBotNETCore.Modules.Public
                 }
                 else
                 {
-                    if (Context.Guild.CurrentUser.VoiceChannel != null || audioService.NowPlaying(Context.Guild.Id) == null)
+                    if (Context.Guild.CurrentUser.VoiceChannel != null || audioService.NowPlaying(Context.Guild.Id) != null)
                     {
                         if (audioService.Paused(Context.Guild.Id))
                         {
