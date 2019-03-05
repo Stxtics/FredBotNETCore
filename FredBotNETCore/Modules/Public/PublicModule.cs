@@ -2221,12 +2221,12 @@ namespace FredBotNETCore.Modules.Public
                     }
                     if (text != null)
                     {
-                        if (text.Contains(value: "{\"error\":\""))
+                        if (text.Contains(value: "{\"success\":false,\"error\":\""))
                         {
                             await ReplyAsync($"{Context.User.Mention} the guild **{Format.Sanitize(guildname)}** does not exist or could not be found.");
                             return;
                         }
-                        string[] users = Extensions.GetBetween(text, "[", "]").Split('}');
+                        string[] users = Extensions.GetBetween(text, ",\"members\":[", "]").Split('}');
                         List<string> guildMembers = new List<string>();
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
@@ -2241,7 +2241,10 @@ namespace FredBotNETCore.Modules.Public
                         foreach (string user_id in users)
                         {
                             string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
-                            guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                            if (name.Length > 0)
+                            {
+                                guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                            }
                         }
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
@@ -2292,13 +2295,13 @@ namespace FredBotNETCore.Modules.Public
                     }
                     if (text != null)
                     {
-                        if (text.Contains(value: "{\"error\":\""))
+                        if (text.Contains(value: "{\"success\":false,\"error\":\""))
                         {
                             await ReplyAsync($"{Context.User.Mention} the guild with ID **{id}** does not exist or could not be found.");
                             return;
                         }
                         string gName = Extensions.GetBetween(text, "\"guild_name\":\"", "\",\"");
-                        string[] users = Extensions.GetBetween(text, "[", "]").Split('}');
+                        string[] users = Extensions.GetBetween(text, ",\"members\":[", "]").Split('}');
                         List<string> guildMembers = new List<string>();
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
@@ -2313,7 +2316,10 @@ namespace FredBotNETCore.Modules.Public
                         foreach (string user_id in users)
                         {
                             string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
-                            guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                            if (name.Length > 0)
+                            {
+                                guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                            }
                         }
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
@@ -2341,7 +2347,7 @@ namespace FredBotNETCore.Modules.Public
             if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
                 HttpClient web = new HttpClient();
-                string hhServers = "", happyHour = "";
+                string hhServers = "";
                 string text = null;
                 try
                 {
@@ -2356,7 +2362,7 @@ namespace FredBotNETCore.Modules.Public
                     string[] servers = text.Split('}');
                     foreach (string server_name in servers)
                     {
-                        happyHour = Extensions.GetBetween(server_name, "hour\":\"", "\"");
+                        string happyHour = Extensions.GetBetween(server_name, "hour\":\"", "\"");
                         if (happyHour.Equals("1"))
                         {
                             string serverName = Extensions.GetBetween(server_name, "server_name\":\"", "\"");
