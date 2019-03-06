@@ -596,7 +596,7 @@ namespace FredBotNETCore.Modules.Public
         }
 
         [Command("come", RunMode = RunMode.Async)]
-        [Alias("summon")]
+        [Alias("summon", "join")]
         [Summary("Brings bot to voice channel")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireContext(ContextType.Guild)]
