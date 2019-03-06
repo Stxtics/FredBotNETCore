@@ -858,7 +858,7 @@ namespace FredBotNETCore.Modules.Public
             }
         }
 
-        [Command("setvolume")]
+        [Command("setvolume", RunMode = RunMode.Async)]
         [Alias("volume")]
         [Summary("Sets volume of the music")]
         [RequireUserPermission(GuildPermission.KickMembers)]
@@ -899,7 +899,7 @@ namespace FredBotNETCore.Modules.Public
             }
         }
 
-        [Command("seek")]
+        [Command("seek", RunMode = RunMode.Async)]
         [Alias("goto")]
         [Summary("Goes to a certain point in a song.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
