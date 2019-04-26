@@ -817,7 +817,7 @@ namespace FredBotNETCore.Modules
                         {
                             if (id == role.Id)
                             {
-                                roleMembers = roleMembers + 1;
+                                roleMembers += 1;
                                 break;
                             }
                         }
@@ -1441,7 +1441,7 @@ namespace FredBotNETCore.Modules
             {
                 return;
             }
-            if (string.IsNullOrWhiteSpace(caseN) || !int.TryParse(caseN, out int level_))
+            if (string.IsNullOrWhiteSpace(caseN) || !int.TryParse(caseN, out _))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
@@ -2012,14 +2012,14 @@ namespace FredBotNETCore.Modules
                     message = await Context.Channel.GetMessageAsync(message.Id) as IUserMessage;
                     if (message.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:"))
                     {
-                        count = count + divide;
+                        count += divide;
                         ended = true;
                     }
                     else
                     {
                         embed.Description = $"React with <:artifact:530404386229321749> to enter the giveaway.\nTime left: {minutes - (minutes / 10 * count)} minutes.";
                         await message.ModifyAsync(x => x.Embed = embed.Build());
-                        count = count + 1;
+                        count += 1;
                     }
                 }
                 if (!ended)

@@ -326,7 +326,9 @@ namespace FredBotNETCore.Modules.Public
         [Command("verify", RunMode = RunMode.Async)]
         [Alias("verifyme")]
         [Summary("Verifies a user on the server.")]
+#pragma warning disable IDE0060 // Remove unused parameter
         public async Task Verify([Remainder] string s1 = null)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             if (!(Context.Channel is SocketDMChannel))
             {
@@ -506,7 +508,7 @@ namespace FredBotNETCore.Modules.Public
                             $"Make sure you typed your PR2 name correctly, or actually sent the PM.");
                         break;
                     }
-                    tries = tries + 1;
+                    tries += 1;
                 }
                 if (responseString.Equals("{\"success\":false,\"error\":\"Could not find a valid login token. Please log in again.\"}"))
                 {
@@ -946,7 +948,7 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
-                if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out int id2))
+                if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out _))
                 {
                     EmbedBuilder embed = new EmbedBuilder()
                     {
@@ -1087,7 +1089,7 @@ namespace FredBotNETCore.Modules.Public
                             await ReplyAsync($"{Context.User.Mention} that user has not linked their PR2 account.");
                             return;
                         }
-                        string pr2userinfo = null;
+                        string pr2userinfo;
                         try
                         {
                             pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2Name);
@@ -1167,7 +1169,7 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
-                if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out int id2))
+                if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out _))
                 {
                     EmbedBuilder embed = new EmbedBuilder()
                     {
@@ -1333,11 +1335,11 @@ namespace FredBotNETCore.Modules.Public
                                 {
                                     if (i == 0)
                                     {
-                                        exp = exp + 1;
+                                        exp += 1;
                                     }
                                     else
                                     {
-                                        exp = exp + Math.Round(Math.Pow(1.25, i) * 30);
+                                        exp += Math.Round(Math.Pow(1.25, i) * 30);
                                     }
                                 }
                                 embed.WithFooter(footer);
@@ -2192,7 +2194,7 @@ namespace FredBotNETCore.Modules.Public
                             await ReplyAsync($"{Context.User.Mention} that user has not linked their PR2 account.");
                             return;
                         }
-                        string pr2userinfo = null;
+                        string pr2userinfo;
                         try
                         {
                             pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
@@ -2271,7 +2273,7 @@ namespace FredBotNETCore.Modules.Public
         {
             if (Extensions.AllowedChannels().Contains(Context.Channel.Id) || Context.Channel is IDMChannel || Context.Guild.Id != 528679522707701760)
             {
-                if (id == null || !int.TryParse(id, out int id2))
+                if (id == null || !int.TryParse(id, out _))
                 {
                     EmbedBuilder embed = new EmbedBuilder()
                     {
@@ -2486,7 +2488,7 @@ namespace FredBotNETCore.Modules.Public
                         embed.Description = $"**By:** {Format.Sanitize(user)}\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n";
                         if (note.Length > 0)
                         {
-                            embed.Description = embed.Description + $"-----\n{Format.Sanitize(note)}";
+                            embed.Description += $"-----\n{Format.Sanitize(note)}";
                         }
                         await ReplyAsync("", false, embed.Build());
                     }

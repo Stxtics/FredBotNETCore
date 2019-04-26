@@ -25,7 +25,7 @@ namespace FredBotNETCore
         {
             if (list.Count() == 0)
             {
-                return default(T);
+                return default;
             }
 
             return list.ElementAt(random.Next(list.Count()));

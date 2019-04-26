@@ -32,7 +32,9 @@ namespace FredBotNETCore
         #region Startup
 
         // Convert sync main to an async main.
+#pragma warning disable IDE0060 // Remove unused parameter
         public static void Main(string[] args)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             new Program().Start().GetAwaiter().GetResult();
         }
@@ -256,12 +258,16 @@ namespace FredBotNETCore
             return Task.CompletedTask;
         }
 
+#pragma warning disable IDE0060 // Remove unused parameter
         internal static Task Start(object workingDirectly, object friendlyName)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             throw new NotImplementedException();
         }
 
+#pragma warning disable IDE0060 // Remove unused parameter
         internal static Task Start(string v)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             throw new NotImplementedException();
         }

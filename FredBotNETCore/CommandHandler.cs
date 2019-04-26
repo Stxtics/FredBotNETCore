@@ -17,7 +17,6 @@ namespace FredBotNETCore
         private CommandService _cmds;
         public static DiscordSocketClient _client;
         public static Lavalink _lavaLink;
-        private ServiceProvider _services;
 
         public static string Name;
 
@@ -40,6 +39,8 @@ namespace FredBotNETCore
             }
         }
 
+        public ServiceProvider Services { get; set; }
+
         public static bool justConnected;
 
         public static string DerronStatus = "";
@@ -54,9 +55,7 @@ namespace FredBotNETCore
 
         public static async Task CheckStatusAsync(bool isOn = false, string serverName = null)
         {
-            string compare = "";
-            compare = isOn + serverName;
-
+            string compare = isOn + serverName;
             switch (serverName)
             {
                 case "Derron":
@@ -255,7 +254,7 @@ namespace FredBotNETCore
                 return;
             }
             _lavaLink = lavalink;
-            _services = provider;
+            Services = provider;
             _client = c;
             _cmds = new CommandService();
             await _cmds.AddModulesAsync(Assembly.GetEntryAssembly(), Program._provider);

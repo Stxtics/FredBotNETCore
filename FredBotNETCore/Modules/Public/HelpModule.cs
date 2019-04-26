@@ -1,21 +1,11 @@
 ﻿using Discord;
 using Discord.Commands;
-using System;
 using System.Threading.Tasks;
 
 namespace FredBotNETCore.Modules.Public
 {
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
-        private readonly CommandService commandService;
-        private readonly IServiceProvider serviceProvider;
-
-        public HelpModule(CommandService commands, IServiceProvider provider)
-        {
-            commandService = commands;
-            serviceProvider = provider;
-        }
-
         [Command("help", RunMode = RunMode.Async)]
         [Alias("commands")]
         [Summary("List of commands for the bot.")]

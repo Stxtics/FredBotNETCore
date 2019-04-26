@@ -237,7 +237,6 @@ namespace FredBotNETCore
             };
             embed.WithCurrentTimestamp();
             SocketTextChannel log = channel.Guild.GetTextChannel(Extensions.GetLogChannel());
-            Discord.Rest.RestUserMessage message = null;
             if (msg.Content.Length > 252)
             {
                 embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty).SplitInParts(252).ElementAt(0)}...**";
@@ -247,6 +246,7 @@ namespace FredBotNETCore
                 embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty)}**";
             }
             bool badMessage = BlacklistedWord(msg);
+            Discord.Rest.RestUserMessage message;
             if (badMessage)
             {
                 Extensions.Purging = true;

@@ -341,7 +341,7 @@ namespace FredBotNETCore.Modules.Public
                             int index = 0;
                             foreach (LavaTrack track in queue.Item1.Items)
                             {
-                                embed.Description = embed.Description + $"{count.ToString()}. **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) queued by **{Format.Sanitize(queue.Item2[index].Username)}#{queue.Item2[index].Discriminator}**.\n";
+                                embed.Description += $"{count.ToString()}. **{Format.Sanitize(track.Title)}** ({track.Length.Minutes}:{track.Length.Seconds.ToString("D2")}) queued by **{Format.Sanitize(queue.Item2[index].Username)}#{queue.Item2[index].Discriminator}**.\n";
                                 count++;
                                 index++;
                             }

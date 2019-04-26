@@ -10,16 +10,14 @@ namespace FredBotNETCore
     public class Database
     {
         private static readonly string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
-        private string Table { get; set; }
         private const string server = "localhost";
         private const string database = "FredBotDatabase";
         private const string username = "root";
         private readonly string password = new StreamReader(path: Path.Combine(downloadPath, "DatabasePassword.txt")).ReadLine();
         private readonly MySqlConnection dbConnection;
 
-        public Database(string table)
+        public Database()
         {
-            Table = table;
             MySqlConnectionStringBuilder stringBuilder = new MySqlConnectionStringBuilder
             {
                 Server = server,
@@ -61,7 +59,7 @@ namespace FredBotNETCore
         public static List<string> CheckExistingUser(IUser user)
         {
             List<string> result = new List<string>();
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
 
             string str = string.Format("SELECT * FROM fredbottable WHERE user_id = '{0}'", user.Id);
             MySqlDataReader tableName = database.FireCommand(str);
@@ -78,10 +76,10 @@ namespace FredBotNETCore
 
         public static string EnterUser(IUser user)
         {
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
 
             string str = string.Format("INSERT INTO fredbottable (user_id, username, pr2_name, jv2_id, balance, last_used ) VALUES ('{0}', '{1}', 'Not verified', '0', '{2}', '5/7/18')", user.Id, user.Username, 10);
-            MySqlDataReader table = database.FireCommand(str);
+            _ = database.FireCommand(str);
 
             database.CloseConnection();
 
@@ -91,7 +89,7 @@ namespace FredBotNETCore
         public static List<string> GetTop()
         {
             List<string> result = new List<string>();
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
 
             string str = string.Format("SELECT * FROM fredbottable ORDER BY balance desc");
             MySqlDataReader tableName = database.FireCommand(str);
@@ -111,7 +109,7 @@ namespace FredBotNETCore
         public static List<string> CheckForVerified(IUser user, string pr2name)
         {
             List<string> result = new List<string>();
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
 
             string str = string.Format("SELECT * FROM fredbottable WHERE pr2_name = '{0}' AND user_id = '{1}'", pr2name, user.Id);
             MySqlDataReader tableName = database.FireCommand(str);
@@ -130,7 +128,7 @@ namespace FredBotNETCore
         public static ulong GetDiscordID(string pr2name)
         {
             ulong id = 0;
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
 
             string str = string.Format("SELECT * FROM fredbottable WHERE pr2_name = '{0}'", pr2name);
             MySqlDataReader tableName = database.FireCommand(str);
@@ -145,7 +143,7 @@ namespace FredBotNETCore
 
         public static void VerifyUser(IUser user, string pr2name)
         {
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             try
             {
                 string str = string.Format("UPDATE fredbottable SET pr2_name = '{1}' WHERE user_id = {0}", user.Id, pr2name);
@@ -163,7 +161,7 @@ namespace FredBotNETCore
 
         public static void VerifyJV2(SocketUser user, string jv2ID)
         {
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             try
             {
                 string str = string.Format("UPDATE fredbottable SET jv2_id = '{1}' WHERE user_id = {0}", user.Id, jv2ID);
@@ -181,7 +179,7 @@ namespace FredBotNETCore
 
         public static void SetLastUsed(SocketUser user, string date)
         {
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             try
             {
                 string str = string.Format("UPDATE fredbottable SET last_used = '{1}' WHERE user_id = {0}", user.Id, date);
@@ -200,7 +198,7 @@ namespace FredBotNETCore
         public static string GetLastUsed(SocketUser user)
         {
             string lastUsed = "";
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             string str = string.Format("SELECT * FROM fredbottable WHERE user_id = '{0}'", user.Id);
             MySqlDataReader tableName = database.FireCommand(str);
             while (tableName.Read())
@@ -213,7 +211,7 @@ namespace FredBotNETCore
 
         public static void SetBalance(SocketUser user, int bal)
         {
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             try
             {
                 string str = string.Format("UPDATE fredbottable SET balance = '{1}' WHERE user_id = {0}", user.Id, bal);
@@ -232,7 +230,7 @@ namespace FredBotNETCore
         public static int GetBalance(SocketUser user)
         {
             int bal = 0;
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             string str = string.Format("SELECT * FROM fredbottable WHERE user_id = '{0}'", user.Id);
             MySqlDataReader tableName = database.FireCommand(str);
             while (tableName.Read())
@@ -246,7 +244,7 @@ namespace FredBotNETCore
         public static string GetPR2Name(IUser user)
         {
             string pr2Name = "";
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             string str = string.Format("SELECT * FROM fredbottable WHERE user_id = '{0}'", user.Id);
             MySqlDataReader tableName = database.FireCommand(str);
             while (tableName.Read())
@@ -261,7 +259,7 @@ namespace FredBotNETCore
         public static string GetUserID(string pr2name)
         {
             string userID = "1";
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             string str = string.Format("SELECT * FROM fredbottable WHERE pr2_name = '{0}'", pr2name);
             MySqlDataReader tableName = database.FireCommand(str);
             while (tableName.Read())
@@ -275,10 +273,10 @@ namespace FredBotNETCore
 
         public static string AddPrior(IUser user, string username, string type, string moderator, string reason)
         {
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
 
             string str = $"INSERT INTO banlog (user_id, username, type, moderator, reason ) VALUES ('{user.Id}', \"{username}\", '{type}', \"{moderator}\", \"{reason}\")";
-            MySqlDataReader table = database.FireCommand(str);
+            _ = database.FireCommand(str);
 
             database.CloseConnection();
 
@@ -288,7 +286,7 @@ namespace FredBotNETCore
         public static string GetCase(string caseN)
         {
             string caseInfo = "";
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             string str = string.Format("SELECT * FROM banlog WHERE `case` = '{0}'", caseN);
             MySqlDataReader tableName = database.FireCommand(str);
             while (tableName.Read())
@@ -308,7 +306,7 @@ namespace FredBotNETCore
         public static List<string> Modlogs(IUser user)
         {
             List<string> modLogs = new List<string>();
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             string str = string.Format("SELECT * FROM banlog WHERE user_id = '{0}'", user.Id);
             MySqlDataReader tableName = database.FireCommand(str);
 
@@ -329,7 +327,7 @@ namespace FredBotNETCore
 
         public static void UpdateReason(string caseN, string reason)
         {
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             try
             {
                 string str = string.Format("UPDATE banlog SET reason = \"{1}\" WHERE `case` = {0}", caseN, reason);
@@ -348,7 +346,7 @@ namespace FredBotNETCore
         public static long CaseCount()
         {
             long cases = 0;
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             string str = string.Format("SELECT COUNT(*) FROM banlog");
             MySqlDataReader tableName = database.FireCommand(str);
             while (tableName.Read())
@@ -362,7 +360,7 @@ namespace FredBotNETCore
         public static List<string> Warnings(IUser user = null)
         {
             List<string> warnings = new List<string>();
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             if (user == null)
             {
                 string str = string.Format("SELECT * FROM banlog WHERE type = 'Warn'");
@@ -370,13 +368,12 @@ namespace FredBotNETCore
                 while (tableName.Read())
                 {
                     int caseN = (int)tableName["case"];
-                    string type = (string)tableName["type"];
                     string userId = (string)tableName["user_id"];
                     string username = (string)tableName["username"];
                     string moderator = (string)tableName["moderator"];
                     string reason = (string)tableName["reason"];
 
-                    warnings.Add(item: $"**Case {caseN}**\n    **User: **({userId}){username}\n    **Moderator: **{moderator}\n    **Reason: **{reason}");
+                    warnings.Add(item: $"__**Case {caseN}**__\n    **User: **({userId}){username}\n    **Moderator: **{moderator}\n    **Reason: **{reason}");
                 }
             }
             else
@@ -386,13 +383,10 @@ namespace FredBotNETCore
                 while (tableName.Read())
                 {
                     int caseN = (int)tableName["case"];
-                    string type = (string)tableName["type"];
-                    string userId = (string)tableName["user_id"];
-                    string username = (string)tableName["username"];
                     string moderator = (string)tableName["moderator"];
                     string reason = (string)tableName["reason"];
 
-                    warnings.Add(item: $"**Case {caseN}**\n    **Moderator: **{moderator}\n    **Reason: **{reason}");
+                    warnings.Add(item: $"__**Case {caseN}**__\n    **Moderator: **{moderator}\n    **Reason: **{reason}");
                 }
             }
             database.CloseConnection();
@@ -402,7 +396,7 @@ namespace FredBotNETCore
         public static long WarnCount(IUser user)
         {
             long warnCount = 0;
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             string str = string.Format("SELECT COUNT(*) FROM banlog WHERE type = 'Warn' AND user_id = '{0}'", user.Id);
             MySqlDataReader tableName = database.FireCommand(str);
             while (tableName.Read())
@@ -415,7 +409,7 @@ namespace FredBotNETCore
 
         public static void ClearWarn(IUser user)
         {
-            Database database = new Database("FredBotDatabase");
+            Database database = new Database();
             try
             {
                 string str = string.Format("DELETE FROM banlog WHERE type = 'Warn' AND user_id = '{0}'", user.Id);
