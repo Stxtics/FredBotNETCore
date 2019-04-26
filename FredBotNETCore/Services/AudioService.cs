@@ -114,7 +114,7 @@ namespace FredBotNETCore.Services
             if (_lavalink.DefaultNode.GetPlayer(guildId).Queue.Count == 0)
             {
                 await _lavalink.DefaultNode.GetPlayer(guildId).TextChannel.SendMessageAsync("Queue finished.");
-                await Stop(guildId);           
+                await Stop(guildId);
             }
             else
             {
