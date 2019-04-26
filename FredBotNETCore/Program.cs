@@ -99,7 +99,7 @@ namespace FredBotNETCore
         {
             return new ServiceCollection()
                 .AddSingleton(_client)
-                .AddSingleton(new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false }))
+                .AddSingleton(new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false, DefaultRunMode = RunMode.Async }))
                 .AddSingleton<Lavalink>()
                 .AddSingleton<AudioService>()
                 .BuildServiceProvider();
