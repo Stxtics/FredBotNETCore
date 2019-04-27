@@ -115,9 +115,10 @@ namespace FredBotNETCore
         public static async Task CheckStatus(DiscordSocketClient client)
         {
             HttpClient web = new HttpClient();
-            string hint = Extensions.GetBetween(await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt"), "{\"hint\":\"", "\",\"finder_name\":\"");
-            string finder = Extensions.GetBetween(await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt"), "\",\"finder_name\":\"", "\",\"updated_time\":");
-            string time = Extensions.GetBetween(await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt"), "\",\"updated_time\":", "}");
+            string hint = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "{\"hint\":\"", "\",\"finder_name\":\"");
+            string finder = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"finder_name\":\"", "\",\"bubbles_name\":\"");
+            string bubbles = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"bubbles_name\":\"", "\",\"updated_time\":");
+            string time = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"updated_time\":", "}");
             bool valid = false;
             while (true)
             {
@@ -125,7 +126,7 @@ namespace FredBotNETCore
                 {
                     await Task.Delay(TimeSpan.FromSeconds(10));
                     #region HH
-                    string status = await web.GetStringAsync("http://pr2hub.com/files/server_status_2.txt");
+                    string status = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
                     string[] servers = status.Split('}');
                     string happyHour = "", guildId = "";
 
@@ -153,7 +154,7 @@ namespace FredBotNETCore
                     #endregion
 
                     #region Arti
-                    string artifactHint = await web.GetStringAsync("http://pr2hub.com/files/artifact_hint.txt");
+                    string artifactHint = await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt");
                     if (!hint.Equals(Extensions.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"")))
                     {
                         hint = Extensions.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"");
@@ -172,12 +173,25 @@ namespace FredBotNETCore
                             await CommandHandler.AnnouceHintUpdatedAsync(hint, false);
                         }
                     }
-                    if (!finder.Equals(Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"updated_time\":")))
+                    if (!finder.Equals(Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"bubbles_name\":\"")))
                     {
-                        finder = Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"updated_time\":");
-                        if (finder.Length > 0)
+                        finder = Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"bubbles_name\":\"");
+                        bubbles = Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":");
+                        if (finder.Length > 0 && finder == bubbles)
+                        {
+                            await CommandHandler.AnnounceArtifactFoundAsync(finder, true);
+                        }
+                        else if (finder.Length > 0)
                         {
                             await CommandHandler.AnnounceArtifactFoundAsync(finder);
+                        }
+                    }
+                    if (!bubbles.Equals(Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":")))
+                    {
+                        bubbles = Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":");
+                        if (bubbles.Length > 0)
+                        {
+                            await CommandHandler.AnnounceBubblesAwardedAsync(bubbles);
                         }
                     }
                     #endregion

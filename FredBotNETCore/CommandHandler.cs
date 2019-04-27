@@ -195,7 +195,7 @@ namespace FredBotNETCore
             }
         }
 
-        private static async Task UpdateHappyHourAsync(string Name = null, bool isOn = false)
+        private static async Task UpdateHappyHourAsync(string Name, bool isOn = false)
         {
             if (isOn)
             {
@@ -218,7 +218,7 @@ namespace FredBotNETCore
             }
         }
 
-        public static async Task AnnouceHintUpdatedAsync(string hint = null, bool newArti = false)
+        public static async Task AnnouceHintUpdatedAsync(string hint, bool newArti = false)
         {
             SocketGuild Guild = _client.GetGuild(528679522707701760);
             SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
@@ -239,11 +239,25 @@ namespace FredBotNETCore
             }
         }
 
-        public static async Task AnnounceArtifactFoundAsync(string finder = null)
+        public static async Task AnnounceArtifactFoundAsync(string finder, bool bubbles = false)
         {
             SocketGuild Guild = _client.GetGuild(528679522707701760);
             SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
-            await channel.SendMessageAsync($"**{finder}** has found the artifact!");
+            if (bubbles)
+            {
+                await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the artifact and has received a bubble set!");
+            }
+            else
+            {
+                await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the artifact!");
+            }          
+        }
+
+        public static async Task AnnounceBubblesAwardedAsync(string bubbles = null)
+        {
+            SocketGuild Guild = _client.GetGuild(528679522707701760);
+            SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
+            await channel.SendMessageAsync($"**{Format.Sanitize(bubbles)}** has been awarded a bubble set!");
         }
 
         public async Task Install(DiscordSocketClient c, Lavalink lavalink, ServiceProvider provider)
