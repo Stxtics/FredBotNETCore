@@ -692,30 +692,72 @@ namespace FredBotNETCore.Modules.Public
                 if (text != null)
                 {
                     string levelname = Extensions.GetBetween(text, "hint\":\"", "\"");
-                    string person = Extensions.GetBetween(text, "finder_name\":\"", "\"");
-                    if (person.Length < 1)
+                    string finder = Extensions.GetBetween(text, "finder_name\":\"", "\"");
+                    string bubbles = Extensions.GetBetween(text, "bubbles_name\":\"", "\"");
+                    if (finder.Length < 1)
                     {
                         await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!");
                     }
                     else
                     {
-                        ulong userID = Convert.ToUInt64(Database.GetUserID(person));
-                        if (userID != 1)
+                        ulong finderID = ulong.Parse(Database.GetUserID(finder));
+                        ulong bubblesID = 1;
+                        if (bubbles.Length > 0)
                         {
-                            SocketGuild guild = Context.Client.GetGuild(528679522707701760);
-                            if (Extensions.UserInGuild(null, guild, userID.ToString()) != null)
+                            bubblesID = ulong.Parse(Database.GetUserID(bubbles));
+                        }
+                        SocketGuild guild = Context.Client.GetGuild(528679522707701760);
+                        if (finderID != 1 && bubblesID == 1)
+                        {
+                            if (Extensions.UserInGuild(null, guild, finderID.ToString()) != null)
                             {
-                                SocketGuildUser user = guild.GetUser(userID);
-                                await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!!");
+                                SocketGuildUser user = guild.GetUser(finderID);
+                                await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
+                                    $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!");
                             }
                             else
                             {
-                                await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))}**!!");
+                                await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
+                                    $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))}**!");
+                            }
+                        }
+                        else if (finderID != 1 && bubblesID != 1)
+                        {
+                            if (Extensions.UserInGuild(null, guild, finderID.ToString()) != null)
+                            {
+                                SocketGuildUser user = guild.GetUser(finderID);
+                                if (Extensions.UserInGuild(null, guild, bubblesID.ToString()) != null)
+                                {
+                                    SocketGuildUser user2 = guild.GetUser(bubblesID);
+                                    await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
+                                        $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!\n" +
+                                        $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(bubbles))} ({Format.Sanitize(user2.Username)}#{user2.Discriminator})** instead!");
+                                }
+                                else
+                                {
+                                    await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
+                                        $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!\n" +
+                                        $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(bubbles))}** instead!");
+                                }
+                            }
+                            else if (Extensions.UserInGuild(null, guild, bubblesID.ToString()) != null)
+                            {
+                                SocketGuildUser user = guild.GetUser(bubblesID);
+                                await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
+                                    $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))}**!\n" +
+                                    $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(bubbles))} ({Format.Sanitize(user.Username)}#{user.Discriminator})** instead!");
+                            }
+                            else
+                            {
+                                await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
+                                    $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))}**!\n" +
+                                    $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(bubbles))}** instead!");
                             }
                         }
                         else
                         {
-                            await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(person))}**!!");
+                            await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
+                                $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))}**!");
                         }
                     }
                 }
