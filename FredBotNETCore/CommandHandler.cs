@@ -280,6 +280,7 @@ namespace FredBotNETCore
 
         private async Task OnReady()
         {
+            await _client.DownloadUsersAsync(_client.Guilds);
             int users = _client.Guilds.Sum(g => g.Users.Count);
             await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
             LavaNode node = await _lavaLink.AddNodeAsync(_client, new Configuration
