@@ -953,14 +953,11 @@ namespace FredBotNETCore.Modules
                     auth.Name = $"Warnings - {user.Username}#{user.Discriminator}";
                     auth.IconUrl = user.GetAvatarUrl();
                     warnings = Database.Warnings(user);
-                }
-                else if (warnings == null)
-                {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
-                }
+                }              
                 else
                 {
                     await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**.");
+                    return;
                 }
             }
             if (warnings.Count > 0)
