@@ -218,6 +218,7 @@ namespace FredBotNETCore
                 await Task.Delay(new Random().Next(300000, 600000));
                 await _client.SetGameAsync($"/help in {_client.Guilds.Count} servers", null, type: ActivityType.Watching);
                 await Task.Delay(new Random().Next(300000, 600000));
+                await _client.DownloadUsersAsync(_client.Guilds);
                 int users = _client.Guilds.Sum(g => g.Users.Count);
                 await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
             }

@@ -2400,6 +2400,10 @@ namespace FredBotNETCore.Modules
                     Database.EnterUser(Context.User);
                 }
                 string pr2name = Database.GetPR2Name(user);
+                if (pr2name == null)
+                {
+                    pr2name = "Not verified";
+                }
                 position = guildUsers.ToList().IndexOf(user);
                 foreach (SocketRole role in user.Roles)
                 {
@@ -2481,99 +2485,85 @@ namespace FredBotNETCore.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ServerInfo()
         {
-            SocketGuild gld = Context.Guild as SocketGuild;
             EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
             {
-                Name = gld.Name,
-                IconUrl = gld.IconUrl,
+                Name = Context.Guild.Name,
+                IconUrl = Context.Guild.IconUrl,
             };
             EmbedBuilder embed = new EmbedBuilder()
             {
                 Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
                 Author = auth
             };
-            string guildName = gld.Name;
-            ulong guildID = gld.Id;
-            SocketGuildUser owner = gld.Owner;
-            DateTimeOffset guildCreatedAt = gld.CreatedAt;
-            string guildRegion = gld.VoiceRegionId;
-            int guildUsers = gld.MemberCount;
-            int guildRoles = gld.Roles.Count;
-            int guildChannels = gld.Channels.Count;
-            int guildHumans = gld.Users.Where(x => x.IsBot == false).Count();
-            int guildBots = gld.Users.Where(x => x.IsBot == true).Count();
-            int guildUsersOnline = gld.Users.Where(x => x.Status == UserStatus.Online || x.Status == UserStatus.Idle || x.Status == UserStatus.DoNotDisturb).Count();
-            string createdMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(gld.CreatedAt.Month);
-            string createdDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(gld.CreatedAt.DayOfWeek);
-            string createdAt = $"{createdDay}, {createdMonth} {gld.CreatedAt.Day}, {gld.CreatedAt.Year} {gld.CreatedAt.DateTime.ToString("h:mm tt")}";
             EmbedFooterBuilder footer = new EmbedFooterBuilder()
             {
                 IconUrl = Context.User.GetAvatarUrl(),
-                Text = $"Server Created | {createdAt}"
+                Text = $"ID: {Context.Guild.Id} | Server Created"
             };
-            embed.AddField(y =>
-            {
-                y.Name = "ID";
-                y.Value = guildID;
-                y.IsInline = true;
-            });
-            embed.AddField(y =>
-            {
-                y.Name = "Name";
-                y.Value = Format.Sanitize(guildName);
-                y.IsInline = true;
-            });
+            await Context.Guild.DownloadUsersAsync();
             embed.AddField(y =>
             {
                 y.Name = "Owner";
-                y.Value = owner.Mention;
+                y.Value = Context.Guild.Owner.Mention;
                 y.IsInline = true;
             });
             embed.AddField(y =>
             {
                 y.Name = "Region";
-                y.Value = guildRegion;
+                y.Value = Context.Guild.VoiceRegionId;
                 y.IsInline = true;
             });
             embed.AddField(y =>
             {
-                y.Name = "Channels";
-                y.Value = guildChannels;
+                y.Name = "Channel Categories";
+                y.Value = Context.Guild.Channels.Where(x => x is SocketCategoryChannel).Count();
+                y.IsInline = true;
+            });
+            embed.AddField(y =>
+            {
+                y.Name = "Text Channels";
+                y.Value = Context.Guild.Channels.Where(x => x is SocketTextChannel).Count();
+                y.IsInline = true;
+            });
+            embed.AddField(y =>
+            {
+                y.Name = "Voice Channels";
+                y.Value = Context.Guild.Channels.Where(x => x is SocketVoiceChannel).Count();
                 y.IsInline = true;
             });
             embed.AddField(y =>
             {
                 y.Name = "Members";
-                y.Value = guildUsers;
+                y.Value = Context.Guild.MemberCount;
                 y.IsInline = true;
             });
             embed.AddField(y =>
             {
                 y.Name = "Humans";
-                y.Value = guildHumans;
+                y.Value = Context.Guild.Users.Where(x => x.IsBot == false).Count();
                 y.IsInline = true;
             });
             embed.AddField(y =>
             {
                 y.Name = "Bots";
-                y.Value = guildBots;
+                y.Value = Context.Guild.Users.Where(x => x.IsBot == true).Count();
                 y.IsInline = true;
             });
             embed.AddField(y =>
             {
                 y.Name = "Online";
-                y.Value = guildUsersOnline;
+                y.Value = Context.Guild.MemberCount - Context.Guild.Users.Where(x => x.Status == UserStatus.Invisible || x.Status == UserStatus.Offline).Count();
                 y.IsInline = true;
             });
             embed.AddField(y =>
             {
                 y.Name = "Roles";
-                y.Value = guildRoles;
+                y.Value = Context.Guild.Roles.Count;
                 y.IsInline = true;
             });
             embed.WithFooter(footer);
             embed.ThumbnailUrl = Context.Guild.IconUrl;
-
+            embed.WithTimestamp(Context.Guild.CreatedAt);
             await ReplyAsync("", false, embed.Build());
         }
 
