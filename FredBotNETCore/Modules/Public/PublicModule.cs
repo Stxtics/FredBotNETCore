@@ -745,7 +745,7 @@ namespace FredBotNETCore.Modules.Public
                                     $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(bubbles))}** instead!");
                             }
                         }
-                        if (finderID != 1)
+                        else if (finderID != 1)
                         {
                             if (Extensions.UserInGuild(null, guild, finderID.ToString()) != null)
                             {
