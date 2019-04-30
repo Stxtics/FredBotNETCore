@@ -16,6 +16,33 @@ namespace FredBotNETCore
             Client = client;
         }
 
+        public async Task OnGuildJoin(SocketGuild guild)
+        {
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = guild.Name,
+                IconUrl = guild.IconUrl
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Author = author,
+                Color = new Color(0, 255, 0),
+            };
+            embed.Description = $"Hi I'm Fred the G. Cactus. Thank you for adding me to this server.\n" +
+                $"For a list of commands type /help.\n" +
+                $"**Note:** Keep in mind the music commands and some of the moderation commands can only be done in the offical server for the bot which is https://discord.gg/kcWBBBj \n" +
+                $"Also the PR2 commands are based off a game which can be played at https://jiggmin2.com/games/platform-racing-2/ and the forums are located at https://jiggmin2.com/forums/ \n" +
+                $"Thanks again for adding me to this server.";
+            try
+            {
+                await guild.DefaultChannel.SendMessageAsync("", false, embed.Build());
+            }
+            catch(Discord.Net.HttpException)
+            {
+                //ignore
+            }
+        }
+
         public async Task AnnounceRoleUpdated(SocketRole role, SocketRole role2)
         {
             if (role.Guild.Id != 528679522707701760)

@@ -289,6 +289,7 @@ namespace FredBotNETCore
             _client.RoleCreated += log.AnnounceRoleCreated;
             _client.RoleDeleted += log.AnnounceRoleDeleted;
             _client.RoleUpdated += log.AnnounceRoleUpdated;
+            _client.JoinedGuild += log.OnGuildJoin;
             _client.Ready += OnReady;
         }
 

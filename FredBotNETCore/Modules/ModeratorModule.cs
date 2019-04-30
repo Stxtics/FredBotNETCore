@@ -933,7 +933,7 @@ namespace FredBotNETCore.Modules
                 return;
             }
             EmbedAuthorBuilder auth = new EmbedAuthorBuilder();
-            List<string> warnings = null;
+            List<string> warnings;
             if (string.IsNullOrWhiteSpace(username))
             {
                 auth.Name = $"Warnings - {Context.Guild.Name}";
