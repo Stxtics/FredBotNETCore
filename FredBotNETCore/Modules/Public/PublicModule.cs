@@ -751,18 +751,21 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 SocketGuildUser user = guild.GetUser(finderID);
                                 await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
-                                    $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!");
+                                    $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!\n" +
+                                    $"The bubble set will be awarded to the first person to find the artifact that doesn't have the set already!");
                             }
                             else
                             {
                                 await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
-                                    $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))}**!");
+                                    $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))}**!\n" +
+                                    $"The bubble set will be awarded to the first person to find the artifact that doesn't have the set already!");
                             }
                         }
                         else
                         {
                             await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
-                                $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))}**!");
+                                $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))}**!\n" +
+                                $"The bubble set will be awarded to the first person to find the artifact that doesn't have the set already!");
                         }
                     }
                 }
