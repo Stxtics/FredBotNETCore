@@ -394,7 +394,7 @@ namespace FredBotNETCore.Modules.Public
                             {
                                 Database.EnterUser(user);
                             }
-                            if (int.Parse(Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + name), "\"rank\":", ",\"hats\":")) < 15)
+                            if (int.Parse(Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + name), "\"rank\":", ",\"hats\":")) < 15)
                             {
                                 await ReplyAsync($"{Context.User.Mention} your PR2 account must be at least rank 15 if you want to link it to your Discord account.");
                             }
@@ -850,7 +850,7 @@ namespace FredBotNETCore.Modules.Public
                                 string pr2info = null;
                                 try
                                 {
-                                    pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2user);
+                                    pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2user);
                                 }
                                 catch (HttpRequestException)
                                 {
@@ -923,7 +923,7 @@ namespace FredBotNETCore.Modules.Public
                         string pr2info = null;
                         try
                         {
-                            pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
+                            pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
                         }
                         catch (HttpRequestException)
                         {
@@ -1025,7 +1025,7 @@ namespace FredBotNETCore.Modules.Public
                     string pr2info = null;
                     try
                     {
-                        pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + id);
+                        pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?user_id=" + id);
                     }
                     catch (HttpRequestException)
                     {
@@ -1142,7 +1142,7 @@ namespace FredBotNETCore.Modules.Public
                         string pr2userinfo;
                         try
                         {
-                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2Name);
+                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2Name);
                         }
                         catch (HttpRequestException)
                         {
@@ -2088,7 +2088,7 @@ namespace FredBotNETCore.Modules.Public
                         string pr2userinfo = null;
                         try
                         {
-                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
+                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
                         }
                         catch (HttpRequestException)
                         {
@@ -2247,7 +2247,7 @@ namespace FredBotNETCore.Modules.Public
                         string pr2userinfo;
                         try
                         {
-                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
+                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
                         }
                         catch (HttpRequestException)
                         {
@@ -2565,7 +2565,7 @@ namespace FredBotNETCore.Modules.Public
         //            return;
         //        }
         //        HttpClient web = new HttpClient();
-        //        string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
+        //        string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
         //        string guild = Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
         //        string id = Extensions.GetBetween(userinfo, "\",\"userId\":\"", "\",\"hatColor2\":");
         //        string guildinfo = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guild);
@@ -2647,7 +2647,7 @@ namespace FredBotNETCore.Modules.Public
         //            return;
         //        }
         //        HttpClient web = new HttpClient();
-        //        string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?name=" + pr2name);
+        //        string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
         //        string guild = Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
         //        IReadOnlyCollection<SocketRole> roles = Context.Guild.Roles;
         //        foreach (IRole role in roles)
