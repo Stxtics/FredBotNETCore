@@ -308,6 +308,10 @@ namespace FredBotNETCore
 
         public async Task LogException(LogMessage message)
         {
+            if (message.Exception.ToString().Contains("Discord.Net.HttpException"))
+            {
+                return;
+            }
             SocketUser user = _client.GetUser(181853112045142016);
             System.Collections.Generic.IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1990);
             foreach (string part in parts)
