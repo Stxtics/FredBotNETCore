@@ -308,10 +308,6 @@ namespace FredBotNETCore
 
         public async Task LogException(LogMessage message)
         {
-            if (message.Exception.ToString().Contains("Discord.Net.HttpException"))
-            {
-                return;
-            }
             SocketUser user = _client.GetUser(181853112045142016);
             System.Collections.Generic.IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1990);
             foreach (string part in parts)
@@ -331,7 +327,7 @@ namespace FredBotNETCore
                 return;
             }
             IMessage message2 = await message.GetOrDownloadAsync();
-            if (message2.Content != msg.Content && msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
+            if (message2.Content != msg.Content && msg.Channel is SocketTextChannel channel)
             {
                 if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
                 {
@@ -357,7 +353,7 @@ namespace FredBotNETCore
                 return;
             }
 
-            if (msg.Channel is SocketGuildChannel && msg.Channel is SocketTextChannel channel)
+            if (msg.Channel is SocketTextChannel channel)
             {
                 if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
                 {
@@ -380,10 +376,22 @@ namespace FredBotNETCore
             int argPos = 0;
             if (msg.HasStringPrefix("/", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
             {
+                if (context.Channel is SocketTextChannel channel)
+                {
+                    if (channel.Guild.CurrentUser.GetPermissions(channel).SendMessages == false)
+                    {
+                        return;
+                    }
+                    else if (channel.Guild.CurrentUser.GetPermissions(channel).EmbedLinks == false)
+                    {
+                        await channel.SendMessageAsync("Error: I am missing permission **Embed Links**.");
+                        return;
+                    }
+                }
                 IResult result = await _cmds.ExecuteAsync(context, argPos, Program._provider);
                 if (result.Error.HasValue && result.Error.Value == CommandError.Exception)
                 {
-                    await context.Channel.SendMessageAsync($"Oh no an error occurred. Details of this error have been sent to {(await _client.GetApplicationInfoAsync()).Owner.Mention} so that he can fix it.");
+                    await context.Channel.SendMessageAsync($"Oh no an error occurred. Details of this error have been sent to **{(await _client.GetApplicationInfoAsync()).Owner.Username}#{(await _client.GetApplicationInfoAsync()).Owner.Discriminator}** so that he can fix it.");
                 }
             }
         }
