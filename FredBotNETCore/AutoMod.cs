@@ -30,7 +30,7 @@ namespace FredBotNETCore
 
         public async Task<bool> MassMention(SocketUserMessage msg, SocketTextChannel channel)
         {
-            if (msg.MentionedUsers.Distinct().Count() + msg.MentionedRoles.Distinct().Where(x => x.IsMentionable == true).Count() >= 10)
+            if (msg.MentionedUsers.Distinct().Where(x => x != msg.Author).Where(x => x.IsBot == false).Count() + msg.MentionedRoles.Distinct().Where(x => x.IsMentionable == true).Count() >= 10)
             {
                 SocketGuildUser user = channel.Guild.GetUser(msg.Author.Id);
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
@@ -165,7 +165,7 @@ namespace FredBotNETCore
                 });
                 return true;
             }
-            else if (msg.MentionedUsers.Distinct().Count() + msg.MentionedRoles.Distinct().Where(x => x.IsMentionable == true).Count() >= 5)
+            else if (msg.MentionedUsers.Distinct().Where(x => x != msg.Author).Where(x => x.IsBot == false).Count() + msg.MentionedRoles.Distinct().Where(x => x.IsMentionable == true).Count() >= 5)
             {
                 return true;
             }
