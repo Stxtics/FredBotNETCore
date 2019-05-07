@@ -1316,12 +1316,10 @@ namespace FredBotNETCore.Modules.Public
                     if (!int.TryParse(lvl, out int level_))
                     {
                         await ReplyAsync($"{Context.User.Mention} that does not seem to be an integer.");
-                        return;
                     }
-                    if (level_ < 0 || level_ > 149)
+                    else if (level_ < 0 || level_ > 149)
                     {
                         await ReplyAsync($"{Context.User.Mention} you can only do a level from 0 to 149");
-                        return;
                     }
                     else
                     {
@@ -1363,44 +1361,43 @@ namespace FredBotNETCore.Modules.Public
                                 if (!int.TryParse(lvl2, out int level_2))
                                 {
                                     await ReplyAsync($"{Context.User.Mention} that does not seem to be an integer.");
-                                    return;
                                 }
-                                else if (level_2 < 0 || level_2 > 100)
+                                else if (level_2 < 0 || level_2 > 150)
                                 {
-                                    await ReplyAsync($"{Context.User.Mention} you can only do a level between 0 and 100");
-                                    return;
+                                    await ReplyAsync($"{Context.User.Mention} you can only do a level from 0 to 149");
                                 }
-                                if (level_ > level_2)
+                                else if (level_ > level_2)
                                 {
                                     await ReplyAsync($"{Context.User.Mention} your EXP can't go down.");
-                                    return;
                                 }
-                                if (level_ == level_2)
+                                else if (level_ == level_2)
                                 {
                                     await ReplyAsync($"{Context.User.Mention} that would just be 0.");
-                                    return;
                                 }
-                                double exp = 0;
-                                for (int i = level_; i < level_2; i++)
+                                else
                                 {
-                                    if (i == 0)
+                                    double exp = 0;
+                                    for (int i = level_; i < level_2; i++)
                                     {
-                                        exp += 1;
+                                        if (i == 0)
+                                        {
+                                            exp += 1;
+                                        }
+                                        else
+                                        {
+                                            exp += Math.Round(Math.Pow(1.25, i) * 30);
+                                        }
                                     }
-                                    else
+                                    embed.WithFooter(footer);
+                                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                     {
-                                        exp += Math.Round(Math.Pow(1.25, i) * 30);
-                                    }
+                                        Name = $"EXP - {level_} to {level_2}"
+                                    };
+                                    embed.WithAuthor(author);
+                                    embed.WithCurrentTimestamp();
+                                    embed.Description = $"**From rank {level_} to rank {level_2} you need {exp.ToString("N0")} EXP.**";
+                                    await ReplyAsync("", false, embed.Build());
                                 }
-                                embed.WithFooter(footer);
-                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                {
-                                    Name = $"EXP - {level_} to {level_2}"
-                                };
-                                embed.WithAuthor(author);
-                                embed.WithCurrentTimestamp();
-                                embed.Description = $"**From rank {level_} to rank {level_2} you need {exp.ToString("N0")} EXP.**";
-                                await ReplyAsync("", false, embed.Build());
                             }
                         }
                         catch (ArgumentException)
