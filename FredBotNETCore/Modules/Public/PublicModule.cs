@@ -1447,9 +1447,9 @@ namespace FredBotNETCore.Modules.Public
             }
             else
             {
-                if (Extensions.RoleInGuild(Context.Message, Context.Guild, roleName) != null)
+                if (Extensions.RoleInGuild(Context.Message, guild, roleName) != null)
                 {
-                    SocketRole role = Extensions.RoleInGuild(Context.Message, Context.Guild, roleName);
+                    SocketRole role = Extensions.RoleInGuild(Context.Message, guild, roleName);
                     string joinableRoles = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"));
                     if (joinableRoles.Contains(role.Id.ToString()))
                     {
