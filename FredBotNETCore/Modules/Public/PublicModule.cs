@@ -1534,8 +1534,8 @@ namespace FredBotNETCore.Modules.Public
             }
         }
 
-        [Command("listjoinableroles")]
-        [Alias("ljr", "listjroles", "joinableroles")]
+        [Command("joinableroles")]
+        [Alias("ljr", "listjroles", "listjoinableroles")]
         [Summary("Lists all joinable roles")]
         public async Task ListJoinableRoles()
         {
@@ -1555,7 +1555,7 @@ namespace FredBotNETCore.Modules.Public
             EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
             {
                 IconUrl = guild.IconUrl,
-                Name = "List Joinable Roles"
+                Name = "Joinable Roles"
             };
             EmbedBuilder embed = new EmbedBuilder()
             {
@@ -1563,24 +1563,19 @@ namespace FredBotNETCore.Modules.Public
                 Author = auth
             };
             string[] joinableRoles = File.ReadAllText(Path.Combine(Extensions.downloadPath, "JoinableRoles.txt")).Split("\n", StringSplitOptions.RemoveEmptyEntries);
-            string joinableRolesS = "";
+            List<string> jRoles = new List<string>();
             foreach (string role in joinableRoles)
             {
-                string currentRole = Context.Guild.GetRole(Convert.ToUInt64(role)).Name;
-                joinableRolesS = joinableRolesS + currentRole + "\n";
+                string currentRole = guild.GetRole(Convert.ToUInt64(role.Split(" - ").First())).Name;
+                jRoles.Add(currentRole + " - " + role.Split(" - ").Last());
             }
-            if (joinableRolesS.Length <= 0)
+            if (jRoles.Count <= 0)
             {
                 await ReplyAsync($"{Context.User.Mention} there are no joinable roles.");
             }
             else
             {
-                embed.AddField(y =>
-                {
-                    y.Name = "Joinable Roles";
-                    y.Value = joinableRolesS;
-                    y.IsInline = false;
-                });
+                embed.Description = string.Join("\n", jRoles.OrderBy(x => x[0]));
                 await ReplyAsync("", false, embed.Build());
             }
         }

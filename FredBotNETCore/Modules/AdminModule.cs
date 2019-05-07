@@ -388,20 +388,20 @@ namespace FredBotNETCore.Modules
         [Summary("Adds a joinable role.")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireContext(ContextType.Guild)]
-        public async Task AddJoinableRole([Remainder] string roleName = null)
+        public async Task AddJoinableRole(string roleName = null, [Remainder] string description = null)
         {
             if (Context.Guild.Id != 528679522707701760)
             {
                 return;
             }
-            if (roleName == null)
+            if (roleName == null || description == null)
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
                 embed.Title = "Command: /addjoinablerole";
-                embed.Description = "**Description:** Add a role that users can add themselves to.\n**Usage:** /addjoinablerole [role]\n**Example:** /addjoinablerole Arti";
+                embed.Description = "**Description:** Add a role that users can add themselves to.\n**Usage:** /addjoinablerole [role] [description]\n**Example:** /addjoinablerole HH Mentioned when there is a happy hour.";
                 await ReplyAsync("", false, embed.Build());
             }
             else
@@ -417,7 +417,7 @@ namespace FredBotNETCore.Modules
                     }
                     else
                     {
-                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"), currentJoinableRoles + role.Id.ToString() + "\n");
+                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"), currentJoinableRoles + role.Id.ToString() + " - " + description + "\n");
                         SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
@@ -477,7 +477,8 @@ namespace FredBotNETCore.Modules
                     string joinableRoles = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"));
                     if (joinableRoles.Contains(role.Id.ToString()))
                     {
-                        joinableRoles = joinableRoles.Replace(role.Id.ToString() + "\n", string.Empty);
+                        string description = Extensions.GetBetween(joinableRoles, role.Id.ToString(), "\n");
+                        joinableRoles = joinableRoles.Replace(role.Id.ToString() + description + "\n", string.Empty);
                         File.WriteAllText(Path.Combine(Extensions.downloadPath, "JoinableRoles.txt"), joinableRoles);
                         SocketTextChannel log = Context.Guild.GetTextChannel(Extensions.GetLogChannel());
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
