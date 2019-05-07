@@ -1318,9 +1318,9 @@ namespace FredBotNETCore.Modules.Public
                         await ReplyAsync($"{Context.User.Mention} that does not seem to be an integer.");
                         return;
                     }
-                    if (level_ < 0 || level_ > 99)
+                    if (level_ < 0 || level_ > 149)
                     {
-                        await ReplyAsync($"{Context.User.Mention} you can only do a level between 0 and 100");
+                        await ReplyAsync($"{Context.User.Mention} you can only do a level from 0 to 149");
                         return;
                     }
                     else
