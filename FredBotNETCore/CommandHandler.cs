@@ -235,7 +235,10 @@ namespace FredBotNETCore
             }
             else
             {
-                await channel.SendMessageAsync($"Artifact hint updated. New hint: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**");
+                options.AuditLogReason = "Announcing hint update";
+                await Guild.Roles.Where(x => x.Name.ToUpper() == "Arti Updates".ToUpper()).First().ModifyAsync(x => x.Mentionable = true, options);
+                await channel.SendMessageAsync($"{Guild.Roles.Where(x => x.Name.ToUpper() == "Arti Updates".ToUpper()).First().Mention} Artifact hint updated. New hint: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**");
+                await Guild.Roles.Where(x => x.Name.ToUpper() == "Arti Updates".ToUpper()).First().ModifyAsync(x => x.Mentionable = false, options);
             }
         }
 
