@@ -748,6 +748,11 @@ namespace FredBotNETCore.Modules.Public
                                         $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(bubbles))}** instead!");
                                 }
                             }
+                            else if (finder == bubbles)
+                            {
+                                await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
+                                        $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(finder))}**!\n");
+                            }
                             else
                             {
                                 await ReplyAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(levelname))}**. Maybe I can remember more later!!\n" +
