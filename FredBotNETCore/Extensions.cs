@@ -287,5 +287,8 @@ namespace FredBotNETCore
                 await user.SendMessageAsync("```" + part + "```");
             }
         }
+
+        public static string[] BlacklistedUrls { get; set; } = File.ReadAllText(Path.Combine(downloadPath, "BlacklistedUrls.txt")).Split("\n");
+        public static string[] BannedWords { get; set; } = File.ReadAllText(Path.Combine(downloadPath, "BlacklistedWords.txt")).Split("\n");
     }
 }

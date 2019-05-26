@@ -13,6 +13,8 @@ namespace FredBotNETCore
     {
         public DiscordSocketClient Client { get; set; }
 
+        readonly Regex rx = new Regex(File.ReadAllText(Path.Combine(Extensions.downloadPath, "UnicodeRegex.txt")));
+
         public AutoMod(DiscordSocketClient client)
         {
             Client = client;
@@ -173,8 +175,7 @@ namespace FredBotNETCore
         }
 
         public bool EmojiSpam(SocketUserMessage msg)
-        {
-            Regex rx = new Regex(File.ReadAllText(Path.Combine(Extensions.downloadPath, "UnicodeRegex.txt")));
+        {           
             if (msg.Tags.Count(x => x.Type == TagType.Emoji) + rx.Matches(msg.Content).Count >= 5)
             {
                 return true;
@@ -184,7 +185,7 @@ namespace FredBotNETCore
 
         public bool BlacklistedUrl(SocketUserMessage msg)
         {
-            string[] blacklistedUrls = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt")).Split("\n");
+            string[] blacklistedUrls = Extensions.BlacklistedUrls;
             foreach (string blacklistedUrl in blacklistedUrls)
             {
                 if (blacklistedUrl.Length > 0 && msg.Content.Contains(blacklistedUrl, StringComparison.InvariantCultureIgnoreCase))
@@ -197,10 +198,10 @@ namespace FredBotNETCore
 
         public bool BlacklistedWord(SocketUserMessage msg)
         {
-            string[] bannedwords = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt")).Split("\n");
-            foreach (string bannedword in bannedwords)
+            string[] bannedWords = Extensions.BannedWords;
+            foreach (string bannedWord in bannedWords)
             {
-                if (bannedword.Length > 0 && msg.Content.Contains(bannedword, StringComparison.InvariantCultureIgnoreCase))
+                if (bannedWord.Length > 0 && msg.Content.Contains(bannedWord, StringComparison.InvariantCultureIgnoreCase))
                 {
                     return true;
                 }

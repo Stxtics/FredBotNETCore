@@ -172,7 +172,7 @@ namespace FredBotNETCore.Modules
                 }
                 else
                 {
-                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**. If this user is not in PRG contact Stxtics#0001.");
+                    await ReplyAsync($"{Context.User.Mention} I could not find user with name or ID **{Format.Sanitize(username)}**. If this user is not in the server contact Stxtics#0001.");
                 }
             }
             else
@@ -851,6 +851,7 @@ namespace FredBotNETCore.Modules
                             embed.Description = $"{Context.User.Mention} blacklisted **{count}** words.";
                             await ReplyAsync($"{Context.User.Mention} you have successfully blacklisted **{count}** words.");
                         }
+                        Extensions.BannedWords = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt")).Split("\n");
                         await log.SendMessageAsync("", false, embed.Build());
                     }
                 }
@@ -933,6 +934,7 @@ namespace FredBotNETCore.Modules
                             embed.Description = $"{Context.User.Mention} unblacklisted **{count}** words.";
                             await ReplyAsync($"{Context.User.Mention} you have successfully unblacklisted **{count}** words.");
                         }
+                        Extensions.BannedWords = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedWords.txt")).Split("\n");
                         await log.SendMessageAsync("", false, embed.Build());
                     }
                 }
@@ -1063,6 +1065,7 @@ namespace FredBotNETCore.Modules
                             embed.Description = $"{Context.User.Mention} blacklisted **{count}** URLs.";
                             await ReplyAsync($"{Context.User.Mention} you have successfully blacklisted **{count}** URLs.");
                         }
+                        Extensions.BlacklistedUrls = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt")).Split("\n");
                         await log.SendMessageAsync("", false, embed.Build());
                     }
                 }
@@ -1145,6 +1148,7 @@ namespace FredBotNETCore.Modules
                             embed.Description = $"{Context.User.Mention} unblacklisted **{count}** URLs.";
                             await ReplyAsync($"{Context.User.Mention} you have successfully unblacklisted **{count}** URLs.");
                         }
+                        Extensions.BlacklistedUrls = File.ReadAllText(Path.Combine(Extensions.downloadPath, "BlacklistedUrls.txt")).Split("\n");
                         await log.SendMessageAsync("", false, embed.Build());
                     }
                 }
@@ -1476,7 +1480,7 @@ namespace FredBotNETCore.Modules
 
         [Command("logchannel", RunMode = RunMode.Async)]
         [Alias("updatelogchannel", "setlogchannel")]
-        [Summary("Sets the log channel for JV")]
+        [Summary("Sets the log channel")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task SetLogChannel([Remainder] string text = null)
@@ -1543,7 +1547,7 @@ namespace FredBotNETCore.Modules
 
         [Command("notificationschannel", RunMode = RunMode.Async)]
         [Alias("updatenotificationschannel", "setnotificationschannel")]
-        [Summary("Sets the log channel for PRG")]
+        [Summary("Sets the notifications channel")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task SetNotificationsChannel([Remainder] string text = null)
