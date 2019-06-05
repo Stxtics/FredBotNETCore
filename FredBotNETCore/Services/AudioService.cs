@@ -261,7 +261,7 @@ namespace FredBotNETCore.Services
 
         public async Task AddAsync(SocketCommandContext context, [Remainder] string url)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -511,7 +511,7 @@ namespace FredBotNETCore.Services
 
         public async Task ShowQueueAsync(SocketCommandContext context)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -575,7 +575,7 @@ namespace FredBotNETCore.Services
 
         public async Task QueueLoopsAsync(SocketCommandContext context)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -602,7 +602,7 @@ namespace FredBotNETCore.Services
 
         public async Task PauseMusicAsync(SocketCommandContext context)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -641,7 +641,7 @@ namespace FredBotNETCore.Services
 
         public async Task ResumeAsync(SocketCommandContext context)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -676,7 +676,7 @@ namespace FredBotNETCore.Services
 
         public async Task PlayAsync(SocketCommandContext context, [Remainder] string url)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -708,7 +708,7 @@ namespace FredBotNETCore.Services
 
         public async Task QueueRemoveAsync(SocketCommandContext context, string position)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -750,7 +750,7 @@ namespace FredBotNETCore.Services
 
         public async Task QueueClearAsync(SocketCommandContext context)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -782,7 +782,7 @@ namespace FredBotNETCore.Services
 
         public async Task ComeAsync(SocketCommandContext context)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -811,7 +811,7 @@ namespace FredBotNETCore.Services
 
         public async Task SkipSongAsync(SocketCommandContext context)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -870,7 +870,7 @@ namespace FredBotNETCore.Services
 
         public async Task ForceSkipAsync(SocketCommandContext context)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -904,7 +904,7 @@ namespace FredBotNETCore.Services
 
         public async Task NPAsync(SocketCommandContext context)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -991,7 +991,7 @@ namespace FredBotNETCore.Services
 
         public async Task StopAsync(SocketCommandContext context)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -1023,7 +1023,7 @@ namespace FredBotNETCore.Services
 
         public async Task VolumeAsync(SocketCommandContext context, int volume)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {
@@ -1059,7 +1059,7 @@ namespace FredBotNETCore.Services
 
         public async Task SeekAsync(SocketCommandContext context, string seconds)
         {
-            if (context.Channel.Id == 528696379325808655 || context.Channel.Id == 528692074917134346)
+            if (Extensions.MusicChannels().Contains(context.Channel.Id))
             {
                 if (Blacklisted(context.User))
                 {

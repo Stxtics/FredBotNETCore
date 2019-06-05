@@ -278,6 +278,20 @@ namespace FredBotNETCore
             return channels;
         }
 
+        public static List<ulong> MusicChannels()
+        {
+            List<ulong> channels = new List<ulong>();
+            StreamReader allowedChannels = new StreamReader(path: Path.Combine(downloadPath, "MusicChannels.txt"));
+            string channel = allowedChannels.ReadLine();
+            while (channel != null)
+            {
+                channels.Add(ulong.Parse(channel));
+                channel = allowedChannels.ReadLine();
+            }
+            allowedChannels.Close();
+            return channels;
+        }
+
         public static async Task LogError(DiscordSocketClient client, string error)
         {
             SocketUser user = client.GetUser(181853112045142016);
