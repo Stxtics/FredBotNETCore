@@ -209,7 +209,7 @@ namespace FredBotNETCore.Modules
 
         [Command("removeallowedchannel", RunMode = RunMode.Async)]
         [Alias("delallowedchannel", "allowedchanneldel", "allowedchannelremove", "removepr2channel")]
-        [Summary("Unblacklist a URL from being said on the server.")]
+        [Summary("Remove a channel that PR2 commands can be done in.")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireContext(ContextType.Guild)]
         public async Task RemoveAllowedChannel([Remainder] string channel = null)
@@ -225,6 +225,36 @@ namespace FredBotNETCore.Modules
         public async Task ListAllowedChannels()
         {
             await adminService.ListAllowedChannelsAsync(Context);
+        }
+
+        [Command("addmusicchannel", RunMode = RunMode.Async)]
+        [Alias("musicchanneladd", "addaudiochannel")]
+        [Summary("Add a channel that Music commands can be done in.")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireContext(ContextType.Guild)]
+        public async Task AddMusicChannel([Remainder] string channel = null)
+        {
+            await adminService.AddMusicChannelAsync(Context, channel);
+        }
+
+        [Command("removemusicchannel", RunMode = RunMode.Async)]
+        [Alias("delmusicchannel", "musicchanneldel", "musicchannelremove", "removemusicchannel")]
+        [Summary("Remove a channel that Music commands can be done in.")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireContext(ContextType.Guild)]
+        public async Task RemoveMusicChannel([Remainder] string channel = null)
+        {
+            await adminService.RemoveMusicChannelAsync(Context, channel);
+        }
+
+        [Command("listmusicchannels", RunMode = RunMode.Async)]
+        [Alias("musicchannelslist", "listaudiochannels", "musicchannels")]
+        [Summary("Lists all the channels that Music commands can be done in.")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireContext(ContextType.Guild)]
+        public async Task ListMusicChannels()
+        {
+            await adminService.ListMusicChannelsAsync(Context);
         }
 
         [Command("logchannel", RunMode = RunMode.Async)]

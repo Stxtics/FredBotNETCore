@@ -1370,6 +1370,265 @@ namespace FredBotNETCore.Services
             }
         }
 
+        public async Task AddMusicChannelAsync(SocketCommandContext context, [Remainder] string text)
+        {
+            if (context.Guild.Id == 528679522707701760)
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /addmusicchannel";
+                    embed.Description = "**Description:** Add a channel that PR2 commands can be done in.\n**Usage:** /addmusicchannel [name, id, mention]\n**Example:** /addmusicchannel bot-commands";
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    string[] channels = text.Split(", ", StringSplitOptions.RemoveEmptyEntries);
+                    int count = 0;
+                    bool allowed = false, exists = false, textChannel = false;
+                    foreach (string channelName in channels)
+                    {
+                        if (Extensions.ChannelInGuild(context.Message, context.Guild, channelName) != null)
+                        {
+                            SocketGuildChannel channel = Extensions.ChannelInGuild(context.Message, context.Guild, channelName);
+                            if (channel is SocketTextChannel)
+                            {
+                                string currentAllowedChannels = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "MusicChannels.txt"));
+                                if (!currentAllowedChannels.Contains(channel.Id.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    File.WriteAllText(Path.Combine(Extensions.downloadPath, "MusicChannels.txt"), currentAllowedChannels + channel.Id.ToString() + "\n");
+                                    count++;
+                                }
+                                else if (channels.Count() == 1)
+                                {
+                                    await context.Channel.SendMessageAsync($"{context.User.Mention} the channel **{Format.Sanitize(channel.Name)}** is already an allowed channel for Music commands.");
+                                }
+                                else
+                                {
+                                    allowed = true;
+                                }
+                            }
+                            else if (channels.Count() == 1)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} the channel **{Format.Sanitize(channel.Name)}** is not a text channel.");
+                            }
+                            else
+                            {
+                                textChannel = true;
+                            }
+                        }
+                        else if (channels.Count() == 1)
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} the channel with name or ID **{Format.Sanitize(text)}** does not exist or could not be found.");
+                        }
+                        else
+                        {
+                            exists = true;
+                        }
+                    }
+                    if (allowed)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} 1 or more channels are already allowed for Music commands.");
+                    }
+                    else if (exists)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} 1 or more channels do not exist or could not be found.");
+                    }
+                    else if (textChannel)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} 1 or more channels are not text channels.");
+                    }
+                    else if (count > 0)
+                    {
+                        SocketTextChannel log = context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = "Music Channel Add",
+                            IconUrl = context.Guild.IconUrl
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = $"ID: {context.User.Id}",
+                            IconUrl = context.User.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(255, 0, 0),
+                            Footer = footer
+                        };
+                        embed.WithCurrentTimestamp();
+                        if (count == 1)
+                        {
+                            embed.Description = $"{context.User.Mention} allowed the channel **{Format.Sanitize(text)}** for Music commands.";
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} you have successfully allowed the channel **{Format.Sanitize(text)}** for Music commands.");
+                        }
+                        else
+                        {
+                            embed.Description = $"{context.User.Mention} allowed **{count}** channels for Music commands.";
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} you have successfully allowed **{count}** channels for Music commands.");
+                        }
+                        await log.SendMessageAsync("", false, embed.Build());
+                    }
+                }
+            }
+        }
+
+        public async Task RemoveMusicChannelAsync(SocketCommandContext context, [Remainder] string text)
+        {
+            if (context.Guild.Id == 528679522707701760)
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    embed.Title = "Command: /removemusicchannel";
+                    embed.Description = "**Description:** Remove a channel that PR2 commands can be done in.\n**Usage:** /removemusicchannel [name, id, mention]\n**Example:** /removemusicchannel announcements";
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    string[] channels = text.Split(", ", StringSplitOptions.RemoveEmptyEntries);
+                    int count = 0;
+                    bool allowed = false, exists = false, textChannel = false;
+                    foreach (string channelName in channels)
+                    {
+                        if (Extensions.ChannelInGuild(context.Message, context.Guild, channelName) != null)
+                        {
+                            SocketGuildChannel channel = Extensions.ChannelInGuild(context.Message, context.Guild, channelName);
+                            if (channel is SocketTextChannel)
+                            {
+                                string currentAllowedChannels = File.ReadAllText(path: Path.Combine(Extensions.downloadPath, "MusicChannels.txt"));
+                                if (currentAllowedChannels.Contains(channel.Id.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    currentAllowedChannels = currentAllowedChannels.Replace(channel.Id.ToString() + "\n", string.Empty);
+                                    File.WriteAllText(Path.Combine(Extensions.downloadPath, "MusicChannels.txt"), currentAllowedChannels);
+                                    count++;
+                                }
+                                else if (channels.Count() == 1)
+                                {
+                                    await context.Channel.SendMessageAsync($"{context.User.Mention} the channel **{Format.Sanitize(channel.Name)}** is not an allowed channel for Music commands.");
+                                }
+                                else
+                                {
+                                    allowed = true;
+                                }
+                            }
+                            else if (channels.Count() == 1)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} the channel **{Format.Sanitize(channel.Name)}** is not a text channel.");
+                            }
+                            else
+                            {
+                                textChannel = true;
+                            }
+                        }
+                        else if (channels.Count() == 1)
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} the channel with name or ID **{Format.Sanitize(text)}** does not exist or could not be found.");
+                        }
+                        else
+                        {
+                            exists = true;
+                        }
+                    }
+                    if (allowed)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} 1 or more channels are already not allowed for Music commands.");
+                    }
+                    else if (exists)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} 1 or more channels do not exist or could not be found.");
+                    }
+                    else if (textChannel)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} 1 or more channels are not text channels.");
+                    }
+                    else if (count > 0)
+                    {
+                        SocketTextChannel log = context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = "Music Channel Remove",
+                            IconUrl = context.Guild.IconUrl
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = $"ID: {context.User.Id}",
+                            IconUrl = context.User.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(0, 255, 0),
+                            Footer = footer
+                        };
+                        embed.WithCurrentTimestamp();
+                        if (count == 1)
+                        {
+                            embed.Description = $"{context.User.Mention} disallowed the channel **{Format.Sanitize(text)}** for Music commands.";
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} you have successfully disallowed the channel **{Format.Sanitize(text)}** for Music commands.");
+                        }
+                        else
+                        {
+                            embed.Description = $"{context.User.Mention} disallowed **{count}** channels for Music commands.";
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} you have successfully disallowed **{count}** channels for Music commands.");
+                        }
+                        await log.SendMessageAsync("", false, embed.Build());
+                    }
+                }
+            }
+        }
+
+        public async Task ListMusicChannelsAsync(SocketCommandContext context)
+        {
+            if (context.Guild.Id == 528679522707701760)
+            {
+                StreamReader allowedChannels = new StreamReader(path: Path.Combine(Extensions.downloadPath, "MusicChannels.txt"));
+                EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
+                {
+                    IconUrl = context.Guild.IconUrl,
+                    Name = "List Music Channels"
+                };
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)),
+                    Author = auth
+                };
+                string currentAllowedChannels = "";
+                string channel = allowedChannels.ReadLine();
+                while (channel != null)
+                {
+                    currentAllowedChannels = currentAllowedChannels + Format.Sanitize(context.Guild.GetTextChannel(ulong.Parse(channel)).Name) + "\n";
+                    channel = allowedChannels.ReadLine();
+                }
+                allowedChannels.Close();
+                if (currentAllowedChannels.Length <= 0)
+                {
+                    await context.Channel.SendMessageAsync($"{context.User.Mention} there are no Music Channels.");
+                }
+                else
+                {
+                    embed.AddField(y =>
+                    {
+                        y.Name = "Allowed Channels";
+                        y.Value = currentAllowedChannels;
+                        y.IsInline = false;
+                    });
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
         public async Task SetLogChannelAsync(SocketCommandContext context, [Remainder] string text)
         {
             if (context.Guild.Id == 528679522707701760)
