@@ -7,7 +7,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Victoria;
@@ -16,35 +16,30 @@ namespace FredBotNETCore
 {
     public class Program
     {
-
-        #region Fields
-
         private DiscordSocketClient _client;
-        private CommandHandler _commands;
-        private Lavalink _lavaLink;
-        public static ServiceProvider _provider;
-        private bool running = false;
-        private bool retryConnection = false;
-        private readonly string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
+        private CommandService _cmds;
+        private IServiceProvider _services;
+        private bool _retryConnection;
+        private bool _running;
+        public static Lavalink _lavaLink;
 
-        #endregion
+        private static readonly System.Threading.Mutex INSTANCE_MUTEX = new System.Threading.Mutex(true, "FredBotNETCore");
 
-        #region Startup
-
-        // Convert sync main to an async main.
-#pragma warning disable IDE0060 // Remove unused parameter
-        public static void Main(string[] args)
-#pragma warning restore IDE0060 // Remove unused parameter
+        private static void Main(string[] args)
         {
-            new Program().Start().GetAwaiter().GetResult();
+            if (!INSTANCE_MUTEX.WaitOne(TimeSpan.Zero, false))
+            {
+                Console.WriteLine("Already running");
+                return;
+            }
+            Program app = new Program();
+            app.RunAsync().GetAwaiter().GetResult();
         }
-
-        public async Task Start()
+        public async Task RunAsync()
         {
             if (_client != null)
             {
-                if (_client.ConnectionState == ConnectionState.Connecting ||
-                _client.ConnectionState == ConnectionState.Connected)
+                if (_client.ConnectionState == ConnectionState.Connecting || _client.ConnectionState == ConnectionState.Connected)
                 {
                     return;
                 }
@@ -53,33 +48,50 @@ namespace FredBotNETCore
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 MessageCacheSize = 100,
-                LogLevel = LogSeverity.Verbose,
+                LogLevel = LogSeverity.Verbose
             });
-            _provider = ConfigureServices();
-            _client.Log += Log;
-            _lavaLink = _provider.GetRequiredService<Lavalink>();
+
+            _cmds = new CommandService(new CommandServiceConfig
+            {
+                CaseSensitiveCommands = false,
+                DefaultRunMode = RunMode.Async
+            });
+
+            _services = InstallServices();
+            _lavaLink = _services.GetRequiredService<Lavalink>();
             _lavaLink.Log += Log;
-            _commands = new CommandHandler();
-            running = false;
-            retryConnection = true;
+            
+            _retryConnection = true;
+            _running = false;
 
             while (true)
             {
                 try
                 {
-                    await _client.LoginAsync(tokenType: TokenType.Bot, token: new StreamReader(path: Path.Combine(downloadPath, "Token.txt")).ReadLine());
+                    string token = File.ReadAllText(Path.Combine(Extensions.downloadPath, "Token.txt"));
+                    await _client.LoginAsync(TokenType.Bot, token);
                     await _client.StartAsync();
 
-                    Task.WaitAny(Task.Factory.StartNew(() => CheckStatus(_client)), Task.Factory.StartNew(() => GameLoop()), Task.Factory.StartNew(async () => await _commands.Install(_client, _lavaLink, _provider)));
 
-                    running = true;
+                    Task.WaitAny(Task.Factory.StartNew(() => NotificationsHandler.CheckStatus(_client)), Task.Factory.StartNew(() => GameLoop()), Task.Factory.StartNew(() => InstallCommands()));
+
+                    _running = true;
 
                     break;
+                }
+                catch (FileNotFoundException)
+                {
+                    await Log(new LogMessage(LogSeverity.Error, "RunAsync", "Token file not found."));
+                    if (_retryConnection == false)
+                    {
+                        return;
+                    }
+                    await Task.Delay(1000);
                 }
                 catch
                 {
                     await Log(new LogMessage(LogSeverity.Error, "RunAsync", "Failed to connect."));
-                    if (retryConnection == false)
+                    if (_retryConnection == false)
                     {
                         return;
                     }
@@ -87,122 +99,178 @@ namespace FredBotNETCore
                 }
             }
 
-            while (running) { await Task.Delay(1000); }
+            while (_running) { await Task.Delay(1000); }
 
-            if (_client.ConnectionState == ConnectionState.Connecting ||
-                _client.ConnectionState == ConnectionState.Connected)
+            if (_client.ConnectionState == ConnectionState.Connecting || _client.ConnectionState == ConnectionState.Connected)
             {
                 try { _client.StopAsync().Wait(); }
                 catch { }
             }
         }
 
-        private ServiceProvider ConfigureServices()
+        public async Task CancelAsync()
         {
-            return new ServiceCollection()
-                .AddSingleton(_client)
-                .AddSingleton(new CommandService(new CommandServiceConfig { CaseSensitiveCommands = false, DefaultRunMode = RunMode.Async }))
-                .AddSingleton<Lavalink>()
-                .AddSingleton<AudioService>()
-                .BuildServiceProvider();
-
+            _retryConnection = false;
+            await Task.Delay(0);
         }
 
-        #endregion
-
-        #region Timer Loop
-
-        public static async Task CheckStatus(DiscordSocketClient client)
+        public async Task StopAsync()
         {
-            HttpClient web = new HttpClient();
-            string hint = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "{\"hint\":\"", "\",\"finder_name\":\"");
-            string finder = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"finder_name\":\"", "\",\"bubbles_name\":\"");
-            string bubbles = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"bubbles_name\":\"", "\",\"updated_time\":");
-            string time = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"updated_time\":", "}");
-            bool valid = false;
-            while (true)
+            if (_running)
             {
-                try
+                _running = false;
+            }
+
+            await Task.Delay(0);
+        }
+
+        private IServiceProvider InstallServices()
+        {
+            ServiceCollection services = new ServiceCollection();
+
+            services.AddSingleton<AdminService>();
+            services.AddSingleton<AudioService>();
+            services.AddSingleton<ModeratorService>();
+            services.AddSingleton<PublicService>();
+            services.AddSingleton<Lavalink>();
+
+            return services.BuildServiceProvider();
+        }
+
+        private async Task InstallCommands()
+        {
+
+            if (_client.LoginState != LoginState.LoggedIn)
+            {
+                return;
+            }
+
+            _cmds.Log += LogException;
+
+            _client.MessageReceived += OnMessageReceived;
+
+            _client.Ready += OnReady;
+
+            ActionLog log = new ActionLog(_client);
+
+            _client.MessageUpdated += OnMessageEdited;
+            _client.UserJoined += log.AnnounceUserJoined;
+            _client.UserLeft += log.AnnounceUserLeft;
+            _client.UserBanned += log.AnnounceUserBanned;
+            _client.UserUnbanned += log.AnnounceUserUnbanned;
+            _client.MessageDeleted += log.AnnounceMessageDeleted;
+            _client.GuildMemberUpdated += log.AnnounceGuildMemberUpdated;
+            _client.ChannelCreated += log.AnnounceChannelCreated;
+            _client.ChannelDestroyed += log.AnnounceChannelDestroyed;
+            _client.ChannelUpdated += log.AnnounceChannelUpdated;
+            _client.RoleCreated += log.AnnounceRoleCreated;
+            _client.RoleDeleted += log.AnnounceRoleDeleted;
+            _client.RoleUpdated += log.AnnounceRoleUpdated;
+            _client.JoinedGuild += log.OnGuildJoin;
+            _client.Log += Log;
+
+            LavaNode node = await _lavaLink.AddNodeAsync(_client, new Configuration
+            {
+                Severity = LogSeverity.Info
+            }).ConfigureAwait(false);
+            node.TrackFinished += AudioService.OnFinished;
+
+            await _cmds.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+        }
+
+        private async Task OnReady()
+        {
+            int users = _client.Guilds.Sum(g => g.MemberCount);
+            await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
+        }
+
+
+        public async Task LogException(LogMessage message)
+        {
+            SocketUser user = _client.GetUser(181853112045142016);
+            System.Collections.Generic.IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1990);
+            foreach (string part in parts)
+            {
+                await user.SendMessageAsync("```" + part + "```");
+            }
+        }
+
+        public async Task OnMessageEdited(Cacheable<IMessage, ulong> message, SocketMessage m, ISocketMessageChannel chl)
+        {
+            if (!(m is SocketUserMessage msg))
+            {
+                return;
+            }
+            if (msg.Author.IsBot)
+            {
+                return;
+            }
+            IMessage message2 = await message.GetOrDownloadAsync();
+            if (message2.Content != msg.Content && msg.Channel is SocketTextChannel channel)
+            {
+                if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(10));
-                    #region HH
-                    string status = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
-                    string[] servers = status.Split('}');
-                    string happyHour = "", guildId = "";
-
-                    foreach (string server_name in servers)
+                    if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false)))
                     {
-                        guildId = Extensions.GetBetween(server_name, "guild_id\":\"", "\"");
-                        if (guildId.Equals("0"))
-                        {
-                            happyHour = Extensions.GetBetween(server_name, "happy_hour\":\"", "\"");
-                            string serverName = Extensions.GetBetween(server_name, "server_name\":\"", "\"");
-                            if (!serverName.Equals("Tournament"))
-                            {
-                                if (happyHour.Equals("1"))
-                                {
-                                    await CommandHandler.CheckStatusAsync(true, serverName);
-                                }
-                                else
-                                {
-                                    await CommandHandler.CheckStatusAsync(false, serverName);
-                                }
-                            }
-                        }
+                        AutoMod mod = new AutoMod(_client);
+                        await mod.FilterMessage(msg, channel);
                     }
-
-                    #endregion
-
-                    #region Arti
-                    string artifactHint = await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt");
-                    if (!hint.Equals(Extensions.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"")))
-                    {
-                        hint = Extensions.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"");
-                        if (!time.Equals(Extensions.GetBetween(artifactHint, "\",\"updated_time\":", "}")))
-                        {
-                            time = Extensions.GetBetween(artifactHint, "\",\"updated_time\":", "}");
-                            valid = true;
-                        }
-                        if (valid)
-                        {
-                            await CommandHandler.AnnouceHintUpdatedAsync(hint, true);
-                            valid = false;
-                        }
-                        else
-                        {
-                            await CommandHandler.AnnouceHintUpdatedAsync(hint, false);
-                        }
-                    }
-                    if (!finder.Equals(Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"bubbles_name\":\"")))
-                    {
-                        finder = Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"bubbles_name\":\"");
-                        bubbles = Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":");
-                        if (finder.Length > 0 && finder == bubbles)
-                        {
-                            await CommandHandler.AnnounceArtifactFoundAsync(finder, true);
-                        }
-                        else if (finder.Length > 0)
-                        {
-                            await CommandHandler.AnnounceArtifactFoundAsync(finder);
-                        }
-                    }
-                    if (!bubbles.Equals(Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":")))
-                    {
-                        bubbles = Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":");
-                        if (bubbles.Length > 0)
-                        {
-                            await CommandHandler.AnnounceBubblesAwardedAsync(bubbles);
-                        }
-                    }
-                    #endregion
                 }
-                catch (HttpRequestException)
+            }
+        }
+
+        public async Task OnMessageReceived(SocketMessage m)
+        {
+            if (!(m is SocketUserMessage msg))
+            {
+                return;
+            }
+
+            bool badMessage = false;
+            if (msg.Author.IsBot)
+            {
+                return;
+            }
+
+            if (msg.Channel is SocketTextChannel channel)
+            {
+                if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
                 {
-                    //failed to connect
+                    if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false)))
+                    {
+                        AutoMod mod = new AutoMod(_client);
+                        badMessage = await mod.FilterMessage(msg, channel);
+                    }
                 }
-                catch (Exception e)
+            }
+            if (!badMessage)
+            {
+                await HandleCommand(msg);
+            }
+        }
+
+        public async Task HandleCommand(SocketUserMessage msg)
+        {
+            SocketCommandContext context = new SocketCommandContext(_client, msg);
+            int argPos = 0;
+            if (msg.HasStringPrefix("/", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
+            {
+                if (context.Channel is SocketTextChannel channel)
                 {
-                    await Extensions.LogError(client, e.Message + e.StackTrace);
+                    if (channel.Guild.CurrentUser.GetPermissions(channel).SendMessages == false)
+                    {
+                        return;
+                    }
+                    else if (channel.Guild.CurrentUser.GetPermissions(channel).EmbedLinks == false)
+                    {
+                        await channel.SendMessageAsync("Error: I am missing permission **Embed Links**.");
+                        return;
+                    }
+                }
+                IResult result = await _cmds.ExecuteAsync(context, argPos, _services);
+                if (!result.IsSuccess || result.Error.HasValue && result.Error.Value == CommandError.Exception)
+                {
+                    await context.Channel.SendMessageAsync($"Oh no an error occurred. Details of this error have been sent to **{(await _client.GetApplicationInfoAsync()).Owner.Username}#{(await _client.GetApplicationInfoAsync()).Owner.Discriminator}** so that he can fix it.");
                 }
             }
         }
@@ -232,15 +300,10 @@ namespace FredBotNETCore
                 await Task.Delay(new Random().Next(300000, 600000));
                 await _client.SetGameAsync($"/help in {_client.Guilds.Count} servers", null, type: ActivityType.Watching);
                 await Task.Delay(new Random().Next(300000, 600000));
-                await _client.DownloadUsersAsync(_client.Guilds);
-                int users = _client.Guilds.Sum(g => g.Users.Count);
+                int users = _client.Guilds.Sum(g => g.MemberCount);
                 await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
             }
         }
-
-        #endregion
-
-        #region Log
 
         private Task Log(LogMessage msg)
         {
@@ -272,22 +335,5 @@ namespace FredBotNETCore
 
             return Task.CompletedTask;
         }
-
-#pragma warning disable IDE0060 // Remove unused parameter
-        internal static Task Start(object workingDirectly, object friendlyName)
-#pragma warning restore IDE0060 // Remove unused parameter
-        {
-            throw new NotImplementedException();
-        }
-
-#pragma warning disable IDE0060 // Remove unused parameter
-        internal static Task Start(string v)
-#pragma warning restore IDE0060 // Remove unused parameter
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
     }
 }

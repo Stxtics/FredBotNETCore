@@ -1,22 +1,111 @@
 ﻿using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
-using FredBotNETCore.Services;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
+using System.Net.Http;
 using System.Threading.Tasks;
-using Victoria;
 
 namespace FredBotNETCore
 {
-    public class CommandHandler
+    public static class NotificationsHandler
     {
-        private CommandService _cmds;
-        public static DiscordSocketClient _client;
-        public static Lavalink _lavaLink;
+        private static DiscordSocketClient _client;
+        public static async Task CheckStatus(DiscordSocketClient client)
+        {
+            _client = client;
+            HttpClient web = new HttpClient();
+            string hint = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "{\"hint\":\"", "\",\"finder_name\":\"");
+            string finder = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"finder_name\":\"", "\",\"bubbles_name\":\"");
+            string bubbles = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"bubbles_name\":\"", "\",\"updated_time\":");
+            string time = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"updated_time\":", "}");
+            bool valid = false;
+            while (true)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(10));
+                    #region HH
+                    string status = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
+                    string[] servers = status.Split('}');
+                    string happyHour = "", guildId = "";
+
+                    foreach (string server_name in servers)
+                    {
+                        guildId = Extensions.GetBetween(server_name, "guild_id\":\"", "\"");
+                        if (guildId.Equals("0"))
+                        {
+                            happyHour = Extensions.GetBetween(server_name, "happy_hour\":\"", "\"");
+                            string serverName = Extensions.GetBetween(server_name, "server_name\":\"", "\"");
+                            if (!serverName.Equals("Tournament"))
+                            {
+                                if (happyHour.Equals("1"))
+                                {
+                                    await CheckStatusAsync(true, serverName);
+                                }
+                                else
+                                {
+                                    await CheckStatusAsync(false, serverName);
+                                }
+                            }
+                        }
+                    }
+
+                    #endregion
+
+                    #region Arti
+                    string artifactHint = await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt");
+                    if (!hint.Equals(Extensions.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"")))
+                    {
+                        hint = Extensions.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"");
+                        if (!time.Equals(Extensions.GetBetween(artifactHint, "\",\"updated_time\":", "}")))
+                        {
+                            time = Extensions.GetBetween(artifactHint, "\",\"updated_time\":", "}");
+                            valid = true;
+                        }
+                        if (valid)
+                        {
+                            await AnnouceHintUpdatedAsync(hint, true);
+                            valid = false;
+                        }
+                        else
+                        {
+                            await AnnouceHintUpdatedAsync(hint, false);
+                        }
+                    }
+                    if (!finder.Equals(Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"bubbles_name\":\"")))
+                    {
+                        finder = Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"bubbles_name\":\"");
+                        bubbles = Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":");
+                        if (finder.Length > 0 && finder == bubbles)
+                        {
+                            await AnnounceArtifactFoundAsync(finder, true);
+                        }
+                        else if (finder.Length > 0)
+                        {
+                            await AnnounceArtifactFoundAsync(finder);
+                        }
+                    }
+                    if (!bubbles.Equals(Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":")))
+                    {
+                        bubbles = Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":");
+                        if (bubbles.Length > 0)
+                        {
+                            await AnnounceBubblesAwardedAsync(bubbles);
+                        }
+                    }
+                    #endregion
+                }
+                catch (HttpRequestException)
+                {
+                    //failed to connect
+                }
+                catch (Exception e)
+                {
+                    await Extensions.LogError(client, e.Message + e.StackTrace);
+                }
+            }
+        }
 
         public static string Name;
 
@@ -38,8 +127,6 @@ namespace FredBotNETCore
                 }
             }
         }
-
-        public ServiceProvider Services { get; set; }
 
         public static bool justConnected;
 
@@ -253,7 +340,7 @@ namespace FredBotNETCore
             else
             {
                 await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the artifact!");
-            }          
+            }
         }
 
         public static async Task AnnounceBubblesAwardedAsync(string bubbles = null)
@@ -261,141 +348,6 @@ namespace FredBotNETCore
             SocketGuild Guild = _client.GetGuild(528679522707701760);
             SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
             await channel.SendMessageAsync($"**{Format.Sanitize(bubbles)}** has been awarded a bubble set!");
-        }
-
-        public async Task Install(DiscordSocketClient c, Lavalink lavalink, ServiceProvider provider)
-        {
-
-            if (c.LoginState != LoginState.LoggedIn)
-            {
-                return;
-            }
-            _lavaLink = lavalink;
-            Services = provider;
-            _client = c;
-            _cmds = new CommandService();
-            await _cmds.AddModulesAsync(Assembly.GetEntryAssembly(), Program._provider);
-            _cmds.Log += LogException;
-            ActionLog log = new ActionLog(_client);
-            _client.MessageReceived += OnMessageReceived;
-            _client.MessageUpdated += OnMessageEdited;
-
-            _client.UserJoined += log.AnnounceUserJoined;
-            _client.UserLeft += log.AnnounceUserLeft;
-            _client.UserBanned += log.AnnounceUserBanned;
-            _client.UserUnbanned += log.AnnounceUserUnbanned;
-            _client.MessageDeleted += log.AnnounceMessageDeleted;
-            _client.GuildMemberUpdated += log.AnnounceGuildMemberUpdated;
-            _client.ChannelCreated += log.AnnounceChannelCreated;
-            _client.ChannelDestroyed += log.AnnounceChannelDestroyed;
-            _client.ChannelUpdated += log.AnnounceChannelUpdated;
-            _client.RoleCreated += log.AnnounceRoleCreated;
-            _client.RoleDeleted += log.AnnounceRoleDeleted;
-            _client.RoleUpdated += log.AnnounceRoleUpdated;
-            _client.JoinedGuild += log.OnGuildJoin;
-            _client.Ready += OnReady;
-        }
-
-        private async Task OnReady()
-        {
-            int users = _client.Guilds.Sum(g => g.MemberCount);
-            await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
-            LavaNode node = await _lavaLink.AddNodeAsync(_client, new Configuration
-            {
-                Severity = LogSeverity.Info
-            }).ConfigureAwait(false);
-            node.TrackFinished += AudioService.OnFinished;
-        }
-
-
-        public async Task LogException(LogMessage message)
-        {
-            SocketUser user = _client.GetUser(181853112045142016);
-            System.Collections.Generic.IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1990);
-            foreach (string part in parts)
-            {
-                await user.SendMessageAsync("```" + part + "```");
-            }
-        }
-
-        public async Task OnMessageEdited(Cacheable<IMessage, ulong> message, SocketMessage m, ISocketMessageChannel chl)
-        {
-            if (!(m is SocketUserMessage msg))
-            {
-                return;
-            }
-            if (msg.Author.IsBot)
-            {
-                return;
-            }
-            IMessage message2 = await message.GetOrDownloadAsync();
-            if (message2.Content != msg.Content && msg.Channel is SocketTextChannel channel)
-            {
-                if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
-                {
-                    if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false)))
-                    {
-                        AutoMod mod = new AutoMod(_client);
-                        await mod.FilterMessage(msg, channel);
-                    }
-                }
-            }
-        }
-
-        public async Task OnMessageReceived(SocketMessage m)
-        {
-            if (!(m is SocketUserMessage msg))
-            {
-                return;
-            }
-
-            bool badMessage = false;
-            if (msg.Author.IsBot)
-            {
-                return;
-            }
-
-            if (msg.Channel is SocketTextChannel channel)
-            {
-                if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
-                {
-                    if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false)))
-                    {
-                        AutoMod mod = new AutoMod(_client);
-                        badMessage = await mod.FilterMessage(msg, channel);
-                    }
-                }
-            }
-            if (!badMessage)
-            {
-                await HandleCommand(msg);
-            }
-        }
-
-        public async Task HandleCommand(SocketUserMessage msg)
-        {
-            SocketCommandContext context = new SocketCommandContext(_client, msg);
-            int argPos = 0;
-            if (msg.HasStringPrefix("/", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
-            {
-                if (context.Channel is SocketTextChannel channel)
-                {
-                    if (channel.Guild.CurrentUser.GetPermissions(channel).SendMessages == false)
-                    {
-                        return;
-                    }
-                    else if (channel.Guild.CurrentUser.GetPermissions(channel).EmbedLinks == false)
-                    {
-                        await channel.SendMessageAsync("Error: I am missing permission **Embed Links**.");
-                        return;
-                    }
-                }
-                IResult result = await _cmds.ExecuteAsync(context, argPos, Program._provider);
-                if (result.Error.HasValue && result.Error.Value == CommandError.Exception)
-                {
-                    await context.Channel.SendMessageAsync($"Oh no an error occurred. Details of this error have been sent to **{(await _client.GetApplicationInfoAsync()).Owner.Username}#{(await _client.GetApplicationInfoAsync()).Owner.Discriminator}** so that he can fix it.");
-                }
-            }
         }
     }
 }

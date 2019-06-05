@@ -70,7 +70,7 @@ namespace FredBotNETCore.Modules
                        && (uriResult.Scheme == "http" || uriResult.Scheme == "https");
             if (result)
             {
-                await CommandHandler._client.SetGameAsync(name, streamUrl, ActivityType.Streaming);
+                await Context.Client.SetGameAsync(name, streamUrl, ActivityType.Streaming);
                 await ReplyAsync($"Successfully set the game as *Streaming {name} at {streamUrl}*");
                 Console.WriteLine($"{DateTime.Now.ToUniversalTime()}: Game was changed to Streaming {name} at {streamUrl}");
             }
@@ -80,20 +80,20 @@ namespace FredBotNETCore.Modules
                 if (type.Equals("watching", StringComparison.InvariantCultureIgnoreCase))
                 {
                     gameType = ActivityType.Watching;
-                    await CommandHandler._client.SetGameAsync(name, null, gameType);
+                    await Context.Client.SetGameAsync(name, null, gameType);
                     await ReplyAsync($"Successfully set the game as *{type} {name}*");
                     Console.WriteLine($"{DateTime.Now.ToUniversalTime()}: Game was changed to {type} {name}");
                 }
                 else if (type.Equals("listening", StringComparison.InvariantCultureIgnoreCase))
                 {
                     gameType = ActivityType.Listening;
-                    await CommandHandler._client.SetGameAsync(name, null, gameType);
+                    await Context.Client.SetGameAsync(name, null, gameType);
                     await ReplyAsync($"Successfully set the game as *{type} to {name}*");
                     Console.WriteLine($"{DateTime.Now.ToUniversalTime()}: Game was changed to {type} to {name}");
                 }
                 else
                 {
-                    await CommandHandler._client.SetGameAsync(name, null, gameType);
+                    await Context.Client.SetGameAsync(name, null, gameType);
                     await ReplyAsync($"Successfully set the game as *{type} {name}*");
                     Console.WriteLine($"{DateTime.Now.ToUniversalTime()}: Game was changed to {type} {name}");
                 }
