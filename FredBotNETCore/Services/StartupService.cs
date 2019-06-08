@@ -35,7 +35,7 @@ namespace FredBotNETCore.Services
                 await Task.Delay(1000);
                 Environment.Exit(0);
             }
-            catch(Exception ex)
+            catch
             {
                 await Log(new LogMessage(LogSeverity.Error, "RunAsync", "Failed to connect."));
                 await Task.Delay(1000);
