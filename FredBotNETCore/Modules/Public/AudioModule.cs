@@ -9,9 +9,13 @@ namespace FredBotNETCore.Modules.Public
     [Summary("Module containing all of the music commands.")]
     public class AudioModule : ModuleBase<SocketCommandContext>
     {
-        private readonly AudioService audioService = new AudioService(Program._lavaLink);
+        private readonly AudioService audioService;
+        public AudioModule(AudioService service)
+        {
+            audioService = service;
+        }
 
-        [Command("add", RunMode = RunMode.Async)]
+        [Command("aadd", RunMode = RunMode.Async)]
         [Alias("addsong")]
         [Summary("Adds a song to play.")]
         [RequireContext(ContextType.Guild)]

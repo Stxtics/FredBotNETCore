@@ -8,12 +8,17 @@ using System.Threading.Tasks;
 
 namespace FredBotNETCore
 {
-    public static class NotificationsHandler
+    public class NotificationsHandler
     {
-        private static DiscordSocketClient _client;
-        public static async Task CheckStatus(DiscordSocketClient client)
+        private readonly DiscordSocketClient _client;
+
+        public NotificationsHandler(DiscordSocketClient client)
         {
             _client = client;
+        }
+
+        public async Task CheckStatus()
+        {
             HttpClient web = new HttpClient();
             string hint = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "{\"hint\":\"", "\",\"finder_name\":\"");
             string finder = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"finder_name\":\"", "\",\"bubbles_name\":\"");
@@ -102,16 +107,16 @@ namespace FredBotNETCore
                 }
                 catch (Exception e)
                 {
-                    await Extensions.LogError(client, e.Message + e.StackTrace);
+                    await Extensions.LogError(_client, e.Message + e.StackTrace);
                 }
             }
         }
 
-        public static string Name;
+        public string Name;
 
-        public static string hint;
+        public string hint;
 
-        public static string CheckHint
+        public string CheckHint
         {
             get => hint;
             set
@@ -128,19 +133,19 @@ namespace FredBotNETCore
             }
         }
 
-        public static bool justConnected;
+        public bool justConnected;
 
-        public static string DerronStatus = "";
-        public static string CarinaStatus = "";
-        public static string GrayanStatus = "";
-        public static string FitzStatus = "";
-        public static string LokiStatus = "";
-        public static string PromieStatus = "";
-        public static string MorganaStatus = "";
-        public static string AndresStatus = "";
-        public static string IsabelStatus = "";
+        public string DerronStatus = "";
+        public string CarinaStatus = "";
+        public string GrayanStatus = "";
+        public string FitzStatus = "";
+        public string LokiStatus = "";
+        public string PromieStatus = "";
+        public string MorganaStatus = "";
+        public string AndresStatus = "";
+        public string IsabelStatus = "";
 
-        public static async Task CheckStatusAsync(bool isOn = false, string serverName = null)
+        public async Task CheckStatusAsync(bool isOn = false, string serverName = null)
         {
             string compare = isOn + serverName;
             switch (serverName)
@@ -282,7 +287,7 @@ namespace FredBotNETCore
             }
         }
 
-        private static async Task UpdateHappyHourAsync(string Name, bool isOn = false)
+        private async Task UpdateHappyHourAsync(string Name, bool isOn = false)
         {
             if (isOn)
             {
@@ -305,7 +310,7 @@ namespace FredBotNETCore
             }
         }
 
-        public static async Task AnnouceHintUpdatedAsync(string hint, bool newArti = false)
+        public async Task AnnouceHintUpdatedAsync(string hint, bool newArti = false)
         {
             SocketGuild Guild = _client.GetGuild(528679522707701760);
             SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
@@ -329,7 +334,7 @@ namespace FredBotNETCore
             }
         }
 
-        public static async Task AnnounceArtifactFoundAsync(string finder, bool bubbles = false)
+        public async Task AnnounceArtifactFoundAsync(string finder, bool bubbles = false)
         {
             SocketGuild Guild = _client.GetGuild(528679522707701760);
             SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
@@ -343,7 +348,7 @@ namespace FredBotNETCore
             }
         }
 
-        public static async Task AnnounceBubblesAwardedAsync(string bubbles = null)
+        public async Task AnnounceBubblesAwardedAsync(string bubbles = null)
         {
             SocketGuild Guild = _client.GetGuild(528679522707701760);
             SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());

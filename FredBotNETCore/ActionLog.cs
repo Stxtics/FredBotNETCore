@@ -9,11 +9,9 @@ namespace FredBotNETCore
 {
     public class ActionLog
     {
-        public DiscordSocketClient Client { get; set; }
-
-        public ActionLog(DiscordSocketClient client)
+        public ActionLog()
         {
-            Client = client;
+
         }
 
         public async Task OnGuildJoin(SocketGuild guild)
@@ -37,7 +35,7 @@ namespace FredBotNETCore
             {
                 await guild.DefaultChannel.SendMessageAsync("", false, embed.Build());
             }
-            catch(Discord.Net.HttpException)
+            catch (Discord.Net.HttpException)
             {
                 //ignore
             }
@@ -677,7 +675,7 @@ namespace FredBotNETCore
             }
             IMessage message2 = await message.GetOrDownloadAsync();
             SocketTextChannel channel2 = channel as SocketTextChannel;
-            SocketTextChannel log = Client.GetChannel(Extensions.GetLogChannel()) as SocketTextChannel;
+            SocketTextChannel log = channel2.Guild.GetChannel(Extensions.GetLogChannel()) as SocketTextChannel;
             if (channel2.Id == log.Id || channel2.Guild.Id != 528679522707701760)
             {
                 return;

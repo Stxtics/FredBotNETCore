@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,34 +19,45 @@ namespace FredBotNETCore.Services
 {
     public class AudioService
     {
-        private static Lavalink _lavalink;
-        private static bool QueueLoop { get; set; } = false;
-        private static List<SocketUser> SkippedUsers { get; set; } = new List<SocketUser>();
-        private static List<SocketUser> UserQueue { get; set; } = new List<SocketUser>();
-        private static SocketUser NowPlayingUser { get; set; } = null;
+        private readonly Lavalink _lavalink;
+        private readonly DiscordSocketClient _client;
+        private bool QueueLoop { get; set; } = false;
+        private List<SocketUser> SkippedUsers { get; set; } = new List<SocketUser>();
+        private List<SocketUser> UserQueue { get; set; } = new List<SocketUser>();
+        private SocketUser NowPlayingUser { get; set; } = null;
+
+        public AudioService(Lavalink lavalink, IServiceProvider provider)
+        {
+            _lavalink = lavalink;
+            _client = provider.GetService<DiscordSocketClient>();
+        }
+
+        public async Task SetupNodes()
+        {
+            LavaNode node = await _lavalink.AddNodeAsync(_client, new Configuration
+            {
+                Severity = LogSeverity.Info
+            }).ConfigureAwait(false);
+            node.TrackFinished += OnFinished;
+        }
 
         private readonly YouTubeService youtubeService = new YouTubeService(new BaseClientService.Initializer()
         {
             ApiKey = File.ReadAllText(Path.Combine(Extensions.downloadPath, "YoutubeApiKey.txt")),
-            ApplicationName = "Fred bot"
+            ApplicationName = "Fred",
         });
-
-        public AudioService(Lavalink lavalink)
-        {
-            _lavalink = lavalink;
-        }
 
         public async Task Connect(IVoiceChannel voiceChannel, IMessageChannel messageChannel)
         {
             await _lavalink.DefaultNode.ConnectAsync(voiceChannel, messageChannel);
         }
 
-        public static async Task Disconnect(ulong guildId)
+        public async Task Disconnect(ulong guildId)
         {
             await _lavalink.DefaultNode.DisconnectAsync(guildId);
         }
 
-        public static async Task OnFinished(LavaPlayer player, LavaTrack track, TrackReason reason)
+        public async Task OnFinished(LavaPlayer player, LavaTrack track, TrackReason reason)
         {
             if (reason is TrackReason.LoadFailed || reason is TrackReason.Cleanup || reason is TrackReason.Replaced || reason is TrackReason.Stopped)
             {
@@ -90,13 +102,13 @@ namespace FredBotNETCore.Services
             }
         }
 
-        public async Task Play(ulong guildId, LavaTrack track)
+        private async Task Play(ulong guildId, LavaTrack track)
         {
             LavaPlayer player = _lavalink.DefaultNode.GetPlayer(guildId);
             await player.PlayAsync(track);
         }
 
-        public async Task<LavaTrack> GetTrackFromYoutube(string searchQuery)
+        private async Task<LavaTrack> GetTrackFromYoutube(string searchQuery)
         {
             LavaResult search = await _lavalink.DefaultNode.SearchYouTubeAsync(searchQuery);
             if (search.LoadResultType == LoadResultType.NoMatches)
@@ -106,22 +118,22 @@ namespace FredBotNETCore.Services
             return search.Tracks.FirstOrDefault();
         }
 
-        public async Task Pause(ulong guildId)
+        private async Task Pause(ulong guildId)
         {
             await _lavalink.DefaultNode.GetPlayer(guildId).PauseAsync();
         }
 
-        public async Task Resume(ulong guildId)
+        private async Task Resume(ulong guildId)
         {
             await _lavalink.DefaultNode.GetPlayer(guildId).PauseAsync();
         }
 
-        public async Task SetVolume(ulong guildId, int volume)
+        private async Task SetVolume(ulong guildId, int volume)
         {
             await _lavalink.DefaultNode.GetPlayer(guildId).SetVolumeAsync(volume);
         }
 
-        public async Task Skip(ulong guildId)
+        private async Task Skip(ulong guildId)
         {
             if (_lavalink.DefaultNode.GetPlayer(guildId).Queue.Count == 0)
             {
@@ -148,22 +160,22 @@ namespace FredBotNETCore.Services
             }
         }
 
-        public List<SocketUser> GetSkippedUsers()
+        private List<SocketUser> GetSkippedUsers()
         {
             return SkippedUsers;
         }
 
-        public void AddSkippedUser(SocketUser user)
+        private void AddSkippedUser(SocketUser user)
         {
             SkippedUsers.Add(user);
         }
 
-        public LavaTrack NowPlaying(ulong guildId)
+        private LavaTrack NowPlaying(ulong guildId)
         {
             return _lavalink.DefaultNode.GetPlayer(guildId).CurrentTrack;
         }
 
-        public async Task Stop(ulong guildId)
+        private async Task Stop(ulong guildId)
         {
             LavaPlayer player = _lavalink.DefaultNode.GetPlayer(guildId);
             if (player.IsPlaying)
@@ -176,22 +188,22 @@ namespace FredBotNETCore.Services
             NowPlayingUser = null;
         }
 
-        public bool Paused(ulong guildId)
+        private bool Paused(ulong guildId)
         {
             return _lavalink.DefaultNode.GetPlayer(guildId).IsPaused;
         }
 
-        public bool Playing(ulong guildId)
+        private bool Playing(ulong guildId)
         {
             return _lavalink.DefaultNode.GetPlayer(guildId).IsPlaying;
         }
 
-        public int GetVolume(ulong guildId)
+        private int GetVolume(ulong guildId)
         {
             return _lavalink.DefaultNode.GetPlayer(guildId).Volume;
         }
 
-        public Tuple<LavaQueue<LavaTrack>, List<SocketUser>> Queue(ulong guildId)
+        private Tuple<LavaQueue<LavaTrack>, List<SocketUser>> Queue(ulong guildId)
         {
             if (_lavalink.DefaultNode.GetPlayer(guildId).Queue != null)
             {
@@ -200,36 +212,36 @@ namespace FredBotNETCore.Services
             return null;
         }
 
-        public void QueueAdd(ulong guildId, LavaTrack track, SocketUser user)
+        private void QueueAdd(ulong guildId, LavaTrack track, SocketUser user)
         {
             _lavalink.DefaultNode.GetPlayer(guildId).Queue.Enqueue(track);
             UserQueue.Add(user);
         }
 
-        public Tuple<LavaTrack, SocketUser> QueueRemove(ulong guildId, int index)
+        private Tuple<LavaTrack, SocketUser> QueueRemove(ulong guildId, int index)
         {
             SocketUser user = UserQueue[index];
             UserQueue.RemoveAt(index);
             return Tuple.Create(_lavalink.DefaultNode.GetPlayer(guildId).Queue.RemoveAt(index), user);
         }
 
-        public void QueueClear(ulong guildId)
+        private void QueueClear(ulong guildId)
         {
             _lavalink.DefaultNode.GetPlayer(guildId).Queue.Clear();
             UserQueue.Clear();
         }
 
-        public void SetNowPlayingUser(SocketUser user)
+        private void SetNowPlayingUser(SocketUser user)
         {
             NowPlayingUser = user;
         }
 
-        public SocketUser GetNowPlayingUser()
+        private SocketUser GetNowPlayingUser()
         {
             return NowPlayingUser;
         }
 
-        public bool Loop()
+        private bool Loop()
         {
             if (QueueLoop)
             {
@@ -242,7 +254,7 @@ namespace FredBotNETCore.Services
             return QueueLoop;
         }
 
-        public async Task Seek(ulong guildId, TimeSpan time)
+        private async Task Seek(ulong guildId, TimeSpan time)
         {
             await _lavalink.DefaultNode.GetPlayer(guildId).SeekAsync(time);
         }

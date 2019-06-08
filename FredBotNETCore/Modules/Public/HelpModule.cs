@@ -9,12 +9,10 @@ namespace FredBotNETCore.Modules.Public
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
         private readonly CommandService _commands;
-        private readonly IServiceProvider _provider;
 
-        public HelpModule(CommandService commands, IServiceProvider provider)
+        public HelpModule(CommandService commands)
         {
             _commands = commands;
-            _provider = provider;
         }
 
         [Command("help", RunMode = RunMode.Async)]
