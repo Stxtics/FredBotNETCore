@@ -54,7 +54,7 @@ namespace FredBotNETCore.Services
                             SocketUser user = Extensions.UserInGuild(context.Message, context.Client.GetGuild(528679522707701760), username);
                             User.SetValue(context.User, "balance", (User.GetUser("user_id", context.User.Id.ToString()).Balance - money).ToString());
                             User.SetValue(user, "balance", (User.GetUser("user_id", user.Id.ToString()).Balance + money).ToString());
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} you have successfully paid **{Format.Sanitize(user.Username)}#{user.Discriminator} ${money.ToString("N0")}**.\nYour new balance is ${(User.GetUser("user_id", context.User.Id.ToString()).Balance - money).ToString("N0")}.");
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} you have successfully paid **{Format.Sanitize(user.Username)}#{user.Discriminator} ${string.Format("{0:n0}", money)}**.\nYour new balance is ${string.Format("{0:n0}", (User.GetUser("user_id", context.User.Id.ToString()).Balance - money))}.");
                             try
                             {
                                 await user.SendMessageAsync($"{user.Mention} you have been paid **${money}** by **{Format.Sanitize(context.User.Username)}#{context.User.Discriminator}**");
@@ -92,7 +92,7 @@ namespace FredBotNETCore.Services
                 if (string.IsNullOrWhiteSpace(username))
                 {
                     int bal = User.GetUser("user_id", context.User.Id.ToString()).Balance;
-                    await context.Channel.SendMessageAsync($"{context.User.Mention} your balance is **${bal.ToString("N0")}**.");
+                    await context.Channel.SendMessageAsync($"{context.User.Mention} your balance is **${string.Format("{0:n0}", bal)}**.");
                 }
                 else
                 {
@@ -104,7 +104,7 @@ namespace FredBotNETCore.Services
                             User.Add(user);
                         }
                         int bal = User.GetUser("user_id", user.Id.ToString()).Balance;
-                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance is **${bal.ToString("N0")}**.");
+                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance is **${string.Format("{0:n0}", bal)}**.");
                     }
                     else
                     {
@@ -127,7 +127,7 @@ namespace FredBotNETCore.Services
             else
             {
                 int lottobal = int.Parse(File.ReadAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt")));
-                await context.Channel.SendMessageAsync($"{context.User.Mention} the jackpot is currently worth **${lottobal.ToString("N0")}**.");
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the jackpot is currently worth **${string.Format("{0:n0}", lottobal)}**.");
             }
         }
 
@@ -160,7 +160,7 @@ namespace FredBotNETCore.Services
                 {
                     try
                     {
-                        leaderboard = leaderboard + "**" + (i + 1).ToString() + ".** " + Format.Sanitize(context.Client.GetUser(ulong.Parse(user.UserID.ToString())).Username) + "#" + context.Client.GetUser(ulong.Parse(user.UserID.ToString())).Discriminator + " - $" + user.Balance.ToString("N0") + "\n";
+                        leaderboard = leaderboard + "**" + (i + 1).ToString() + ".** " + Format.Sanitize(context.Client.GetUser(ulong.Parse(user.UserID.ToString())).Username) + "#" + context.Client.GetUser(ulong.Parse(user.UserID.ToString())).Discriminator + " - $" + string.Format("{0:n0}", user.Balance) + "\n";
                         i++;
                     }
                     catch (Exception)
@@ -216,13 +216,13 @@ namespace FredBotNETCore.Services
                         {
                             Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
                             Author = auth,
-                            Description = $"Jackpot: ${lottobal.ToString("N0")}\nScratching Tickets..."
+                            Description = $"Jackpot: ${string.Format("{0:n0}", lottobal)}\nScratching Tickets..."
                         };
                         IUserMessage message = await context.Channel.SendMessageAsync("", false, embed.Build());
                         await Task.Delay(500);
                         if (chance >= 100)
                         {
-                            embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0")}!";
+                            embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} won the jackpot of ${string.Format("{0:n0}", lottobal)}!";
                             await message.ModifyAsync(x => x.Embed = embed.Build());
                             User.SetValue(context.User, "balance", (balance + lottobal).ToString());
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt"), "100");
@@ -232,14 +232,14 @@ namespace FredBotNETCore.Services
                             int random = Extensions.random.Next(100);
                             if (random <= chance)
                             {
-                                embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0")}!";
+                                embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} won the jackpot of ${string.Format("{0:n0}", lottobal)}!";
                                 await message.ModifyAsync(x => x.Embed = embed.Build());
                                 User.SetValue(context.User, "balance", (balance + lottobal).ToString());
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt"), "100");
                             }
                             else
                             {
-                                embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} did not win the jackpot of ${lottobal.ToString("N0")}.";
+                                embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} did not win the jackpot of ${string.Format("{0:n0}", lottobal)}.";
                                 int newbal = lottobal + tickets;
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt"), newbal.ToString());
                                 await message.ModifyAsync(x => x.Embed = embed.Build());
@@ -1162,8 +1162,8 @@ namespace FredBotNETCore.Services
                             string name = Extensions.GetBetween(pr2info, "guild_name\":\"", "\",\"creation");
                             string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
                             string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
-                            string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0");
-                            string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0");
+                            string gptotal = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")));
+                            string gptoday = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")));
                             string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
                             string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
                             string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
@@ -1248,8 +1248,8 @@ namespace FredBotNETCore.Services
                             string name = Extensions.GetBetween(pr2info, "\"guild_name\":\"", "\",\"");
                             string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
                             string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
-                            string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0");
-                            string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0");
+                            string gptotal = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")));
+                            string gptoday = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")));
                             string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
                             string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
                             string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
@@ -1351,7 +1351,7 @@ namespace FredBotNETCore.Services
                                 }
                                 else
                                 {
-                                    exp = Math.Round(Math.Pow(1.25, level_) * 30).ToString("N0");
+                                    exp = string.Format("{0:n0}", Math.Round(Math.Pow(1.25, level_) * 30));
                                 }
                                 embed.WithFooter(footer);
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -1402,7 +1402,7 @@ namespace FredBotNETCore.Services
                                     };
                                     embed.WithAuthor(author);
                                     embed.WithCurrentTimestamp();
-                                    embed.Description = $"**From rank {level_} to rank {level_2} you need {exp.ToString("N0")} EXP.**";
+                                    embed.Description = $"**From rank {level_} to rank {level_2} you need {string.Format("{0:n0}", exp)} EXP.**";
                                     await context.Channel.SendMessageAsync("", false, embed.Build());
                                 }
                             }
@@ -1602,25 +1602,25 @@ namespace FredBotNETCore.Services
                 {
                     string[] guildlist = text.Split('}');
                     string guild1name = Extensions.GetBetween(guildlist[0], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild1gp = int.Parse(Extensions.GetBetween(guildlist[0], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild1gp = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(guildlist[0], "\",\"gp_today\":\"", "\",\"gp_total\":\"")));
                     string guild2name = Extensions.GetBetween(guildlist[1], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild2gp = int.Parse(Extensions.GetBetween(guildlist[1], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild2gp = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(guildlist[1], "\",\"gp_today\":\"", "\",\"gp_total\":\"")));
                     string guild3name = Extensions.GetBetween(guildlist[2], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild3gp = int.Parse(Extensions.GetBetween(guildlist[2], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild3gp = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(guildlist[2], "\",\"gp_today\":\"", "\",\"gp_total\":\"")));
                     string guild4name = Extensions.GetBetween(guildlist[3], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild4gp = int.Parse(Extensions.GetBetween(guildlist[3], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild4gp = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(guildlist[3], "\",\"gp_today\":\"", "\",\"gp_total\":\"")));
                     string guild5name = Extensions.GetBetween(guildlist[4], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild5gp = int.Parse(Extensions.GetBetween(guildlist[4], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild5gp = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(guildlist[4], "\",\"gp_today\":\"", "\",\"gp_total\":\"")));
                     string guild6name = Extensions.GetBetween(guildlist[5], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild6gp = int.Parse(Extensions.GetBetween(guildlist[5], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild6gp = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(guildlist[5], "\",\"gp_today\":\"", "\",\"gp_total\":\"")));
                     string guild7name = Extensions.GetBetween(guildlist[6], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild7gp = int.Parse(Extensions.GetBetween(guildlist[6], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild7gp = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(guildlist[6], "\",\"gp_today\":\"", "\",\"gp_total\":\"")));
                     string guild8name = Extensions.GetBetween(guildlist[7], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild8gp = int.Parse(Extensions.GetBetween(guildlist[7], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild8gp = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(guildlist[7], "\",\"gp_today\":\"", "\",\"gp_total\":\"")));
                     string guild9name = Extensions.GetBetween(guildlist[8], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild9gp = int.Parse(Extensions.GetBetween(guildlist[8], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild9gp = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(guildlist[8], "\",\"gp_today\":\"", "\",\"gp_total\":\"")));
                     string guild10name = Extensions.GetBetween(guildlist[9], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild10gp = int.Parse(Extensions.GetBetween(guildlist[9], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    string guild10gp = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(guildlist[9], "\",\"gp_today\":\"", "\",\"gp_total\":\"")));
                     EmbedBuilder embed = new EmbedBuilder();
                     embed.WithColor(new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)));
                     embed.AddField(y =>
@@ -1784,13 +1784,13 @@ namespace FredBotNETCore.Services
                         embed.AddField(y =>
                         {
                             y.Name = $"Score";
-                            y.Value = $"{Convert.ToInt32(stats.GetValue("credit")).ToString("N0")}";
+                            y.Value = $"{string.Format("{0:n0}", Convert.ToInt32(stats.GetValue("credit")))}";
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
                         {
                             y.Name = "Completed WUs";
-                            y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0")}";
+                            y.Value = $"{string.Format("{0:n0}", Convert.ToInt32(stats.GetValue("wus")))}";
                             y.IsInline = true;
                         });
                         if (stats.GetValue("last") != null)
@@ -1928,7 +1928,7 @@ namespace FredBotNETCore.Services
                             embed.AddField(y =>
                             {
                                 y.Name = "Ban Info";
-                                y.Value = Format.Sanitize($"{mod} banned {user} for {length} on {date}.");
+                                y.Value = Format.Sanitize($"{mod} banned {user} for {string.Format("{0:n0}", length)} on {date}.");
                                 y.IsInline = true;
                             });
                             embed.AddField(y =>
@@ -2570,7 +2570,7 @@ namespace FredBotNETCore.Services
                         string version = Extensions.GetBetween(responseString, "&version0=", "&title0=");
                         string title = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&title0=", "&rating0=")).Replace("+", " ");
                         string rating = Extensions.GetBetween(responseString, "&rating0=", "&playCount0=");
-                        string plays = int.Parse(Extensions.GetBetween(responseString, "&playCount0=", "&minLevel0=")).ToString("N0");
+                        string plays = string.Format("{0:n0}", int.Parse(Extensions.GetBetween(responseString, "&playCount0=", "&minLevel0=")));
                         string minLevel = Extensions.GetBetween(responseString, "&minLevel0=", "&note0=");
                         string note = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&note0=", "&userName0=")).Replace("+", " ");
                         string user = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
