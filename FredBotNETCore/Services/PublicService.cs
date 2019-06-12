@@ -609,7 +609,11 @@ namespace FredBotNETCore.Services
 
         public async Task HintAsync(SocketCommandContext context)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 HttpClient web = new HttpClient();
@@ -726,7 +730,11 @@ namespace FredBotNETCore.Services
 
         public async Task ViewAsync(SocketCommandContext context, [Remainder] string pr2name)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (string.IsNullOrWhiteSpace(pr2name))
@@ -948,7 +956,11 @@ namespace FredBotNETCore.Services
 
         public async Task ViewIDAsync(SocketCommandContext context, string id)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out _))
@@ -1056,7 +1068,11 @@ namespace FredBotNETCore.Services
 
         public async Task GuildAsync(SocketCommandContext context, [Remainder] string guildname)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 HttpClient web = new HttpClient();
@@ -1183,7 +1199,11 @@ namespace FredBotNETCore.Services
 
         public async Task GuildIDAsync(SocketCommandContext context, string id)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out _))
@@ -1265,7 +1285,11 @@ namespace FredBotNETCore.Services
 
         public async Task EXPAsync(SocketCommandContext context, [Remainder] string lvl)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 string lvl2 = "0";
@@ -1399,7 +1423,11 @@ namespace FredBotNETCore.Services
 
         public async Task RoleAsync(SocketCommandContext context, string roleName)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (roleName == null)
@@ -1495,7 +1523,11 @@ namespace FredBotNETCore.Services
 
         public async Task ListJoinableRolesAsync(SocketCommandContext context)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
@@ -1557,7 +1589,11 @@ namespace FredBotNETCore.Services
 
         public async Task TopGuildsAsync(SocketCommandContext context)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 HttpClient web = new HttpClient();
@@ -1649,7 +1685,11 @@ namespace FredBotNETCore.Services
 
         public async Task FahAsync(SocketCommandContext context, [Remainder] string fahuser)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (fahuser == null)
@@ -1795,7 +1835,11 @@ namespace FredBotNETCore.Services
 
         public async Task BansAsync(SocketCommandContext context, string id)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (id == null || !int.TryParse(id, out int id2))
@@ -1957,7 +2001,11 @@ namespace FredBotNETCore.Services
 
         public async Task PopAsync(SocketCommandContext context, [Remainder] string s)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (s != null)
@@ -2016,7 +2064,11 @@ namespace FredBotNETCore.Services
 
         public async Task StatsAsync(SocketCommandContext context, [Remainder] string server)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (string.IsNullOrWhiteSpace(server))
@@ -2181,7 +2233,11 @@ namespace FredBotNETCore.Services
 
         public async Task GuildMembersAsync(SocketCommandContext context, [Remainder] string guildname)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (guildname == null)
@@ -2307,7 +2363,11 @@ namespace FredBotNETCore.Services
 
         public async Task GuildMembersIDAsync(SocketCommandContext context, string id)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (id == null || !int.TryParse(id, out _))
@@ -2389,7 +2449,11 @@ namespace FredBotNETCore.Services
 
         public async Task HHAsync(SocketCommandContext context)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 HttpClient web = new HttpClient();
@@ -2459,7 +2523,11 @@ namespace FredBotNETCore.Services
 
         public async Task LevelAsync(SocketCommandContext context, [Remainder] string level)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (string.IsNullOrWhiteSpace(level))
@@ -2549,7 +2617,11 @@ namespace FredBotNETCore.Services
 
         public async Task VerifyGuildAsync(SocketCommandContext context)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (!User.Exists(context.User))
@@ -2628,7 +2700,11 @@ namespace FredBotNETCore.Services
 
         public async Task JoinGuildAsync(SocketCommandContext context)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (!User.Exists(context.User))
@@ -2669,7 +2745,11 @@ namespace FredBotNETCore.Services
 
         public async Task ServersAsync(SocketCommandContext context, [Remainder] string s1)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (s1 != null)
@@ -2755,7 +2835,11 @@ namespace FredBotNETCore.Services
 
         public async Task StaffAsync(SocketCommandContext context)
         {
-            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 HttpClient web = new HttpClient();
