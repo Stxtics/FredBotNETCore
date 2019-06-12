@@ -1515,20 +1515,25 @@ namespace FredBotNETCore.Services
                 }
                 else
                 {
-                    joinableRoles.Sort();
                     bool removed = false;
+                    List<string> jRoles = new List<string>();
                     foreach (JoinableRole jRole in joinableRoles)
                     {
                         SocketRole role = context.Guild.GetRole(ulong.Parse(jRole.RoleID.ToString()));
                         if (role != null)
                         {
-                            embed.Description += Format.Sanitize(role.Name + " - " + jRole.Description);
+                            jRoles.Add(Format.Sanitize(role.Name + " - " + jRole.Description));
                         }
                         else
                         {
                             JoinableRole.Remove(context.Guild.Id, ulong.Parse(jRole.RoleID.ToString()));
                             removed = true;
                         }
+                    }
+                    jRoles.Sort();
+                    foreach (string role in jRoles)
+                    {
+                        embed.Description += role + "\n";
                     }
                     if (removed)
                     {
