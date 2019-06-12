@@ -79,7 +79,7 @@ namespace FredBotNETCore
                 IResult result = await _commands.ExecuteAsync(context, argPos, _provider);
 
                 LogCommandUsage(context);
-                if (!result.IsSuccess || result.Error.HasValue && result.Error.Value == CommandError.Exception)
+                if (result.Error.HasValue && result.Error.Value == CommandError.Exception)
                 {
                     if (result.Error.Value != CommandError.UnknownCommand)
                     {
