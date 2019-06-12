@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FredBotNETCore.Database;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,7 +20,6 @@ namespace FredBotNETCore
 
         public static string downloadPath = Path.Combine(Directory.GetCurrentDirectory(), "TextFiles");
         public static Random random = new Random();
-        public static bool Purging { get; set; } = false;
 
         public static T GetRandomElement<T>(this IEnumerable<T> list)
         {
@@ -69,56 +69,6 @@ namespace FredBotNETCore
             }
         }
 
-        public static bool IsMuted(ulong userID)
-        {
-            if (File.ReadAllText(Path.Combine(downloadPath, "MutedUsers.txt")).Contains(userID.ToString()))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public static bool CheckStaff(string userID, IEnumerable<SocketRole> roles)
-        {
-            string roleID = null;
-            if (roles.Count() > 0)
-            {
-                roleID = roles.First().Id.ToString();
-            }
-            StreamReader staff = new StreamReader(path: Path.Combine(downloadPath, "DiscordStaff.txt"));
-            StreamReader staffRoles = new StreamReader(path: Path.Combine(downloadPath, "DiscordStaffRoles.txt"));
-            string line = staff.ReadLine();
-            bool isStaff = false;
-            while (line != null)
-            {
-                if (line.Equals(userID))
-                {
-                    isStaff = true;
-                    break;
-                }
-                line = staff.ReadLine();
-            }
-            if (!isStaff && roleID != null)
-            {
-                line = staffRoles.ReadLine();
-                while (line != null)
-                {
-                    if (line.Equals(roleID))
-                    {
-                        isStaff = true;
-                        break;
-                    }
-                    line = staffRoles.ReadLine();
-                }
-            }
-            staff.Close();
-            staffRoles.Close();
-            return isStaff;
-        }
-
         public static string HexConverter(Color c)
         {
             return c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
@@ -132,7 +82,7 @@ namespace FredBotNETCore
                 if (message.MentionedUsers.Count > 0)
                 {
                     int argPos = 0;
-                    if (message.HasStringPrefix("/", ref argPos))
+                    if (message.HasStringPrefix(Guild.Get(guild).Prefix, ref argPos))
                     {
                         user = message.MentionedUsers.First();
                     }
@@ -249,33 +199,58 @@ namespace FredBotNETCore
             return result;
         }
 
-        public static ulong GetLogChannel()
+        public static SocketTextChannel GetLogChannel(SocketGuild guild)
         {
-            return ulong.Parse(File.ReadAllText(Path.Combine(downloadPath, "LogChannel.txt")));
-        }
-
-        public static ulong GetNotificationsChannel()
-        {
-            return ulong.Parse(File.ReadAllText(Path.Combine(downloadPath, "NotificationsChannel.txt")));
-        }
-
-        public static ulong GetBanLogChannel()
-        {
-            return ulong.Parse(File.ReadAllText(Path.Combine(downloadPath, "BanLogChannel.txt")));
-        }
-
-        public static List<ulong> AllowedChannels()
-        {
-            List<ulong> channels = new List<ulong>();
-            StreamReader allowedChannels = new StreamReader(path: Path.Combine(downloadPath, "AllowedChannels.txt"));
-            string channel = allowedChannels.ReadLine();
-            while (channel != null)
+            SocketTextChannel channel = null;
+            long? logChannel = Guild.Get(guild).LogChannel;
+            if (logChannel != null)
             {
-                channels.Add(ulong.Parse(channel));
-                channel = allowedChannels.ReadLine();
+                try
+                {
+                    channel = guild.GetTextChannel(ulong.Parse(logChannel.ToString()));
+                }
+                catch (Discord.Net.HttpException)
+                {
+
+                }
             }
-            allowedChannels.Close();
-            return channels;
+            return channel;
+        }
+
+        public static SocketTextChannel GetNotificationsChannel(SocketGuild guild)
+        {
+            SocketTextChannel channel = null;
+            long? notificationsChannel = Guild.Get(guild).NotificationsChannel;
+            if (notificationsChannel != null)
+            {
+                try
+                {
+                    channel = guild.GetTextChannel(ulong.Parse(notificationsChannel.ToString()));
+                }
+                catch (Discord.Net.HttpException)
+                {
+
+                }
+            }
+            return channel;
+        }
+
+        public static SocketTextChannel GetBanLogChannel(SocketGuild guild)
+        {
+            SocketTextChannel channel = null;
+            long? banlogChannel = Guild.Get(guild).BanlogChannel;
+            if (banlogChannel != null)
+            {
+                try
+                {
+                    channel = guild.GetTextChannel(ulong.Parse(banlogChannel.ToString()));
+                }
+                catch (Discord.Net.HttpException)
+                {
+
+                }
+            }
+            return channel;
         }
 
         public static List<ulong> MusicChannels()
@@ -301,8 +276,5 @@ namespace FredBotNETCore
                 await user.SendMessageAsync("```" + part + "```");
             }
         }
-
-        public static string[] BlacklistedUrls { get; set; } = File.ReadAllText(Path.Combine(downloadPath, "BlacklistedUrls.txt")).Split("\n");
-        public static string[] BannedWords { get; set; } = File.ReadAllText(Path.Combine(downloadPath, "BlacklistedWords.txt")).Split("\n");
     }
 }

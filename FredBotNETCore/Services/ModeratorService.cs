@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FredBotNETCore.Database;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,8 +28,9 @@ namespace FredBotNETCore.Services
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /setnick";
-                embed.Description = "**Description:** Change the nickname of a user.\n**Usage:** /setnick [user] [new nickname]\n**Example:** /setnick Jiggmin Jiggy";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}setnick";
+                embed.Description = $"**Description:** Change the nickname of a user.\n**Usage:** {prefix}setnick [user] [new nickname]\n**Example:** {prefix}setnick Jiggmin Jiggy";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
             }
             else
@@ -65,8 +67,9 @@ namespace FredBotNETCore.Services
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /nick";
-                embed.Description = "**Description:** Change the bot nickname.\n**Usage:** /nick [new nickname]\n**Example:** /nick Fred";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}nick";
+                embed.Description = $"**Description:** Change the bot nickname.\n**Usage:** {prefix}nick [new nickname]\n**Example:** {prefix}nick Fred";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
             }
             else
@@ -93,7 +96,7 @@ namespace FredBotNETCore.Services
             {
                 string currentToken = File.ReadAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
 
-                SocketTextChannel log = context.Client.GetGuild(528679522707701760).GetTextChannel(Extensions.GetLogChannel());
+                SocketTextChannel log = Extensions.GetLogChannel(context.Client.GetGuild(528679522707701760));
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
                     Name = "Token Changed",
@@ -120,20 +123,29 @@ namespace FredBotNETCore.Services
 
         public async Task NotifyMacroersAsync(SocketCommandContext context)
         {
-            if (context.Guild.Id == 528679522707701760)
+            SocketTextChannel channel = Extensions.GetNotificationsChannel(context.Guild);
+            if (channel != null)
             {
-                SocketTextChannel channel = context.Guild.GetTextChannel(Extensions.GetNotificationsChannel());
-                SocketRole role = context.Guild.Roles.Where(x => x.Name.ToUpper() == "Macroer".ToUpper()).First() as SocketRole;
-                RequestOptions options = new RequestOptions()
+                SocketRole role = context.Guild.Roles.Where(x => x.Name.ToUpper() == "Macroer".ToUpper()).FirstOrDefault();
+                if (role != null)
                 {
-                    AuditLogReason = $"Notified by {context.User.Username}#{context.User.Discriminator}."
-                };
-                Extensions.Purging = true;
-                await context.Message.DeleteAsync();
-                await role.ModifyAsync(x => x.Mentionable = true, options);
-                await channel.SendMessageAsync($"Servers have just been restarted. Check your macros!! {role.Mention}");
-                Extensions.Purging = false;
-                await role.ModifyAsync(x => x.Mentionable = false, options);
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"Notified by {context.User.Username}#{context.User.Discriminator}."
+                    };
+                    await context.Message.DeleteAsync();
+                    await role.ModifyAsync(x => x.Mentionable = true, options);
+                    await channel.SendMessageAsync($"Servers have just been restarted. Check your macros!! {role.Mention}");
+                    await role.ModifyAsync(x => x.Mentionable = false, options);
+                }
+                else
+                {
+                    await context.Channel.SendMessageAsync($"{context.User.Mention} the Macroer role does not exist or could not be found.");
+                }
+            }
+            else
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the notifications channel has not been set.");
             }
         }
 
@@ -147,8 +159,9 @@ namespace FredBotNETCore.Services
                     {
                         Color = new Color(220, 200, 220)
                     };
-                    embed.Title = "Command: /blacklistmusic";
-                    embed.Description = "**Description:** Blacklist a user from using music commands.\n**Usage:** /blacklistmusic [user]\n**Example:** /blacklistmusic Jiggmin";
+                    string prefix = Guild.Get(context.Guild).Prefix;
+                    embed.Title = $"Command {prefix}blacklistmusic";
+                    embed.Description = $"**Description:** Blacklist a user from using music commands.\n**Usage:** {prefix}blacklistmusic [user]\n**Example:** {prefix}blacklistmusic Jiggmin";
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
@@ -164,7 +177,7 @@ namespace FredBotNETCore.Services
                         else
                         {
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers + user.Id.ToString() + "\n");
-                            SocketTextChannel log = context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                            SocketTextChannel log = Extensions.GetLogChannel(context.Guild);
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Music Blacklist Add",
@@ -209,8 +222,9 @@ namespace FredBotNETCore.Services
                     {
                         Color = new Color(220, 200, 220)
                     };
-                    embed.Title = "Command: /unblacklistmusic";
-                    embed.Description = "**Description:** Unblacklist a user from using music commands.\n**Usage:** /unblacklistmusic [user]\n**Example:** /unblacklistmusic Jiggmin";
+                    string prefix = Guild.Get(context.Guild).Prefix;
+                    embed.Title = $"Command {prefix}unblacklistmusic";
+                    embed.Description = $"**Description:** Unblacklist a user from using music commands.\n**Usage:** {prefix}unblacklistmusic [user]\n**Example:** {prefix}unblacklistmusic Jiggmin";
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
@@ -223,7 +237,7 @@ namespace FredBotNETCore.Services
                         {
                             currentBlacklistedUsers = currentBlacklistedUsers.Replace(user.Id.ToString() + "\n", string.Empty);
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "BlacklistedMusic.txt"), currentBlacklistedUsers);
-                            SocketTextChannel log = context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                            SocketTextChannel log = Extensions.GetLogChannel(context.Guild);
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Music Blacklist Remove",
@@ -314,8 +328,9 @@ namespace FredBotNETCore.Services
                     {
                         Color = new Color(220, 200, 220)
                     };
-                    embed.Title = "Command: /blacklistsuggestions";
-                    embed.Description = "**Description:** Blacklist a user from using the /suggest command.\n**Usage:** /blacklistsuggestions [user]\n**Example:** /blacklistsuggestions Jiggmin";
+                    string prefix = Guild.Get(context.Guild).Prefix;
+                    embed.Title = $"Command {prefix}blacklistsuggestions";
+                    embed.Description = $"**Description:** Blacklist a user from using the {prefix}suggest command.\n**Usage:** {prefix}blacklistsuggestions [user]\n**Example:** {prefix}blacklistsuggestions Jiggmin";
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
@@ -337,7 +352,7 @@ namespace FredBotNETCore.Services
                                 AuditLogReason = $"Blacklisting User | Mod: {context.User.Username}#{context.User.Discriminator}"
                             };
                             await suggestions.AddPermissionOverwriteAsync(user, OverwritePermissions.InheritAll.Modify(PermValue.Inherit, PermValue.Inherit, PermValue.Inherit, PermValue.Deny), options);
-                            SocketTextChannel log = context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                            SocketTextChannel log = Extensions.GetLogChannel(context.Guild);
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Suggestions Blacklist Add",
@@ -382,8 +397,9 @@ namespace FredBotNETCore.Services
                     {
                         Color = new Color(220, 200, 220)
                     };
-                    embed.Title = "Command: /unblacklistsuggestions";
-                    embed.Description = "**Description:** Unblacklist a user from using the /suggest command.\n**Usage:** /unblacklistsuggestions [user]\n**Example:** /unblacklistsuggestions Jiggmin";
+                    string prefix = Guild.Get(context.Guild).Prefix;
+                    embed.Title = $"Command {prefix}unblacklistsuggestions";
+                    embed.Description = $"**Description:** Unblacklist a user from using the {prefix}suggest command.\n**Usage:** {prefix}unblacklistsuggestions [user]\n**Example:** {prefix}unblacklistsuggestions Jiggmin";
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
@@ -402,7 +418,7 @@ namespace FredBotNETCore.Services
                                 AuditLogReason = $"Unblacklisting User | Mod: {context.User.Username}#{context.User.Discriminator}"
                             };
                             await suggestions.RemovePermissionOverwriteAsync(user, options);
-                            SocketTextChannel log = context.Guild.GetTextChannel(Extensions.GetLogChannel());
+                            SocketTextChannel log = Extensions.GetLogChannel(context.Guild);
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
                                 Name = "Suggestions Blacklist Remove",
@@ -491,8 +507,9 @@ namespace FredBotNETCore.Services
                 {
                     Color = new Color(220, 200, 220)
                 };
-                embed.Title = "Command: /channelinfo";
-                embed.Description = "**Description:** Get information about a channel.\n**Usage:** /channelinfo [channel name]\n**Example:** /channelinfo rules";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}channelinfo";
+                embed.Description = $"**Description:** Get information about a channel.\n**Usage:** {prefix}channelinfo [channel name]\n**Example:** {prefix}channelinfo rules";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
             }
             else
@@ -696,8 +713,9 @@ namespace FredBotNETCore.Services
                 {
                     Color = new Color(220, 200, 220)
                 };
-                embed.Title = "Command: /roleinfo";
-                embed.Description = "**Description:** Get information about a role.\n**Usage:** /roleinfo [role name]\n**Example:** /roleinfo Admins";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}roleinfo";
+                embed.Description = $"**Description:** Get information about a role.\n**Usage:** {prefix}roleinfo [role name]\n**Example:** {prefix}roleinfo Admins";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
             }
             else
@@ -849,17 +867,13 @@ namespace FredBotNETCore.Services
 
         public async Task WarningsAsync(SocketCommandContext context, [Remainder] string username)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             EmbedAuthorBuilder auth = new EmbedAuthorBuilder();
-            List<string> warnings;
+            List<Ban> warnings;
             if (string.IsNullOrWhiteSpace(username))
             {
                 auth.Name = $"Warnings - {context.Guild.Name}";
                 auth.IconUrl = context.Guild.IconUrl;
-                warnings = Database.Warnings();
+                warnings = Ban.Warnings(context.Guild.Id);
                 if (warnings.Count <= 0)
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} nobody has been warned on this server.");
@@ -873,7 +887,7 @@ namespace FredBotNETCore.Services
                     SocketUser user = Extensions.UserInGuild(context.Message, context.Guild, username);
                     auth.Name = $"Warnings - {user.Username}#{user.Discriminator}";
                     auth.IconUrl = user.GetAvatarUrl();
-                    warnings = Database.Warnings(user);
+                    warnings = Ban.Warnings(context.Guild.Id, user);
                 }
                 else
                 {
@@ -895,29 +909,49 @@ namespace FredBotNETCore.Services
                 };
                 embed.WithFooter(footer);
                 embed.WithCurrentTimestamp();
-                string warningsS = string.Join("\n", warnings.ToArray());
                 bool first = true;
-                foreach (string warning in warningsS.SplitInParts(1990))
+
+                foreach (Ban warning in warnings)
                 {
-                    if (first)
+                    string text = $"**User:** {Format.Sanitize(warning.Username)} ({warning.UserID})\n**Moderator:** {Format.Sanitize(warning.Moderator)} ({warning.ModeratorID})\n**Reason:** {Format.Sanitize(warning.Reason)}";
+                    embed.AddField("Case " + warning.Case.ToString(), text);
+                    if (embed.Fields.Count == 25)
                     {
-                        first = false;
-                        embed.Description = warning;
-                        if (warnings.Count == 1)
+                        if (first)
                         {
-                            await context.Channel.SendMessageAsync($"**{warnings.Count}** warning found.", false, embed.Build());
+                            if (warnings.Count == 1)
+                            {
+                                await context.Channel.SendMessageAsync($"**{warnings.Count}** warning found.", false, embed.Build());
+                            }
+                            else
+                            {
+                                await context.Channel.SendMessageAsync($"**{warnings.Count}** warnings found.", false, embed.Build());
+                            }
+                            first = false;
                         }
                         else
                         {
-                            await context.Channel.SendMessageAsync($"**{warnings.Count}** warnings found.", false, embed.Build());
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
                         }
+                        embed.Fields.Clear();
+                    }
+                }
+                if (first)
+                {
+                    if (warnings.Count == 1)
+                    {
+                        await context.Channel.SendMessageAsync($"**{warnings.Count}** warning found.", false, embed.Build());
                     }
                     else
                     {
-                        embed.Description = warning;
-                        await context.Channel.SendMessageAsync("", false, embed.Build());
+                        await context.Channel.SendMessageAsync($"**{warnings.Count}** warnings found.", false, embed.Build());
                     }
                 }
+                else
+                {
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+
             }
             else
             {
@@ -927,19 +961,24 @@ namespace FredBotNETCore.Services
 
         public async Task UnbanAsync(SocketCommandContext context, string username, [Remainder] string reason)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (string.IsNullOrWhiteSpace(username))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /unban";
-                embed.Description = "**Description:** Unban a member\n**Usage:** /unban [user], [optional reason]\n**Example:** /unban @Jiggmin, Appealed!";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}unban";
+                embed.Description = $"**Description:** Unban a member\n**Usage:** {prefix}unban [user], [optional reason]\n**Example:** {prefix}unban @Jiggmin, Appealed!";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else if (Extensions.GetBanLogChannel(context.Guild) == null)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the ban log channel has not been set.");
+            }
+            else if (reason != null && reason.Length > 200)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} reason must be 200 characters or less.");
             }
             else
             {
@@ -956,10 +995,10 @@ namespace FredBotNETCore.Services
                 }
                 if (isBanned)
                 {
-                    SocketTextChannel banlog = context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
+                    SocketTextChannel banlog = Extensions.GetBanLogChannel(context.Guild);
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
-                        Name = $"Case {Database.CaseCount() + 1} | Unban | {user.Username}#{user.Discriminator}",
+                        Name = $"Case {Ban.CaseCount(context.Guild.Id) + 1} | Unban | {user.Username}#{user.Discriminator}",
                         IconUrl = user.GetAvatarUrl(),
                     };
                     EmbedBuilder embed = new EmbedBuilder()
@@ -988,14 +1027,25 @@ namespace FredBotNETCore.Services
                     await context.Message.DeleteAsync();
                     if (reason == null)
                     {
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unban", context.User.Username + "#" + context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was unbanned.");
+                        Ban ban = new Ban()
+                        {
+                            GuildID = long.Parse(context.Guild.Id.ToString()),
+                            Case = Ban.CaseCount(context.Guild.Id) + 1,
+                            UserID = long.Parse(user.Id.ToString()),
+                            Username = user.Username + "#" + user.Discriminator,
+                            Type = "Unban",
+                            ModeratorID = long.Parse(context.User.Id.ToString()),
+                            Moderator = context.User.Username + "#" + context.User.Discriminator,
+                            Reason = "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                        };
+                        Ban.Add(ban);
                         RequestOptions options = new RequestOptions()
                         {
                             AuditLogReason = $"No Reason Given | Mod: {context.User.Username}#{context.User.Discriminator}"
                         };
                         await context.Guild.RemoveBanAsync(user, options);
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was unbanned.");
                     }
                     else
                     {
@@ -1005,14 +1055,25 @@ namespace FredBotNETCore.Services
                             y.Value = Format.Sanitize(reason);
                             y.IsInline = true;
                         });
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unban", context.User.Username + "#" + context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was unbanned.");
+                        Ban ban = new Ban()
+                        {
+                            GuildID = long.Parse(context.Guild.Id.ToString()),
+                            Case = Ban.CaseCount(context.Guild.Id) + 1,
+                            UserID = long.Parse(user.Id.ToString()),
+                            Username = user.Username + "#" + user.Discriminator,
+                            Type = "Unban",
+                            ModeratorID = long.Parse(context.User.Id.ToString()),
+                            Moderator = context.User.Username + "#" + context.User.Discriminator,
+                            Reason = reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                        };
+                        Ban.Add(ban);
                         RequestOptions options = new RequestOptions()
                         {
                             AuditLogReason = $"{reason} | Mod: {context.User.Username}#{context.User.Discriminator}"
                         };
                         await context.Guild.RemoveBanAsync(user, options);
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was unbanned.");
                     }
                 }
                 else
@@ -1024,27 +1085,32 @@ namespace FredBotNETCore.Services
 
         public async Task UndeafenAsync(SocketCommandContext context, string username, [Remainder] string reason)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (string.IsNullOrWhiteSpace(username))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /undeafen";
-                embed.Description = "**Description:** Undeafen a member\n**Usage:** /undeafen [user], [optional reason]\n**Example:** /undeafen @Jiggmin Listen now!";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}undeafen";
+                embed.Description = $"**Description:** Undeafen a member\n**Usage:** {prefix}undeafen [user], [optional reason]\n**Example:** {prefix}undeafen @Jiggmin Listen now!";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
                 return;
+            }
+            else if (Extensions.GetBanLogChannel(context.Guild) == null)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the ban log channel has not been set.");
+            }
+            else if (reason != null && reason.Length > 200)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} reason must be 200 characters or less.");
             }
             else
             {
                 if (Extensions.UserInGuild(context.Message, context.Guild, username) != null)
                 {
                     SocketUser user = Extensions.UserInGuild(context.Message, context.Guild, username);
-                    if (Extensions.CheckStaff(user.Id.ToString(), (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false)) || user.Id == context.Client.CurrentUser.Id)
+                    if (DiscordStaff.Get(context.Guild.Id, "u-" + user.Id).Count > 0 || DiscordStaff.Get(context.Guild.Id, "r-" + (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0 || user.Id == context.Client.CurrentUser.Id)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is a mod/admin, I can't do that.");
                         return;
@@ -1054,10 +1120,10 @@ namespace FredBotNETCore.Services
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
+                    SocketTextChannel banlog = Extensions.GetBanLogChannel(context.Guild);
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
-                        Name = $"Case {Database.CaseCount() + 1} | Undeafen | {user.Username}#{user.Discriminator}",
+                        Name = $"Case {Ban.CaseCount(context.Guild.Id) + 1} | Undeafen | {user.Username}#{user.Discriminator}",
                         IconUrl = user.GetAvatarUrl(),
                     };
                     EmbedBuilder embed = new EmbedBuilder()
@@ -1086,9 +1152,18 @@ namespace FredBotNETCore.Services
                     await context.Message.DeleteAsync();
                     if (reason == null)
                     {
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", context.User.Username + "#" + context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
+                        Ban ban = new Ban()
+                        {
+                            GuildID = long.Parse(context.Guild.Id.ToString()),
+                            Case = Ban.CaseCount(context.Guild.Id) + 1,
+                            UserID = long.Parse(user.Id.ToString()),
+                            Username = user.Username + "#" + user.Discriminator,
+                            Type = "Undeafen",
+                            ModeratorID = long.Parse(context.User.Id.ToString()),
+                            Moderator = context.User.Username + "#" + context.User.Discriminator,
+                            Reason = "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                        };
+                        Ban.Add(ban);
                         await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
                         try
                         {
@@ -1098,6 +1173,8 @@ namespace FredBotNETCore.Services
                         {
                             //cant send message
                         }
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
                     }
                     else
                     {
@@ -1107,9 +1184,18 @@ namespace FredBotNETCore.Services
                             y.Value = Format.Sanitize(reason);
                             y.IsInline = true;
                         });
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Undeafen", context.User.Username + "#" + context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
+                        Ban ban = new Ban()
+                        {
+                            GuildID = long.Parse(context.Guild.Id.ToString()),
+                            Case = Ban.CaseCount(context.Guild.Id) + 1,
+                            UserID = long.Parse(user.Id.ToString()),
+                            Username = user.Username + "#" + user.Discriminator,
+                            Type = "Undeafen",
+                            ModeratorID = long.Parse(context.User.Id.ToString()),
+                            Moderator = context.User.Username + "#" + context.User.Discriminator,
+                            Reason = reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                        };
+                        Ban.Add(ban);
                         await (user as SocketGuildUser).ModifyAsync(x => x.Deaf = false);
                         try
                         {
@@ -1119,6 +1205,8 @@ namespace FredBotNETCore.Services
                         {
                             //cant send message
                         }
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was undeafened.");
                     }
                 }
                 else
@@ -1130,27 +1218,32 @@ namespace FredBotNETCore.Services
 
         public async Task DeafenAsync(SocketCommandContext context, string username, [Remainder] string reason)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (string.IsNullOrWhiteSpace(username))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /deafen";
-                embed.Description = "**Description:** Deafen a member\n**Usage:** /deafen [user], [optional reason]\n**Example:** /deafen @Jiggmin Don't listen!";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}deafen";
+                embed.Description = $"**Description:** Deafen a member\n**Usage:** {prefix}deafen [user], [optional reason]\n**Example:** {prefix}deafen @Jiggmin Don't listen!";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
                 return;
+            }
+            else if (Extensions.GetBanLogChannel(context.Guild) == null)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the ban log channel has not been set.");
+            }
+            else if (reason != null && reason.Length > 200)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} reason must be 200 characters or less.");
             }
             else
             {
                 if (Extensions.UserInGuild(context.Message, context.Guild, username) != null)
                 {
                     SocketGuildUser user = context.Guild.GetUser(Extensions.UserInGuild(context.Message, context.Guild, username).Id);
-                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == context.Client.CurrentUser.Id)
+                    if (DiscordStaff.Get(context.Guild.Id, "u-" + user.Id).Count > 0 || DiscordStaff.Get(context.Guild.Id, "r-" + user.Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0 || user.Id == context.Client.CurrentUser.Id)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is a mod/admin, I can't do that.");
                         return;
@@ -1160,10 +1253,10 @@ namespace FredBotNETCore.Services
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
+                    SocketTextChannel banlog = Extensions.GetBanLogChannel(context.Guild);
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
-                        Name = $"Case {Database.CaseCount() + 1} | Deafen | {user.Username}#{user.Discriminator}",
+                        Name = $"Case {Ban.CaseCount(context.Guild.Id) + 1} | Deafen | {user.Username}#{user.Discriminator}",
                         IconUrl = user.GetAvatarUrl(),
                     };
                     EmbedBuilder embed = new EmbedBuilder()
@@ -1192,9 +1285,18 @@ namespace FredBotNETCore.Services
                     await context.Message.DeleteAsync();
                     if (reason == null)
                     {
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", context.User.Username + "#" + context.User.Discriminator, "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
+                        Ban ban = new Ban()
+                        {
+                            GuildID = long.Parse(context.Guild.Id.ToString()),
+                            Case = Ban.CaseCount(context.Guild.Id) + 1,
+                            UserID = long.Parse(user.Id.ToString()),
+                            Username = user.Username + "#" + user.Discriminator,
+                            Type = "Deafen",
+                            ModeratorID = long.Parse(context.User.Id.ToString()),
+                            Moderator = context.User.Username + "#" + context.User.Discriminator,
+                            Reason = "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                        };
+                        Ban.Add(ban);
                         await user.ModifyAsync(x => x.Deaf = true);
                         try
                         {
@@ -1204,6 +1306,8 @@ namespace FredBotNETCore.Services
                         {
                             //cant send message
                         }
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
                     }
                     else
                     {
@@ -1213,9 +1317,18 @@ namespace FredBotNETCore.Services
                             y.Value = Format.Sanitize(reason);
                             y.IsInline = true;
                         });
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Deafen", context.User.Username + "#" + context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        await banlog.SendMessageAsync("", false, embed.Build());
-                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
+                        Ban ban = new Ban()
+                        {
+                            GuildID = long.Parse(context.Guild.Id.ToString()),
+                            Case = Ban.CaseCount(context.Guild.Id) + 1,
+                            UserID = long.Parse(user.Id.ToString()),
+                            Username = user.Username + "#" + user.Discriminator,
+                            Type = "Deafen",
+                            ModeratorID = long.Parse(context.User.Id.ToString()),
+                            Moderator = context.User.Username + "#" + context.User.Discriminator,
+                            Reason = reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                        };
+                        Ban.Add(ban);
                         await user.ModifyAsync(x => x.Deaf = true);
                         try
                         {
@@ -1225,6 +1338,8 @@ namespace FredBotNETCore.Services
                         {
                             //cant send message
                         }
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was deafened.");
                     }
                 }
                 else
@@ -1236,27 +1351,32 @@ namespace FredBotNETCore.Services
 
         public async Task SoftbanAsync(SocketCommandContext context, string username, [Remainder] string reason)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(reason))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /softban";
-                embed.Description = "**Description:** Softban a member (ban and immediate unban to delete user messages)\n**Usage:** /softban [user] [reason]\n**Example:** /softban @Jiggmin Not making Fred admin!";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}softban";
+                embed.Description = $"**Description:** Softban a member (ban and immediate unban to delete user messages)\n**Usage:** {prefix}softban [user] [reason]\n**Example:** {prefix}softban @Jiggmin Not making Fred admin!";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
                 return;
+            }
+            else if (Extensions.GetBanLogChannel(context.Guild) == null)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the ban log channel has not been set.");
+            }
+            else if (reason.Length > 200)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} reason must be 200 characters or less.");
             }
             else
             {
                 if (Extensions.UserInGuild(context.Message, context.Guild, username) != null)
                 {
                     SocketGuildUser user = context.Guild.GetUser(Extensions.UserInGuild(context.Message, context.Guild, username).Id);
-                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == context.Client.CurrentUser.Id)
+                    if (DiscordStaff.Get(context.Guild.Id, "u-" + user.Id).Count > 0 || DiscordStaff.Get(context.Guild.Id, "r-" + user.Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0 || user.Id == context.Client.CurrentUser.Id)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is a mod/admin, I can't do that.");
                         return;
@@ -1266,10 +1386,10 @@ namespace FredBotNETCore.Services
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
+                    SocketTextChannel banlog = Extensions.GetBanLogChannel(context.Guild);
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
-                        Name = $"Case {Database.CaseCount() + 1} | Softban | {user.Username}#{user.Discriminator}",
+                        Name = $"Case {Ban.CaseCount(context.Guild.Id) + 1} | Softban | {user.Username}#{user.Discriminator}",
                         IconUrl = user.GetAvatarUrl(),
                     };
                     EmbedBuilder embed = new EmbedBuilder()
@@ -1302,9 +1422,18 @@ namespace FredBotNETCore.Services
                         y.IsInline = true;
                     });
                     await context.Message.DeleteAsync();
-                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Softban", context.User.Username + "#" + context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                    await banlog.SendMessageAsync("", false, embed.Build());
-                    await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was softbanned.");
+                    Ban ban = new Ban()
+                    {
+                        GuildID = long.Parse(context.Guild.Id.ToString()),
+                        Case = Ban.CaseCount(context.Guild.Id) + 1,
+                        UserID = long.Parse(user.Id.ToString()),
+                        Username = user.Username + "#" + user.Discriminator,
+                        Type = "Softban",
+                        ModeratorID = long.Parse(context.User.Id.ToString()),
+                        Moderator = context.User.Username + "#" + context.User.Discriminator,
+                        Reason = reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                    };
+                    Ban.Add(ban);
                     try
                     {
                         await user.SendMessageAsync($"You have been softbanned on **{Format.Sanitize(context.Guild.Name)}** by {context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
@@ -1319,6 +1448,8 @@ namespace FredBotNETCore.Services
                         AuditLogReason = $"Softban | Mod: {context.User.Username}#{context.User.Discriminator}"
                     };
                     await context.Guild.RemoveBanAsync(user, options);
+                    await banlog.SendMessageAsync("", false, embed.Build());
+                    await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was softbanned.");
                 }
                 else
                 {
@@ -1329,18 +1460,15 @@ namespace FredBotNETCore.Services
 
         public async Task GetCaseAsync(SocketCommandContext context, string caseN)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (string.IsNullOrWhiteSpace(caseN) || !int.TryParse(caseN, out _))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /getcase";
-                embed.Description = "**Description:** Get info on a case.\n**Usage:** /getcase [case number]\n**Example:** /getcase 1";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}getcase";
+                embed.Description = $"**Description:** Get info on a case.\n**Usage:** {prefix}getcase [case number]\n**Example:** {prefix}getcase 1";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
             }
             else
@@ -1361,7 +1489,8 @@ namespace FredBotNETCore.Services
                 };
                 embed.WithFooter(footer);
                 embed.WithCurrentTimestamp();
-                embed.Description = Database.GetCase(caseN);
+                Ban ban = Ban.GetCase("`case`", caseN);
+                embed.Description = $"**User:** {Format.Sanitize(ban.Username)} ({ban.UserID})\n**Moderator:** {Format.Sanitize(ban.Moderator)} ({ban.ModeratorID})\n**Type:** {ban.Type}\n**Reason:** {Format.Sanitize(ban.Reason)}";
                 if (embed.Description.Length <= 0)
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} case could not be found.");
@@ -1375,18 +1504,15 @@ namespace FredBotNETCore.Services
 
         public async Task ModlogsAsync(SocketCommandContext context, [Remainder] string username)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (string.IsNullOrWhiteSpace(username))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /modlogs";
-                embed.Description = "**Description:** Get a list of mod logs for a user.\n**Usage:** /modlogs [user]\n**Example:** /modlogs @Jiggmin";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}modlogs";
+                embed.Description = $"**Description:** Get a list of mod logs for a user.\n**Usage:** {prefix}modlogs [user]\n**Example:** {prefix}modlogs @Jiggmin";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
             }
             else
@@ -1394,7 +1520,7 @@ namespace FredBotNETCore.Services
                 if (Extensions.UserInGuild(context.Message, context.Guild, username) != null)
                 {
                     SocketUser user = Extensions.UserInGuild(context.Message, context.Guild, username);
-                    List<string> modlogs = Database.Modlogs(user);
+                    List<Ban> modlogs = Ban.GetPriors(context.Guild.Id, user);
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
                         Name = $"Mod Logs - {user.Username}#{user.Discriminator}",
@@ -1418,28 +1544,46 @@ namespace FredBotNETCore.Services
                     }
                     else
                     {
-                        string modlogsS = string.Join("\n", modlogs.ToArray());
                         bool first = true;
-                        foreach (string modlog in modlogsS.SplitInParts(1990))
+                        foreach (Ban modlog in modlogs)
                         {
-                            if (first)
+                            string text = $"**User:** {modlog.Username} ({modlog.UserID})\n**Moderator:** {modlog.Moderator} ({modlog.ModeratorID})\n**Type:** {modlog.Type}\n**Reason:** {Format.Sanitize(modlog.Reason)}";
+                            embed.AddField("Case " + modlog.Case.ToString(), text);
+                            if (embed.Fields.Count == 25)
                             {
-                                first = false;
-                                embed.Description = modlog;
-                                if (modlogs.Count == 1)
+                                if (first)
                                 {
-                                    await context.Channel.SendMessageAsync($"**{modlogs.Count}** log found.", false, embed.Build());
+                                    if (modlogs.Count == 1)
+                                    {
+                                        await context.Channel.SendMessageAsync($"**{modlogs.Count}** log found.", false, embed.Build());
+                                    }
+                                    else
+                                    {
+                                        await context.Channel.SendMessageAsync($"**{modlogs.Count}** logs found.", false, embed.Build());
+                                    }
+                                    first = false;
                                 }
                                 else
                                 {
-                                    await context.Channel.SendMessageAsync($"**{modlogs.Count}** logs found.", false, embed.Build());
+                                    await context.Channel.SendMessageAsync("", false, embed.Build());
                                 }
+                                embed.Fields.Clear();
+                            }
+                        }
+                        if (first)
+                        {
+                            if (modlogs.Count == 1)
+                            {
+                                await context.Channel.SendMessageAsync($"**{modlogs.Count}** log found.", false, embed.Build());
                             }
                             else
                             {
-                                embed.Description = modlog;
-                                await context.Channel.SendMessageAsync("", false, embed.Build());
+                                await context.Channel.SendMessageAsync($"**{modlogs.Count}** logs found.", false, embed.Build());
                             }
+                        }
+                        else
+                        {
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
                         }
                     }
                 }
@@ -1452,23 +1596,28 @@ namespace FredBotNETCore.Services
 
         public async Task ReasonAsync(SocketCommandContext context, string caseN, [Remainder] string reason)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (caseN == null || reason == null || !int.TryParse(caseN, out int level_))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /reason";
-                embed.Description = "**Description:** Edit a reason for a mod log.\n**Usage:** /reason [case number] [reason]\n**Example:** /reason 1 Be nice :)";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}reason";
+                embed.Description = $"**Description:** Edit a reason for a mod log.\n**Usage:** {prefix}reason [case number] [reason]\n**Example:** {prefix}reason 1 Be nice :)";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else if (Extensions.GetBanLogChannel(context.Guild) == null)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the ban log channel has not been set.");
+            }
+            else if (reason.Length > 200)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} reason must be 200 characters or less.");
             }
             else
             {
-                SocketTextChannel banlog = context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
+                SocketTextChannel banlog = Extensions.GetBanLogChannel(context.Guild);
                 IAsyncEnumerable<IMessage> messages = banlog.GetMessagesAsync().Flatten().Where(x => x.Embeds.Count > 0);
                 string author = "", iconUrl = "", footerText = "";
                 IUserMessage msgToEdit = null;
@@ -1529,7 +1678,7 @@ namespace FredBotNETCore.Services
                     embed.WithFooter(footer);
                     embed.WithCurrentTimestamp();
                     await msgToEdit.ModifyAsync(x => x.Embed = embed.Build());
-                    Database.UpdateReason(caseN, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                    Ban.SetValue(caseN, context.Guild.Id, "reason", reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
                     await context.Message.DeleteAsync();
                     await context.Channel.SendMessageAsync($"{context.User.Mention} updated case {caseN}.");
                     embed.Author.Name = "Updated Case";
@@ -1539,33 +1688,41 @@ namespace FredBotNETCore.Services
                     embed.Color = new Color(0, 0, 255);
                     embed.Fields.Clear();
                     embed.Description = $"{context.User.Mention} updated case **{caseN}**.";
-                    await context.Guild.GetTextChannel(Extensions.GetLogChannel()).SendMessageAsync("", false, embed.Build());
+                    if (Extensions.GetLogChannel(context.Guild) != null)
+                    {
+                        await Extensions.GetLogChannel(context.Guild).SendMessageAsync("", false, embed.Build());
+                    }
                 }
             }
         }
 
         public async Task WarnAsync(SocketCommandContext context, string username, [Remainder] string reason)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(reason))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /warn";
-                embed.Description = "**Description:** Warn a member.\n**Usage:** /warn [user] [reason]\n**Example:** /warn @Jiggmin No flooding";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}warn";
+                embed.Description = $"**Description:** Warn a member.\n**Usage:** {prefix}warn [user] [reason]\n**Example:** {prefix}warn @Jiggmin No flooding";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else if (Extensions.GetBanLogChannel(context.Guild) == null)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the ban log channel has not been set.");
+            }
+            else if (reason.Length > 200)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} reason must be 200 characters or less.");
             }
             else
             {
                 if (Extensions.UserInGuild(context.Message, context.Guild, username) != null)
                 {
                     SocketGuildUser user = context.Guild.GetUser(Extensions.UserInGuild(context.Message, context.Guild, username).Id);
-                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == context.Client.CurrentUser.Id)
+                    if (DiscordStaff.Get(context.Guild.Id, "u-" + user.Id).Count > 0 || DiscordStaff.Get(context.Guild.Id, "r-" + user.Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0 || user.Id == context.Client.CurrentUser.Id)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is a mod/admin, I can't do that.");
                         return;
@@ -1575,10 +1732,10 @@ namespace FredBotNETCore.Services
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
+                    SocketTextChannel banlog = Extensions.GetBanLogChannel(context.Guild);
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
-                        Name = $"Case {Database.CaseCount() + 1} | Warn | {user.Username}#{user.Discriminator}",
+                        Name = $"Case {Ban.CaseCount(context.Guild.Id) + 1} | Warn | {user.Username}#{user.Discriminator}",
                         IconUrl = user.GetAvatarUrl(),
                     };
                     EmbedBuilder embed = new EmbedBuilder()
@@ -1611,9 +1768,18 @@ namespace FredBotNETCore.Services
                         y.IsInline = true;
                     });
                     await context.Message.DeleteAsync();
-                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Warn", context.User.Username + "#" + context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                    await banlog.SendMessageAsync("", false, embed.Build());
-                    await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was warned.");
+                    Ban ban = new Ban()
+                    {
+                        GuildID = long.Parse(context.Guild.Id.ToString()),
+                        Case = Ban.CaseCount(context.Guild.Id) + 1,
+                        UserID = long.Parse(user.Id.ToString()),
+                        Username = user.Username + "#" + user.Discriminator,
+                        Type = "Warn",
+                        ModeratorID = long.Parse(context.User.Id.ToString()),
+                        Moderator = context.User.Username + "#" + context.User.Discriminator,
+                        Reason = reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                    };
+                    Ban.Add(ban);
                     try
                     {
                         await user.SendMessageAsync($"You have been warned on **{Format.Sanitize(context.Guild.Name)}** by {context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
@@ -1622,6 +1788,8 @@ namespace FredBotNETCore.Services
                     {
                         //cant send message
                     }
+                    await banlog.SendMessageAsync("", false, embed.Build());
+                    await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was warned.");
                 }
                 else
                 {
@@ -1807,8 +1975,9 @@ namespace FredBotNETCore.Services
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /giveaway";
-                embed.Description = "**Description:** Create a giveaway.\n**Usage:** /giveaway [channel] [time] [winners] [item]\n**Example:** /giveaway pr2-discussion 60 1 Cowboy Hat";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}giveaway";
+                embed.Description = $"**Description:** Create a giveaway.\n**Usage:** {prefix}giveaway [channel] [time] [winners] [item]\n**Example:** {prefix}giveaway pr2-discussion 60 1 Cowboy Hat";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
             }
             else
@@ -1947,8 +2116,9 @@ namespace FredBotNETCore.Services
                     {
                         Color = new Color(220, 220, 220)
                     };
-                    embed.Title = "Command: /promote";
-                    embed.Description = "**Description:** Annonce a PR2 promotion.\n**Usage:** /promote [type] [user]\n**Example:** /promote temp @Jiggmin";
+                    string prefix = Guild.Get(context.Guild).Prefix;
+                    embed.Title = $"Command {prefix}promote";
+                    embed.Description = $"**Description:** Annonce a PR2 promotion.\n**Usage:** {prefix}promote [type] [user]\n**Example:** {prefix}promote temp @Jiggmin";
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else if (Extensions.UserInGuild(context.Message, context.Guild, username) != null)
@@ -2001,19 +2171,24 @@ namespace FredBotNETCore.Services
 
         public async Task UnmuteAsync(SocketCommandContext context, string username, [Remainder] string reason)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (string.IsNullOrWhiteSpace(username))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /unmute";
-                embed.Description = "**Description:** Unmute a user.\n**Usage:** /unmute [user], [optional reason]\n**Example:** /unmute @Jiggmin, Speak now";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}unmute";
+                embed.Description = $"**Description:** Unmute a user.\n**Usage:** {prefix}unmute [user], [optional reason]\n**Example:** {prefix}unmute @Jiggmin, Speak now";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else if (Extensions.GetBanLogChannel(context.Guild) == null)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the ban log channel has not been set.");
+            }
+            else if (reason != null && reason.Length > 200)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} reason must be 200 characters or less.");
             }
             else
             {
@@ -2030,7 +2205,7 @@ namespace FredBotNETCore.Services
                         RequestOptions options = new RequestOptions();
                         EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                         {
-                            Name = $"Case {Database.CaseCount() + 1} | Unmute | {user.Username}#{user.Discriminator}",
+                            Name = $"Case {Ban.CaseCount(context.Guild.Id) + 1} | Unmute | {user.Username}#{user.Discriminator}",
                             IconUrl = user.GetAvatarUrl(),
                         };
                         EmbedBuilder embed = new EmbedBuilder()
@@ -2059,7 +2234,18 @@ namespace FredBotNETCore.Services
                         if (reason == null)
                         {
                             options.AuditLogReason = $"Unmuting User | Mod: {context.User.Username}#{context.User.Discriminator}";
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", context.User.Username + "#" + context.User.Discriminator, "No Reason - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            Ban ban = new Ban()
+                            {
+                                GuildID = long.Parse(context.Guild.Id.ToString()),
+                                Case = Ban.CaseCount(context.Guild.Id) + 1,
+                                UserID = long.Parse(user.Id.ToString()),
+                                Username = user.Username + "#" + user.Discriminator,
+                                Type = "Unmute",
+                                ModeratorID = long.Parse(context.User.Id.ToString()),
+                                Moderator = context.User.Username + "#" + context.User.Discriminator,
+                                Reason = "No reason given - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                            };
+                            Ban.Add(ban);
                             try
                             {
                                 await user.SendMessageAsync($"{context.User.Mention} you have been unmuted in **{Format.Sanitize(context.Guild.Name)}** by {context.User.Mention}.");
@@ -2078,7 +2264,18 @@ namespace FredBotNETCore.Services
                                 y.Value = Format.Sanitize(reason);
                                 y.IsInline = true;
                             });
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", context.User.Username + "#" + context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                            Ban ban = new Ban()
+                            {
+                                GuildID = long.Parse(context.Guild.Id.ToString()),
+                                Case = Ban.CaseCount(context.Guild.Id) + 1,
+                                UserID = long.Parse(user.Id.ToString()),
+                                Username = user.Username + "#" + user.Discriminator,
+                                Type = "Unmute",
+                                ModeratorID = long.Parse(context.User.Id.ToString()),
+                                Moderator = context.User.Username + "#" + context.User.Discriminator,
+                                Reason = reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                            };
+                            Ban.Add(ban);
                             try
                             {
                                 await user.SendMessageAsync($"{context.User.Mention} you have been unmuted in **{Format.Sanitize(context.Guild.Name)}** by {context.User.Mention} with reason **{Format.Sanitize(reason)}**.");
@@ -2089,12 +2286,12 @@ namespace FredBotNETCore.Services
                             }
                         }
                         await context.Message.DeleteAsync();
-                        SocketTextChannel banlog = context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
-                        await banlog.SendMessageAsync("", false, embed.Build());
+                        SocketTextChannel banlog = Extensions.GetBanLogChannel(context.Guild);
                         await user.RemoveRolesAsync(role, options);
-                        await context.Channel.SendMessageAsync($"Unmuted **{Format.Sanitize(user.Username)}#{user.Discriminator}**");
                         string mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace("\n" + user.Id.ToString(), string.Empty);
                         File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
+                        await banlog.SendMessageAsync("", false, embed.Build());
+                        await context.Channel.SendMessageAsync($"Unmuted **{Format.Sanitize(user.Username)}#{user.Discriminator}**");
                     }
                 }
                 else
@@ -2225,16 +2422,11 @@ namespace FredBotNETCore.Services
                 string joinedMonth = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(user.JoinedAt.Value.Month);
                 string joinedDay = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(user.JoinedAt.Value.DayOfWeek);
                 string joined = $"{joinedDay}, {joinedMonth} {user.JoinedAt.Value.Day}, {user.JoinedAt.Value.Year} {user.JoinedAt.Value.LocalDateTime.ToString("h:mm tt")}";
-                List<string> result = Database.CheckExistingUser(context.User);
-                if (result.Count() <= 0)
+                if (!User.Exists(context.User))
                 {
-                    Database.EnterUser(context.User);
+                    User.Add(context.User);
                 }
-                string pr2name = Database.GetPR2Name(user);
-                if (pr2name == null)
-                {
-                    pr2name = "Not verified";
-                }
+                string pr2name = User.GetUser("user_id", context.User.Id.ToString()).PR2Name;
                 position = guildUsers.ToList().IndexOf(user);
                 foreach (SocketRole role in user.Roles)
                 {
@@ -2267,12 +2459,15 @@ namespace FredBotNETCore.Services
                     y.Value = date;
                     y.IsInline = true;
                 });
-                embed.AddField(y =>
+                if (pr2name != null)
                 {
-                    y.Name = "PR2 Name";
-                    y.Value = Format.Sanitize(pr2name);
-                    y.IsInline = true;
-                });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "PR2 Name";
+                        y.Value = Format.Sanitize(pr2name);
+                        y.IsInline = true;
+                    });
+                }
                 embed.AddField(y =>
                 {
                     y.Name = "JV2 Name";
@@ -2293,7 +2488,7 @@ namespace FredBotNETCore.Services
                     embed.AddField(y =>
                     {
                         y.Name = $"Priors";
-                        y.Value = Database.Modlogs(user).Count;
+                        y.Value = Ban.GetPriors(context.Guild.Id, user).Count;
                         y.IsInline = false;
                     });
                 }
@@ -2395,38 +2590,19 @@ namespace FredBotNETCore.Services
 
         public async Task PurgeAsync(SocketCommandContext context, string amount, [Remainder] string username)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (string.IsNullOrWhiteSpace(amount) || !int.TryParse(amount, out int delete))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /purge";
-                embed.Description = "**Description:** Delete a number of messages from a channel.\n**Usage:** /purge [amount], [optional user]\n**Example:** /purge 10, @Jiggmin";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}purge";
+                embed.Description = $"**Description:** Delete a number of messages from a channel.\n**Usage:** {prefix}purge [amount], [optional user]\n**Example:** {prefix}purge 10, @Jiggmin";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
                 return;
             }
-            SocketTextChannel channel = context.Channel as SocketTextChannel, log = context.Guild.GetTextChannel(Extensions.GetLogChannel());
-            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-            {
-                Name = "Purge Messages",
-                IconUrl = context.Guild.IconUrl
-            };
-            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-            {
-                Text = $"ID: {context.User.Id}"
-            };
-            EmbedBuilder embed2 = new EmbedBuilder()
-            {
-                Author = author,
-                Color = new Color(255, 0, 0),
-                Footer = footer
-            };
-            embed2.WithCurrentTimestamp();
+            SocketTextChannel channel = context.Channel as SocketTextChannel;
             if (username == null)
             {
                 await context.Message.DeleteAsync();
@@ -2434,19 +2610,13 @@ namespace FredBotNETCore.Services
                 if (delete == 1)
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} deleted {amount} message in {channel.Mention} .");
-                    Extensions.Purging = true;
                     await (context.Channel as SocketTextChannel).DeleteMessagesAsync(items.ToEnumerable());
-                    embed2.Description = $"{context.User.Mention} purged **{amount}** message in {channel.Mention}.";
                 }
                 else
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} deleted {amount} messages in {channel.Mention} .");
-                    Extensions.Purging = true;
                     await (context.Channel as ITextChannel).DeleteMessagesAsync(items.ToEnumerable());
-                    embed2.Description = $"{context.User.Mention} purged **{amount}** messages in {channel.Mention}.";
                 }
-                await log.SendMessageAsync("", false, embed2.Build());
-                Extensions.Purging = false;
                 return;
             }
             else
@@ -2459,19 +2629,13 @@ namespace FredBotNETCore.Services
                     if (delete == 1)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} deleted {amount} message from {user.Mention} in {channel.Mention} .");
-                        Extensions.Purging = true;
                         await (context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
-                        embed2.Description = $"{context.User.Mention} purged **{amount}** message in {channel.Mention} from {user.Mention}.";
                     }
                     else
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} deleted {amount} messages from {user.Mention} in {channel.Mention} .");
-                        Extensions.Purging = true;
                         await (context.Channel as ITextChannel).DeleteMessagesAsync(usermessages.ToEnumerable());
-                        embed2.Description = $"{context.User.Mention} purged **{amount}** messages in {channel.Mention} from {user.Mention}.";
                     }
-                    await log.SendMessageAsync("", false, embed2.Build());
-                    Extensions.Purging = false;
                 }
                 else
                 {
@@ -2482,26 +2646,31 @@ namespace FredBotNETCore.Services
 
         public async Task KickAsync(SocketCommandContext context, string username, [Remainder] string reason)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (username == null || reason == null)
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /kick";
-                embed.Description = "**Description:** Kick a member.\n**Usage:** /kick [user] [reason]\n**Example:** /kick @Jiggmin Be nice :)";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}kick";
+                embed.Description = $"**Description:** Kick a member.\n**Usage:** {prefix}kick [user] [reason]\n**Example:** {prefix}kick @Jiggmin Be nice :)";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else if (Extensions.GetBanLogChannel(context.Guild) == null)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the ban log channel has not been set.");
+            }
+            else if (reason.Length > 200)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} reason must be 200 characters or less.");
             }
             else
             {
                 if (Extensions.UserInGuild(context.Message, context.Guild, username) != null)
                 {
                     SocketGuildUser user = Extensions.UserInGuild(context.Message, context.Guild, username) as SocketGuildUser;
-                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == context.Client.CurrentUser.Id)
+                    if (DiscordStaff.Get(context.Guild.Id, "u-" + user.Id).Count > 0 || DiscordStaff.Get(context.Guild.Id, "r-" + user.Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0 || user.Id == context.Client.CurrentUser.Id)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is a mod/admin, I can't do that.");
                         return;
@@ -2511,10 +2680,10 @@ namespace FredBotNETCore.Services
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
+                    SocketTextChannel banlog = Extensions.GetBanLogChannel(context.Guild);
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
-                        Name = $"Case {Database.CaseCount() + 1} | Kick | {user.Username}#{user.Discriminator}",
+                        Name = $"Case {Ban.CaseCount(context.Guild.Id) + 1} | Kick | {user.Username}#{user.Discriminator}",
                         IconUrl = user.GetAvatarUrl(),
                     };
                     EmbedBuilder embed = new EmbedBuilder()
@@ -2560,7 +2729,18 @@ namespace FredBotNETCore.Services
                         //cant send message
                     }
                     await user.KickAsync(null, options);
-                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Kick", context.User.Username + "#" + context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                    Ban ban = new Ban()
+                    {
+                        GuildID = long.Parse(context.Guild.Id.ToString()),
+                        Case = Ban.CaseCount(context.Guild.Id) + 1,
+                        UserID = long.Parse(user.Id.ToString()),
+                        Username = user.Username + "#" + user.Discriminator,
+                        Type = "Kick",
+                        ModeratorID = long.Parse(context.User.Id.ToString()),
+                        Moderator = context.User.Username + "#" + context.User.Discriminator,
+                        Reason = reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                    };
+                    Ban.Add(ban);
                     await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was kicked.");
                     await banlog.SendMessageAsync("", false, embed.Build());
                 }
@@ -2573,26 +2753,31 @@ namespace FredBotNETCore.Services
 
         public async Task BanAsync(SocketCommandContext context, string username, [Remainder] string reason)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
             if (username == null || string.IsNullOrWhiteSpace(reason))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /ban";
-                embed.Description = "**Description:** Ban a member.\n**Usage:** /ban [user] [reason]\n**Example:** /ban @Jiggmin botting";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}ban";
+                embed.Description = $"**Description:** Ban a member.\n**Usage:** {prefix}ban [user] [reason]\n**Example:** {prefix}ban @Jiggmin botting";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else if (Extensions.GetBanLogChannel(context.Guild) == null)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the ban log channel has not been set.");
+            }
+            else if (reason.Length > 200)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} reason must be 200 characters or less.");
             }
             else
             {
                 if (Extensions.UserInGuild(context.Message, context.Guild, username) != null)
                 {
                     SocketGuildUser user = Extensions.UserInGuild(context.Message, context.Guild, username) as SocketGuildUser;
-                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == context.Client.CurrentUser.Id)
+                    if (DiscordStaff.Get(context.Guild.Id, "u-" + user.Id).Count > 0 || DiscordStaff.Get(context.Guild.Id, "r-" + user.Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0 || user.Id == context.Client.CurrentUser.Id)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is a mod/admin, I can't do that.");
                         return;
@@ -2602,10 +2787,10 @@ namespace FredBotNETCore.Services
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    SocketTextChannel banlog = context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
+                    SocketTextChannel banlog = Extensions.GetBanLogChannel(context.Guild);
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
-                        Name = $"Case {Database.CaseCount() + 1} | Ban | {user.Username}#{user.Discriminator}",
+                        Name = $"Case {Ban.CaseCount(context.Guild.Id) + 1} | Ban | {user.Username}#{user.Discriminator}",
                         IconUrl = user.GetAvatarUrl(),
                     };
                     EmbedBuilder embed = new EmbedBuilder()
@@ -2651,7 +2836,18 @@ namespace FredBotNETCore.Services
                         //cant send message
                     }
                     await context.Guild.AddBanAsync(user, 1, null, options);
-                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Ban", context.User.Username + "#" + context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                    Ban ban = new Ban()
+                    {
+                        GuildID = long.Parse(context.Guild.Id.ToString()),
+                        Case = Ban.CaseCount(context.Guild.Id) + 1,
+                        UserID = long.Parse(user.Id.ToString()),
+                        Username = user.Username + "#" + user.Discriminator,
+                        Type = "Ban",
+                        ModeratorID = long.Parse(context.User.Id.ToString()),
+                        Moderator = context.User.Username + "#" + context.User.Discriminator,
+                        Reason = reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                    };
+                    Ban.Add(ban);
                     await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was banned.");
                     await banlog.SendMessageAsync("", false, embed.Build());
                 }
@@ -2664,26 +2860,35 @@ namespace FredBotNETCore.Services
 
         public async Task MuteAsync(SocketCommandContext context, string username, string time, [Remainder] string reason)
         {
-            if (context.Guild.Id != 528679522707701760)
-            {
-                return;
-            }
-            if (username == null || string.IsNullOrWhiteSpace(time) || string.IsNullOrWhiteSpace(reason) || Math.Round(Convert.ToDouble(time), 0) < 1)
+            if (username == null || string.IsNullOrWhiteSpace(time) || string.IsNullOrWhiteSpace(reason) || !double.TryParse(time, out double minutes))
             {
                 EmbedBuilder embed = new EmbedBuilder()
                 {
                     Color = new Color(220, 220, 220)
                 };
-                embed.Title = "Command: /mute";
-                embed.Description = "**Description:** Mute a member.\n**Usage:** /mute [user] [time] [reason]\n**Example:** /mute @Jiggmin 10 Flooding";
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command {prefix}mute";
+                embed.Description = $"**Description:** Mute a member.\n**Usage:** {prefix}mute [user] [time] [reason]\n**Example:** {prefix}mute @Jiggmin 10 Flooding";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else if (Extensions.GetBanLogChannel(context.Guild) == null)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the ban log channel has not been set.");
+            }
+            else if (minutes < 1)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} you must mute a user for at least 1 minute.");
+            }
+            else if (reason.Length > 200)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} reason must be 200 characters or less.");
             }
             else
             {
                 if (Extensions.UserInGuild(context.Message, context.Guild, username) != null)
                 {
                     SocketGuildUser user = context.Guild.GetUser(Extensions.UserInGuild(context.Message, context.Guild, username).Id);
-                    if (Extensions.CheckStaff(user.Id.ToString(), user.Roles.Where(x => x.IsEveryone == false)) || user.Id == context.Client.CurrentUser.Id)
+                    if (DiscordStaff.Get(context.Guild.Id, "u-" + user.Id).Count > 0 || (user.Roles.Count - 1 > 0 && DiscordStaff.Get(context.Guild.Id, "r-" + user.Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0) || user.Id == context.Client.CurrentUser.Id)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is a mod/admin, I can't do that.");
                         return;
@@ -2693,10 +2898,10 @@ namespace FredBotNETCore.Services
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is of higher role than me.");
                         return;
                     }
-                    double minutes = Math.Round(Convert.ToDouble(time), 0);
+                    minutes = Math.Round(Convert.ToDouble(time), 0);
                     EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                     {
-                        Name = $"Case {Database.CaseCount() + 1} | Mute | {user.Username}#{user.Discriminator}",
+                        Name = $"Case {Ban.CaseCount(context.Guild.Id) + 1} | Mute | {user.Username}#{user.Discriminator}",
                         IconUrl = user.GetAvatarUrl(),
                     };
                     EmbedBuilder embed = new EmbedBuilder()
@@ -2708,8 +2913,13 @@ namespace FredBotNETCore.Services
                     {
                         Text = $"ID: {user.Id}"
                     };
-                    SocketTextChannel banlog = context.Guild.GetTextChannel(Extensions.GetBanLogChannel());
-                    IEnumerable<IRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
+                    SocketTextChannel banlog = Extensions.GetBanLogChannel(context.Guild);
+                    IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
+                    if (role.Count() <= 0)
+                    {
+                        await context.Guild.CreateRoleAsync("Muted", GuildPermissions.None.Modify(sendMessages: false, addReactions: false));
+                        role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
+                    }
                     RequestOptions options = new RequestOptions()
                     {
                         AuditLogReason = $"Muting User | Reason: {reason} | Mod: {context.User.Username}#{context.User.Discriminator}"
@@ -2756,7 +2966,18 @@ namespace FredBotNETCore.Services
                     await context.Message.DeleteAsync();
                     await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}** was muted.");
                     await banlog.SendMessageAsync("", false, embed.Build());
-                    Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", context.User.Username + "#" + context.User.Discriminator, reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                    Ban ban = new Ban()
+                    {
+                        GuildID = long.Parse(context.Guild.Id.ToString()),
+                        Case = Ban.CaseCount(context.Guild.Id) + 1,
+                        UserID = long.Parse(user.Id.ToString()),
+                        Username = user.Username + "#" + user.Discriminator,
+                        Type = "Mute",
+                        ModeratorID = long.Parse(context.User.Id.ToString()),
+                        Moderator = context.User.Username + "#" + context.User.Discriminator,
+                        Reason = reason + " - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                    };
+                    Ban.Add(ban);
                     try
                     {
                         if (minutes == 1)
@@ -2772,8 +2993,7 @@ namespace FredBotNETCore.Services
                     {
                         //cant send message
                     }
-                    string mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"));
-                    File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers + user.Id.ToString() + "\n");
+                    MutedUser.Add(context.Guild.Id, user.Id);
                     int mutetime = Convert.ToInt32(minutes) * 60000;
                     Task task = Task.Run(async () =>
                     {
@@ -2785,7 +3005,7 @@ namespace FredBotNETCore.Services
                             await user.RemoveRolesAsync(role, options);
                             EmbedAuthorBuilder auth2 = new EmbedAuthorBuilder()
                             {
-                                Name = $"Case {Database.CaseCount() + 1} | Unmute | {user.Username}#{user.Discriminator}",
+                                Name = $"Case {Ban.CaseCount(context.Guild.Id) + 1} | Unmute | {user.Username}#{user.Discriminator}",
                                 IconUrl = user.GetAvatarUrl(),
                             };
                             EmbedBuilder embed2 = new EmbedBuilder()
@@ -2826,14 +3046,17 @@ namespace FredBotNETCore.Services
                             {
                                 //cant send message
                             }
-                            Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: context.Client.CurrentUser.Username + "#" + context.Client.CurrentUser.Discriminator, reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                            mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace(user.Id.ToString() + "\n", string.Empty);
-                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
+                            ban.Case = Ban.CaseCount(context.Guild.Id) + 1;
+                            ban.ModeratorID = long.Parse(context.Client.CurrentUser.Id.ToString());
+                            ban.Moderator = context.Client.CurrentUser.Username + "#" + context.Client.CurrentUser.Discriminator;
+                            ban.Type = "Unmute";
+                            ban.Reason = "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString();
+                            Ban.Add(ban);
+                            MutedUser.Remove(context.Guild.Id, user.Id);
                         }
                         else
                         {
-                            mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace(user.Id.ToString() + "\n", string.Empty);
-                            File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
+                            MutedUser.Remove(context.Guild.Id, user.Id);
                         }
                     });
                 }

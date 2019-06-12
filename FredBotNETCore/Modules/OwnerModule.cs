@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FredBotNETCore.Database;
 using System;
 using System.Threading.Tasks;
 
@@ -18,7 +19,7 @@ namespace FredBotNETCore.Modules
             if (Extensions.UserInGuild(Context.Message, Context.Client.GetGuild(528679522707701760), username) != null)
             {
                 SocketUser user = Extensions.UserInGuild(Context.Message, Context.Guild, username);
-                Database.SetBalance(user, bal);
+                User.SetValue(user, "balance", bal.ToString());
                 await ReplyAsync($"{Context.User.Mention} successfully set **{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance to **${bal}**.");
             }
             else

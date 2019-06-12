@@ -37,7 +37,8 @@ namespace FredBotNETCore
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
                 {
                     LogLevel = LogSeverity.Verbose,
-                    MessageCacheSize = 100
+                    MessageCacheSize = 100,
+                    ExclusiveBulkDelete = true
                 }))
                 .AddSingleton(new CommandService(new CommandServiceConfig
                 {

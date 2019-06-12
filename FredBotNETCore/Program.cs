@@ -1,10 +1,8 @@
-﻿using Discord;
-using System;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace FredBotNETCore
 {
-    class Program
+    internal class Program
     {
         public static void Main(string[] args)
         {

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using FredBotNETCore.Database;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -34,6 +35,7 @@ namespace FredBotNETCore.Services
             _client.UserBanned += log.AnnounceUserBanned;
             _client.UserUnbanned += log.AnnounceUserUnbanned;
             _client.MessageDeleted += log.AnnounceMessageDeleted;
+            _client.MessagesBulkDeleted += log.AnnounceBulkDelete;
             _client.GuildMemberUpdated += log.AnnounceGuildMemberUpdated;
             _client.ChannelCreated += log.AnnounceChannelCreated;
             _client.ChannelDestroyed += log.AnnounceChannelDestroyed;
@@ -63,9 +65,9 @@ namespace FredBotNETCore.Services
             IMessage message2 = await message.GetOrDownloadAsync();
             if (message2.Content != msg.Content && msg.Channel is SocketTextChannel channel)
             {
-                if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
+                if (Extensions.GetLogChannel(channel.Guild) != null && channel != Extensions.GetLogChannel(channel.Guild))
                 {
-                    if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false)))
+                    if (DiscordStaff.Get(channel.Guild.Id, "u-" + msg.Author.Id).Count <= 0 || DiscordStaff.Get(channel.Guild.Id, "r-" + channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0)
                     {
                         AutoMod mod = new AutoMod(_client);
                         await mod.FilterMessage(msg, channel);

@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FredBotNETCore.Database;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
@@ -37,9 +38,9 @@ namespace FredBotNETCore
 
             if (msg.Channel is SocketTextChannel channel)
             {
-                if (channel.Guild.Id == 528679522707701760 && channel.Id != Extensions.GetLogChannel())
+                if (Extensions.GetLogChannel(channel.Guild) != null && channel != Extensions.GetLogChannel(channel.Guild))
                 {
-                    if (!Extensions.CheckStaff(msg.Author.Id.ToString(), channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false)))
+                    if (DiscordStaff.Get(channel.Guild.Id, "u-" + msg.Author.Id).Count > 0 || DiscordStaff.Get(channel.Guild.Id, "r-" + channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0)
                     {
                         AutoMod mod = new AutoMod(_client);
                         badMessage = await mod.FilterMessage(msg, channel);
@@ -56,7 +57,12 @@ namespace FredBotNETCore
         {
             SocketCommandContext context = new SocketCommandContext(_client, msg);
             int argPos = 0;
-            if (msg.HasStringPrefix("/", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
+            string prefix = "/";
+            if (context.Channel is SocketTextChannel)
+            {
+                prefix = Guild.Get(context.Guild).Prefix;
+            }
+            if (msg.HasStringPrefix(prefix, ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
             {
                 if (context.Channel is SocketTextChannel channel)
                 {
@@ -75,7 +81,10 @@ namespace FredBotNETCore
                 LogCommandUsage(context);
                 if (!result.IsSuccess || result.Error.HasValue && result.Error.Value == CommandError.Exception)
                 {
-                    await context.Channel.SendMessageAsync($"Oh no an error occurred. Details of this error have been sent to **{(await _client.GetApplicationInfoAsync()).Owner.Username}#{(await _client.GetApplicationInfoAsync()).Owner.Discriminator}** so that he can fix it.");
+                    if (result.Error.Value != CommandError.UnknownCommand)
+                    {
+                        await context.Channel.SendMessageAsync($"Oh no an error occurred. Details of this error have been sent to **{(await _client.GetApplicationInfoAsync()).Owner.Username}#{(await _client.GetApplicationInfoAsync()).Owner.Discriminator}** so that he can fix it.");
+                    }
                 }
             }
         }

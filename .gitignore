@@ -283,3 +283,4 @@ __pycache__/
 /FredBotNETCore/TextFiles/BanLogChannel.txt
 /FredBotNETCore/TextFiles/MusicChannels.txt
 /FredBotNETCore/logs
+/FredBotNETCore/TextFiles/ServerIP.txt

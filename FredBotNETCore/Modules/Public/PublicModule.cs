@@ -154,6 +154,7 @@ namespace FredBotNETCore.Modules.Public
         [Command("role", RunMode = RunMode.Async)]
         [Alias("joinrole", "leaverole")]
         [Summary("Add or remove yourself from a joinable role.")]
+        [RequireContext(ContextType.Guild)]
         public async Task Role([Remainder] string roleName = null)
         {
             await publicService.RoleAsync(Context, roleName);
@@ -162,6 +163,7 @@ namespace FredBotNETCore.Modules.Public
         [Command("joinableroles")]
         [Alias("ljr", "listjroles", "listjoinableroles")]
         [Summary("Lists all joinable roles.")]
+        [RequireContext(ContextType.Guild)]
         public async Task ListJoinableRoles()
         {
             await publicService.ListJoinableRolesAsync(Context);

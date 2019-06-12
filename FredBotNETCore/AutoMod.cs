@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using FredBotNETCore.Database;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +14,7 @@ namespace FredBotNETCore
     {
         public DiscordSocketClient Client { get; set; }
 
-        readonly Regex rx = new Regex(File.ReadAllText(Path.Combine(Extensions.downloadPath, "UnicodeRegex.txt")));
+        private readonly Regex rx = new Regex(File.ReadAllText(Path.Combine(Extensions.downloadPath, "UnicodeRegex.txt")));
 
         public AutoMod(DiscordSocketClient client)
         {
@@ -37,7 +38,7 @@ namespace FredBotNETCore
                 SocketGuildUser user = channel.Guild.GetUser(msg.Author.Id);
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
-                    Name = $"Case {Database.CaseCount() + 1} | Mute | {user.Username}#{user.Discriminator}",
+                    Name = $"Case {Ban.CaseCount(channel.Guild.Id) + 1} | Mute | {user.Username}#{user.Discriminator}",
                     IconUrl = user.GetAvatarUrl(),
                 };
                 EmbedBuilder embed = new EmbedBuilder()
@@ -92,9 +93,18 @@ namespace FredBotNETCore
                     y.Value = $"**{content}**";
                     y.IsInline = true;
                 });
-                await channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was muted.");
-                await banlog.SendMessageAsync("", false, embed.Build());
-                Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Mute", Client.CurrentUser.Username + "#" + Client.CurrentUser.Discriminator, "Auto - Mass mention - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
+                Ban ban = new Ban()
+                {
+                    GuildID = long.Parse(channel.Guild.Id.ToString()),
+                    Case = Ban.CaseCount(channel.Guild.Id) + 1,
+                    UserID = long.Parse(user.Id.ToString()),
+                    Username = user.Username + "#" + user.Discriminator,
+                    Type = "Mute",
+                    ModeratorID = long.Parse(Client.CurrentUser.Id.ToString()),
+                    Moderator = Client.CurrentUser.Username + "#" + Client.CurrentUser.Discriminator,
+                    Reason = "Auto - Mass mention - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString()
+                };
+                Ban.Add(ban);
                 try
                 {
                     await user.SendMessageAsync($"You have been muted in **{Format.Sanitize(channel.Guild.Name)}** by {Client.CurrentUser.Mention} for **mass mentioning** and for a length of **10** minutes.");
@@ -103,8 +113,9 @@ namespace FredBotNETCore
                 {
                     //cant send message
                 }
-                string mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"));
-                File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers + user.Id.ToString() + "\n");
+                MutedUser.Add(channel.Guild.Id, user.Id);
+                await channel.SendMessageAsync($"**{user.Username}#{user.Discriminator}** was muted.");
+                await banlog.SendMessageAsync("", false, embed.Build());
                 Task task = Task.Run(async () =>
                 {
                     await Task.Delay(600000);
@@ -115,7 +126,7 @@ namespace FredBotNETCore
                         await user.RemoveRoleAsync(role, options);
                         EmbedAuthorBuilder auth2 = new EmbedAuthorBuilder()
                         {
-                            Name = $"Case {Database.CaseCount() + 1} | Unmute | {user.Username}#{user.Discriminator}",
+                            Name = $"Case {Ban.CaseCount(channel.Guild.Id) + 1} | Unmute | {user.Username}#{user.Discriminator}",
                             IconUrl = user.GetAvatarUrl(),
                         };
                         EmbedBuilder embed2 = new EmbedBuilder()
@@ -156,13 +167,14 @@ namespace FredBotNETCore
                         {
                             //cant send message
                         }
-                        Database.AddPrior(user, user.Username + "#" + user.Discriminator, "Unmute", moderator: "Fred the G. Cactus#1000", reason: "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString());
-                        mutedUsers = File.ReadAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt")).Replace("\n" + user.Id.ToString(), string.Empty);
-                        File.WriteAllText(Path.Combine(Extensions.downloadPath, "MutedUsers.txt"), mutedUsers);
+                        ban.Type = "Unmute";
+                        ban.Reason = "Auto - " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToUniversalTime().ToShortTimeString();
+                        Ban.Add(ban);
+                        MutedUser.Remove(channel.Guild.Id, user.Id);
                     }
                     else
                     {
-                        return;
+                        MutedUser.Remove(channel.Guild.Id, user.Id);
                     }
                 });
                 return true;
@@ -175,7 +187,7 @@ namespace FredBotNETCore
         }
 
         public bool EmojiSpam(SocketUserMessage msg)
-        {           
+        {
             if (msg.Tags.Count(x => x.Type == TagType.Emoji) + rx.Matches(msg.Content).Count >= 5)
             {
                 return true;
@@ -183,12 +195,12 @@ namespace FredBotNETCore
             return false;
         }
 
-        public bool BlacklistedUrl(SocketUserMessage msg)
+        public bool HasBlacklistedUrl(SocketUserMessage msg, SocketTextChannel channel)
         {
-            string[] blacklistedUrls = Extensions.BlacklistedUrls;
-            foreach (string blacklistedUrl in blacklistedUrls)
+            List<BlacklistedUrl> blacklistedUrls = BlacklistedUrl.Get(channel.Guild.Id);
+            foreach (BlacklistedUrl blacklistedUrl in blacklistedUrls)
             {
-                if (blacklistedUrl.Length > 0 && msg.Content.Contains(blacklistedUrl, StringComparison.InvariantCultureIgnoreCase))
+                if (msg.Content.Contains(blacklistedUrl.Url, StringComparison.InvariantCultureIgnoreCase))
                 {
                     return true;
                 }
@@ -196,12 +208,12 @@ namespace FredBotNETCore
             return false;
         }
 
-        public bool BlacklistedWord(SocketUserMessage msg)
+        public bool HasBlacklistedWord(SocketUserMessage msg, SocketTextChannel channel)
         {
-            string[] bannedWords = Extensions.BannedWords;
-            foreach (string bannedWord in bannedWords)
+            List<BlacklistedWord> blacklistedWords = BlacklistedWord.Get(channel.Guild.Id);
+            foreach (BlacklistedWord blacklistedWord in blacklistedWords)
             {
-                if (bannedWord.Length > 0 && msg.Content.Contains(bannedWord, StringComparison.InvariantCultureIgnoreCase))
+                if (msg.Content.Contains(blacklistedWord.Word, StringComparison.InvariantCultureIgnoreCase))
                 {
                     return true;
                 }
@@ -237,94 +249,81 @@ namespace FredBotNETCore
                 }
             };
             embed.WithCurrentTimestamp();
-            SocketTextChannel log = channel.Guild.GetTextChannel(Extensions.GetLogChannel());
-            if (msg.Content.Length > 252)
+            SocketTextChannel log = Extensions.GetLogChannel(channel.Guild);
+            if (log != null)
             {
-                embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty).SplitInParts(252).ElementAt(0)}...**";
+                if (msg.Content.Length > 252)
+                {
+                    embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty).SplitInParts(252).ElementAt(0)}...**";
+                }
+                else
+                {
+                    embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty)}**";
+                }
+                bool badMessage = HasBlacklistedWord(msg, channel);
+                Discord.Rest.RestUserMessage message;
+                if (badMessage)
+                {
+                    await msg.DeleteAsync();
+                    embed.Fields.ElementAt(0).Value = "Blacklisted word";
+                    await log.SendMessageAsync("", false, embed.Build());
+                    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} watch your language.");
+                    await Task.Delay(5000);
+                    await message.DeleteAsync();
+                    await Task.Delay(100);
+                    return true;
+                }
+                badMessage = await MassMention(msg, channel);
+                if (badMessage)
+                {
+                    await msg.DeleteAsync();
+                    embed.Fields.ElementAt(0).Value = "Mass mention";
+                    await log.SendMessageAsync("", false, embed.Build());
+                    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no mention spamming.");
+                    await Task.Delay(5000);
+                    await message.DeleteAsync();
+                    await Task.Delay(100);
+                    return true;
+                }
+                badMessage = HasBlacklistedUrl(msg, channel);
+                if (badMessage)
+                {
+                    await msg.DeleteAsync();
+                    embed.Fields.ElementAt(0).Value = "Blacklisted URL";
+                    await log.SendMessageAsync("", false, embed.Build());
+                    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no inappropriate links.");
+                    await Task.Delay(5000);
+                    await message.DeleteAsync();
+                    await Task.Delay(100);
+                    return true;
+                }
+                badMessage = EmojiSpam(msg);
+                if (badMessage)
+                {
+                    await msg.DeleteAsync();
+                    embed.Fields.ElementAt(0).Value = "Too many emojis";
+                    await log.SendMessageAsync("", false, embed.Build());
+                    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no emoji spamming.");
+                    await Task.Delay(5000);
+                    await message.DeleteAsync();
+                    await Task.Delay(100);
+                    return true;
+                }
+                //badMessage = Spam(msg, channel);
+                //if (badMessage)
+                //{
+                //    embed.Fields.ElementAt(0).Value = "Sent 4 messages in less than 5 seconds";
+                //    Extensions.Purging = true;
+                //    await channel.DeleteMessagesAsync(usermessages);
+                //    await log.SendMessageAsync("", false, embed.Build());
+                //    Extensions.Purging = false;
+                //    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no spamming!");
+                //    await Task.Delay(5000);
+                //    Extensions.Purging = true;
+                //    await message.DeleteAsync();
+                //    Extensions.Purging = false;
+                //}
             }
-            else
-            {
-                embed.Description = $"Message sent by {msg.Author.Mention} deleted in {channel.Mention}\nContent: **{msg.Content.Replace("`", string.Empty)}**";
-            }
-            bool badMessage = BlacklistedWord(msg);
-            Discord.Rest.RestUserMessage message;
-            if (badMessage)
-            {
-                Extensions.Purging = true;
-                await msg.DeleteAsync();
-                embed.Fields.ElementAt(0).Value = "Blacklisted word";
-                await log.SendMessageAsync("", false, embed.Build());
-                Extensions.Purging = false;
-                message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} watch your language.");
-                await Task.Delay(5000);
-                Extensions.Purging = true;
-                await message.DeleteAsync();
-                await Task.Delay(100);
-                Extensions.Purging = false;
-                return true;
-            }
-            badMessage = await MassMention(msg, channel);
-            if (badMessage)
-            {
-                Extensions.Purging = true;
-                await msg.DeleteAsync();
-                embed.Fields.ElementAt(0).Value = "Mass mention";
-                await log.SendMessageAsync("", false, embed.Build());
-                Extensions.Purging = false;
-                message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no mention spamming.");
-                await Task.Delay(5000);
-                Extensions.Purging = true;
-                await message.DeleteAsync();
-                await Task.Delay(100);
-                Extensions.Purging = false;
-                return true;
-            }
-            badMessage = BlacklistedUrl(msg);
-            if (badMessage)
-            {
-                Extensions.Purging = true;
-                await msg.DeleteAsync();
-                embed.Fields.ElementAt(0).Value = "Blacklisted URL";
-                await log.SendMessageAsync("", false, embed.Build());
-                Extensions.Purging = false;
-                message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no inappropriate links.");
-                await Task.Delay(5000);
-                Extensions.Purging = true;
-                await message.DeleteAsync();
-                await Task.Delay(100);
-                Extensions.Purging = false;
-                return true;
-            }
-            badMessage = EmojiSpam(msg);
-            if (badMessage)
-            {
-                Extensions.Purging = true;
-                await msg.DeleteAsync();
-                embed.Fields.ElementAt(0).Value = "Too many emojis";
-                await log.SendMessageAsync("", false, embed.Build());
-                Extensions.Purging = false;
-                message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no emoji spamming.");
-                await Task.Delay(5000);
-                Extensions.Purging = true;
-                await message.DeleteAsync();
-                await Task.Delay(100);
-                Extensions.Purging = false;
-                return true;
-            }
-            //badMessage = Spam(msg, channel);
-            //if (badMessage)
-            //{
-            //    embed.Fields.ElementAt(0).Value = "Sent 4 messages in less than 5 seconds";
-            //    Extensions.Purging = true;
-            //    await channel.DeleteMessagesAsync(usermessages);
-            //    await log.SendMessageAsync("", false, embed.Build());
-            //    Extensions.Purging = false;
-            //    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no spamming!");
-            //    await Task.Delay(5000);
-            //    Extensions.Purging = true;
-            //    await message.DeleteAsync();
-            //    Extensions.Purging = false;
-            //}
             return false;
         }
     }

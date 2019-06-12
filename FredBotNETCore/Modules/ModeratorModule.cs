@@ -7,6 +7,7 @@ namespace FredBotNETCore.Modules
 {
     [Name("Moderator")]
     [Summary("Module of commands for Moderators and up of servers.")]
+    [RequireContext(ContextType.Guild)]
     public class ModeratorModule : ModuleBase<SocketCommandContext>
     {
         private readonly ModeratorService modService = new ModeratorService();
@@ -16,7 +17,6 @@ namespace FredBotNETCore.Modules
         [Summary("Change the nickname of a user.")]
         [RequireUserPermission(GuildPermission.ManageNicknames)]
         [RequireBotPermission(GuildPermission.ManageNicknames)]
-        [RequireContext(ContextType.Guild)]
         public async Task SetNick(string username = null, [Remainder] string nickname = null)
         {
             await modService.SetNickAsync(Context, username, nickname);
@@ -27,7 +27,6 @@ namespace FredBotNETCore.Modules
         [Summary("Change the bots nickname.")]
         [RequireUserPermission(GuildPermission.ManageNicknames)]
         [RequireBotPermission(GuildPermission.ChangeNickname)]
-        [RequireContext(ContextType.Guild)]
         public async Task Nick([Remainder] string nickname = null)
         {
             await modService.NickAsync(Context, nickname);
@@ -36,7 +35,6 @@ namespace FredBotNETCore.Modules
         [Command("updatetoken", RunMode = RunMode.Async)]
         [Alias("utoken", "changetoken")]
         [Summary("Updates token for FredtheG.CactusBot.")]
-        [RequireContext(ContextType.Guild)]
         public async Task UpdateToken(string newToken)
         {
             await modService.UpdateTokenAsync(Context, newToken);
@@ -47,7 +45,6 @@ namespace FredBotNETCore.Modules
         [Summary("Let macroers know the servers have restarted.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.ManageRoles)]
-        [RequireContext(ContextType.Guild)]
         public async Task NotifyMacroers()
         {
             await modService.NotifyMacroersAsync(Context);
@@ -57,7 +54,6 @@ namespace FredBotNETCore.Modules
         [Alias("musicblacklist")]
         [Summary("Blacklist a user from using music commands.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task BlacklistMusic([Remainder] string username = null)
         {
             await modService.BlacklistMusicAsync(Context, username);
@@ -67,7 +63,6 @@ namespace FredBotNETCore.Modules
         [Alias("musicunblacklist")]
         [Summary("Unblacklist a user from using music commands.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task UnblacklistMusic([Remainder] string username = null)
         {
             await modService.UnblacklistMusicAsync(Context, username);
@@ -77,7 +72,6 @@ namespace FredBotNETCore.Modules
         [Alias("lbm", "blacklistedmusic")]
         [Summary("Lists blacklisted users from music commands.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task ListBlacklistedMusic()
         {
             await modService.ListBlacklistedMusicAsync(Context);
@@ -87,7 +81,6 @@ namespace FredBotNETCore.Modules
         [Alias("blacklistsuggestion", "suggestionblacklist", "suggestionsblacklist")]
         [Summary("Blacklist a user from using the /suggest command.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task BlacklistSuggestions([Remainder] string username = null)
         {
             await modService.BlacklistSuggestionsAsync(Context, username);
@@ -97,7 +90,6 @@ namespace FredBotNETCore.Modules
         [Alias("unblacklistsuggestion", "suggestionunblacklist", "suggestionsunblacklist")]
         [Summary("Unblacklist a user from using the /suggest command.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task UnblacklistSuggestions([Remainder] string username = null)
         {
             await modService.UnblacklistSuggestionsAsync(Context, username);
@@ -107,7 +99,6 @@ namespace FredBotNETCore.Modules
         [Alias("lbs", "listblacklistedsuggestion", "blacklistedsuggestions")]
         [Summary("Lists blacklisted users from suggestions.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task ListBlacklistedSuggestions()
         {
             await modService.ListBlacklistedSuggestionsAsync(Context);
@@ -117,7 +108,6 @@ namespace FredBotNETCore.Modules
         [Alias("infochannel", "channel", "ci")]
         [Summary("Gets information about a channel.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task ChannelInfo([Remainder] string channelName)
         {
             await modService.ChannelInfoAsync(Context, channelName);
@@ -127,7 +117,6 @@ namespace FredBotNETCore.Modules
         [Alias("mcount", "usercount", "ucount")]
         [Summary("Get the server member count.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task MemberCount()
         {
             await modService.MemberCountAsync(Context);
@@ -137,7 +126,6 @@ namespace FredBotNETCore.Modules
         [Alias("utime", "ut")]
         [Summary("Gets the bot uptime.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Uptime()
         {
             await modService.UptimeAsync(Context);
@@ -147,7 +135,6 @@ namespace FredBotNETCore.Modules
         [Alias("rinfo")]
         [Summary("Get information about a role.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task RoleInfo([Remainder] string roleName = null)
         {
             await modService.RoleInfoAsync(Context, roleName);
@@ -157,7 +144,6 @@ namespace FredBotNETCore.Modules
         [Alias("rolelist")]
         [Summary("Get a list of server roles and member counts.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Roles()
         {
             await modService.RolesAsync(Context);
@@ -167,7 +153,6 @@ namespace FredBotNETCore.Modules
         [Alias("warns")]
         [Summary("Get warnings for the server or user.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Warnings([Remainder] string username = null)
         {
             await modService.WarningsAsync(Context, username);
@@ -178,7 +163,6 @@ namespace FredBotNETCore.Modules
         [Summary("Unban a member.")]
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Unban(string username = null, [Remainder] string reason = null)
         {
             await modService.UnbanAsync(Context, username, reason);
@@ -189,7 +173,6 @@ namespace FredBotNETCore.Modules
         [Summary("Undeafen a member.")]
         [RequireUserPermission(GuildPermission.DeafenMembers)]
         [RequireBotPermission(GuildPermission.DeafenMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Undeafen(string username = null, [Remainder] string reason = null)
         {
             await modService.UndeafenAsync(Context, username, reason);
@@ -200,7 +183,6 @@ namespace FredBotNETCore.Modules
         [Summary("Deafen a member.")]
         [RequireUserPermission(GuildPermission.DeafenMembers)]
         [RequireBotPermission(GuildPermission.DeafenMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Deafen(string username = null, [Remainder] string reason = null)
         {
             await modService.DeafenAsync(Context, username, reason);
@@ -211,7 +193,6 @@ namespace FredBotNETCore.Modules
         [Summary("Softban a member (ban and immediate unban to delete user messages).")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Softban(string username = null, [Remainder] string reason = null)
         {
             await modService.SoftbanAsync(Context, username, reason);
@@ -221,7 +202,6 @@ namespace FredBotNETCore.Modules
         [Alias("getprior", "case")]
         [Summary("Get info on a case.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task GetCase(string caseN = null)
         {
             await modService.GetCaseAsync(Context, caseN);
@@ -231,7 +211,6 @@ namespace FredBotNETCore.Modules
         [Alias("priors")]
         [Summary("Get a list of mod logs for a user.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Modlogs([Remainder] string username)
         {
             await modService.ModlogsAsync(Context, username);
@@ -241,7 +220,6 @@ namespace FredBotNETCore.Modules
         [Alias("edit", "editcase")]
         [Summary("Edit a reason for a mod log.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Reason(string caseN = null, [Remainder] string reason = null)
         {
             await modService.ReasonAsync(Context, caseN, reason);
@@ -251,7 +229,6 @@ namespace FredBotNETCore.Modules
         [Alias("w")]
         [Summary("Warn a member.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Warn(string username = null, [Remainder] string reason = null)
         {
             await modService.WarnAsync(Context, username, reason);
@@ -261,7 +238,6 @@ namespace FredBotNETCore.Modules
         [Alias("endg", "gend")]
         [Summary("Ends the giveaway.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task EndGiveaway()
         {
             await modService.EndGiveawayAsync(Context);
@@ -271,7 +247,6 @@ namespace FredBotNETCore.Modules
         [Alias("reroll", "redo")]
         [Summary("Repicks giveaway winner.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Repick()
         {
             await modService.RepickAsync(Context);
@@ -282,7 +257,6 @@ namespace FredBotNETCore.Modules
         [Summary("Create a giveaway.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         [RequireBotPermission(GuildPermission.AddReactions)]
-        [RequireContext(ContextType.Guild)]
         public async Task Giveaway(string channel = null, string time = null, string winnersS = null, [Remainder] string item = null)
         {
             await modService.GiveawayAsync(Context, channel, time, winnersS, item);
@@ -291,7 +265,6 @@ namespace FredBotNETCore.Modules
         [Command("promote", RunMode = RunMode.Async)]
         [Alias("prom")]
         [Summary("Announces user promoted to temp/trial/perm mod on PR2.")]
-        [RequireContext(ContextType.Guild)]
         public async Task Promote(string type = null, [Remainder] string username = null)
         {
             await modService.PromoteAsync(Context, type, username);
@@ -302,7 +275,6 @@ namespace FredBotNETCore.Modules
         [Summary("Unmutes a user.")]
         [RequireBotPermission(GuildPermission.ManageRoles)]
         [RequireUserPermission(GuildPermission.ManageRoles)]
-        [RequireContext(ContextType.Guild)]
         public async Task Unmute(string username = null, [Remainder] string reason = null)
         {
             await modService.UnmuteAsync(Context, username, reason);
@@ -312,7 +284,6 @@ namespace FredBotNETCore.Modules
         [Alias("latency")]
         [Summary("Returns the latency between the bot and Discord.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Ping()
         {
             await modService.PingAsync(Context);
@@ -331,7 +302,6 @@ namespace FredBotNETCore.Modules
         [Alias("uinfo", "whois")]
         [Summary("Returns information about a user.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task UserInfo([Remainder] string username = null)
         {
             await modService.UserInfoAsync(Context, username);
@@ -341,7 +311,6 @@ namespace FredBotNETCore.Modules
         [Alias("ginfo", "serverinfo")]
         [Summary("Information about current server.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task ServerInfo()
         {
             await modService.ServerInfoAsync(Context);
@@ -352,7 +321,6 @@ namespace FredBotNETCore.Modules
         [Summary("Deletes number of messages specified, optional user mention.")]
         [RequireBotPermission(GuildPermission.ManageMessages)]
         [RequireUserPermission(GuildPermission.ManageMessages)]
-        [RequireContext(ContextType.Guild)]
         public async Task Purge(string amount = null, [Remainder] string username = null)
         {
             await modService.PurgeAsync(Context, amount, username);
@@ -363,7 +331,6 @@ namespace FredBotNETCore.Modules
         [Summary("Kick a user.")]
         [RequireBotPermission(GuildPermission.KickMembers)]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Kick(string username = null, [Remainder] string reason = null)
         {
             await modService.KickAsync(Context, username, reason);
@@ -374,7 +341,6 @@ namespace FredBotNETCore.Modules
         [Summary("Bans a user, needs reason.")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [RequireUserPermission(GuildPermission.BanMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Ban(string username = null, [Remainder] string reason = null)
         {
             await modService.BanAsync(Context, username, reason);
@@ -385,7 +351,6 @@ namespace FredBotNETCore.Modules
         [Summary("Mutes a user.")]
         [RequireBotPermission(GuildPermission.ManageRoles)]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        [RequireContext(ContextType.Guild)]
         public async Task Mute(string username = null, string time = null, [Remainder] string reason = null)
         {
             await modService.MuteAsync(Context, username, time, reason);

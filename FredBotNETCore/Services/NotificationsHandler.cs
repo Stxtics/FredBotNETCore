@@ -297,62 +297,93 @@ namespace FredBotNETCore
                 {
                     return;
                 }
-                SocketGuild Guild = _client.GetGuild(528679522707701760);
-                SocketRole RoleM = Guild.Roles.Where(x => x.Name.ToUpper() == "HH".ToUpper()).First();
-                SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
-                RequestOptions options = new RequestOptions()
+                foreach (SocketGuild guild in _client.Guilds)
                 {
-                    AuditLogReason = "Announcing happy hour on " + Name
-                };
-                await RoleM.ModifyAsync(x => x.Mentionable = true, options);
-                await channel.SendMessageAsync($"{RoleM.Mention} A happy hour has just started on Server: {Name}");
-                await RoleM.ModifyAsync(x => x.Mentionable = false, options);
+                    SocketRole role = guild.Roles.Where(x => x.Name.ToUpper() == "HH".ToUpper()).FirstOrDefault();
+                    if (role != null)
+                    {
+                        SocketTextChannel channel = Extensions.GetNotificationsChannel(guild);
+                        if (channel != null)
+                        {
+                            RequestOptions options = new RequestOptions()
+                            {
+                                AuditLogReason = "Announcing happy hour on " + Name
+                            };
+                            await role.ModifyAsync(x => x.Mentionable = true, options);
+                            await channel.SendMessageAsync($"{role.Mention} A happy hour has just started on Server: {Name}");
+                            await role.ModifyAsync(x => x.Mentionable = false, options);
+                        }
+                    }
+                }
             }
         }
 
         public async Task AnnouceHintUpdatedAsync(string hint, bool newArti = false)
         {
-            SocketGuild Guild = _client.GetGuild(528679522707701760);
-            SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
-            RequestOptions options = new RequestOptions()
+            foreach (SocketGuild guild in _client.Guilds)
             {
-                AuditLogReason = "Announcing new artifact"
-            };
-            if (newArti)
-            {
-                await Guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).First().ModifyAsync(x => x.Mentionable = true, options);
-                await channel.SendMessageAsync($"{Guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).First().Mention} Hmm... I seem to have misplaced the artifact. Maybe you can help me find it?\n" +
-                        $"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**. Maybe I can remember more later!!");
-                await Guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).First().ModifyAsync(x => x.Mentionable = false, options);
-            }
-            else
-            {
-                options.AuditLogReason = "Announcing hint update";
-                await Guild.Roles.Where(x => x.Name.ToUpper() == "Arti Updates".ToUpper()).First().ModifyAsync(x => x.Mentionable = true, options);
-                await channel.SendMessageAsync($"{Guild.Roles.Where(x => x.Name.ToUpper() == "Arti Updates".ToUpper()).First().Mention} Artifact hint updated. New hint: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**");
-                await Guild.Roles.Where(x => x.Name.ToUpper() == "Arti Updates".ToUpper()).First().ModifyAsync(x => x.Mentionable = false, options);
+                SocketTextChannel channel = Extensions.GetNotificationsChannel(guild);
+                if (channel != null)
+                {
+                    SocketRole arti = guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).FirstOrDefault();
+                    SocketRole updates = guild.Roles.Where(x => x.Name.ToUpper() == "Arti Updates".ToUpper()).FirstOrDefault();
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = "Announcing new artifact"
+                    };
+                    if (newArti)
+                    {
+                        if (arti != null)
+                        {
+                            await arti.ModifyAsync(x => x.Mentionable = true, options);
+                            await channel.SendMessageAsync($"{arti.Mention} Hmm... I seem to have misplaced the artifact. Maybe you can help me find it?\n" +
+                                    $"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**. Maybe I can remember more later!!");
+                            await arti.ModifyAsync(x => x.Mentionable = false, options);
+                        }
+                    }
+                    else
+                    {
+                        if (updates != null)
+                        {
+                            options.AuditLogReason = "Announcing hint update";
+                            await updates.ModifyAsync(x => x.Mentionable = true, options);
+                            await channel.SendMessageAsync($"{updates.Mention} Artifact hint updated. New hint: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**");
+                            await updates.ModifyAsync(x => x.Mentionable = false, options);
+                        }
+                    }
+                }
             }
         }
 
         public async Task AnnounceArtifactFoundAsync(string finder, bool bubbles = false)
         {
-            SocketGuild Guild = _client.GetGuild(528679522707701760);
-            SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
-            if (bubbles)
+            foreach (SocketGuild guild in _client.Guilds)
             {
-                await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the artifact and has received a bubble set!");
-            }
-            else
-            {
-                await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the artifact!");
+                SocketTextChannel channel = Extensions.GetNotificationsChannel(guild);
+                if (channel != null)
+                {
+                    if (bubbles)
+                    {
+                        await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the artifact and has received a bubble set!");
+                    }
+                    else
+                    {
+                        await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the artifact!");
+                    }
+                }
             }
         }
 
         public async Task AnnounceBubblesAwardedAsync(string bubbles = null)
         {
-            SocketGuild Guild = _client.GetGuild(528679522707701760);
-            SocketTextChannel channel = Guild.GetTextChannel(Extensions.GetNotificationsChannel());
-            await channel.SendMessageAsync($"**{Format.Sanitize(bubbles)}** has been awarded a bubble set!");
+            foreach (SocketGuild guild in _client.Guilds)
+            {
+                SocketTextChannel channel = Extensions.GetNotificationsChannel(guild);
+                if (channel != null)
+                {
+                    await channel.SendMessageAsync($"**{Format.Sanitize(bubbles)}** has been awarded a bubble set!");
+                }
+            }
         }
     }
 }
