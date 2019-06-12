@@ -326,7 +326,7 @@ namespace FredBotNETCore
                 if (channel != null)
                 {
                     SocketRole arti = guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).FirstOrDefault();
-                    SocketRole updates = guild.Roles.Where(x => x.Name.ToUpper() == "Arti Updates".ToUpper()).FirstOrDefault();
+                    SocketRole updates = guild.Roles.Where(x => x.Name.ToUpper() == "ArtiUpdates".ToUpper()).FirstOrDefault();
                     RequestOptions options = new RequestOptions()
                     {
                         AuditLogReason = "Announcing new artifact"
