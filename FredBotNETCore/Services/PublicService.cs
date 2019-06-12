@@ -1423,11 +1423,7 @@ namespace FredBotNETCore.Services
 
         public async Task RoleAsync(SocketCommandContext context, string roleName)
         {
-            List<AllowedChannel> channels = new List<AllowedChannel>();
-            if (context.Channel is SocketTextChannel)
-            {
-                channels = AllowedChannel.Get(context.Guild.Id);
-            }
+            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
             if (channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 if (roleName == null)
@@ -1523,11 +1519,7 @@ namespace FredBotNETCore.Services
 
         public async Task ListJoinableRolesAsync(SocketCommandContext context)
         {
-            List<AllowedChannel> channels = new List<AllowedChannel>();
-            if (context.Channel is SocketTextChannel)
-            {
-                channels = AllowedChannel.Get(context.Guild.Id);
-            }
+            List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
             if (channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
