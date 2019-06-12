@@ -14,7 +14,7 @@ namespace FredBotNETCore.Database
         {
             Database database = new Database();
 
-            string str = $"INSERT INTO blacklistedurl ( guild_id, url ) VALUES ('{guildId}', '{url}' )";
+            string str = $"INSERT INTO blacklistedurls ( guild_id, url ) VALUES ('{guildId}', '{url}' )";
             _ = database.FireCommand(str);
 
             database.CloseConnection();
