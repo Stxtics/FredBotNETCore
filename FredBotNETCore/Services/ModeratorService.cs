@@ -2368,7 +2368,7 @@ namespace FredBotNETCore.Services
                 .AddField(y =>
                 {
                     y.Name = "Number Of Users";
-                    y.Value = context.Client.Guilds.Sum(g => g.Users.Count).ToString();
+                    y.Value = context.Client.Guilds.Sum(g => g.MemberCount).ToString();
                     y.IsInline = true;
                 })
                 .AddField(y =>
