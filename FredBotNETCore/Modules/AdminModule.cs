@@ -272,7 +272,7 @@ namespace FredBotNETCore.Modules
 
         [Command("setwelcomemessage", RunMode = RunMode.Async)]
         [Alias("welcomemessage", "changewelcomemessage")]
-        [Summary("Set the prefix for commands for the guild.")]
+        [Summary("Set the welcome message sent to users when they join the guild.")]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task SetWelcomeMessage([Remainder] string message = null)
         {
