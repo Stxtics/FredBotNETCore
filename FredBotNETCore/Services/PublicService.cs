@@ -1600,57 +1600,33 @@ namespace FredBotNETCore.Services
                 }
                 if (text != null)
                 {
-                    string[] guildlist = text.Split('}');
-                    string guild1name = Extensions.GetBetween(guildlist[0], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild1gp = int.Parse(Extensions.GetBetween(guildlist[0], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                    string guild2name = Extensions.GetBetween(guildlist[1], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild2gp = int.Parse(Extensions.GetBetween(guildlist[1], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                    string guild3name = Extensions.GetBetween(guildlist[2], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild3gp = int.Parse(Extensions.GetBetween(guildlist[2], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                    string guild4name = Extensions.GetBetween(guildlist[3], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild4gp = int.Parse(Extensions.GetBetween(guildlist[3], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                    string guild5name = Extensions.GetBetween(guildlist[4], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild5gp = int.Parse(Extensions.GetBetween(guildlist[4], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                    string guild6name = Extensions.GetBetween(guildlist[5], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild6gp = int.Parse(Extensions.GetBetween(guildlist[5], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                    string guild7name = Extensions.GetBetween(guildlist[6], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild7gp = int.Parse(Extensions.GetBetween(guildlist[6], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                    string guild8name = Extensions.GetBetween(guildlist[7], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild8gp = int.Parse(Extensions.GetBetween(guildlist[7], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                    string guild9name = Extensions.GetBetween(guildlist[8], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild9gp = int.Parse(Extensions.GetBetween(guildlist[8], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
-                    string guild10name = Extensions.GetBetween(guildlist[9], "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                    string guild10gp = int.Parse(Extensions.GetBetween(guildlist[9], "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                    List<string> guildlist = text.Split('}').ToList();
+                    int count = 0;
+                    string guilds = "", gps = "";
+                    foreach (string guild in guildlist)
+                    {
+                        string guildName = Extensions.GetBetween(guild, "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                        string guildGP = int.Parse(Extensions.GetBetween(guild, "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                        guilds += $"[{Format.Sanitize(Uri.UnescapeDataString(guildName))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guildName)})\n";
+                        gps += guildGP + "\n";
+                        count++;
+                        if (count >= 10)
+                        {
+                            break;
+                        }
+                    }
                     EmbedBuilder embed = new EmbedBuilder();
                     embed.WithColor(new Color(Extensions.random.Next(255), Extensions.random.Next(255), Extensions.random.Next(255)));
                     embed.AddField(y =>
                     {
                         y.Name = "Guild";
-                        y.Value = $"[{Format.Sanitize(Uri.UnescapeDataString(guild1name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild1name)})\n" +
-                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild2name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild2name)})\n" +
-                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild3name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild3name)})\n" +
-                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild4name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild4name)})\n" +
-                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild5name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild5name)})\n" +
-                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild6name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild6name)})\n" +
-                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild7name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild7name)})\n" +
-                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild8name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild8name)})\n" +
-                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild9name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild9name)})\n" +
-                                  $"[{Format.Sanitize(Uri.UnescapeDataString(guild10name))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guild10name)})\n";
+                        y.Value = guilds;
                         y.IsInline = true;
                     });
                     embed.AddField(y =>
                     {
                         y.Name = "GP Today";
-                        y.Value = $"{guild1gp}\n" +
-                                  $"{guild2gp}\n" +
-                                  $"{guild3gp}\n" +
-                                  $"{guild4gp}\n" +
-                                  $"{guild5gp}\n" +
-                                  $"{guild6gp}\n" +
-                                  $"{guild7gp}\n" +
-                                  $"{guild8gp}\n" +
-                                  $"{guild9gp}\n" +
-                                  $"{guild10gp}";
+                        y.Value = gps;
                         y.IsInline = true;
                     });
                     EmbedFooterBuilder footer = new EmbedFooterBuilder()
