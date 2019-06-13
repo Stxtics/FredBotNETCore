@@ -1759,7 +1759,7 @@ namespace FredBotNETCore.Services
                         }
                         embed.AddField(y =>
                         {
-                            y.Name = $"Score";
+                            y.Name = "Score";
                             y.Value = $"{Convert.ToInt32(stats.GetValue("credit")).ToString("N0")}";
                             y.IsInline = true;
                         });
