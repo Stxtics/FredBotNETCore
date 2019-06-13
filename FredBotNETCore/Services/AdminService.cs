@@ -1835,7 +1835,7 @@ namespace FredBotNETCore.Services
                 };
                 string currentPrefix = Guild.Get(context.Guild).Prefix;
                 embed.Title = $"Command: {currentPrefix}setprefix";
-                embed.Description = $"**Description:** Set the prefix for the server.\n**Usage:** {currentPrefix}prefix [prefix]\n**Example:** {currentPrefix}prefix /";
+                embed.Description = $"**Description:** Set the prefix for the server.\n**Usage:** {currentPrefix}setprefix [prefix]\n**Example:** {currentPrefix}setprefix /";
                 await context.Channel.SendMessageAsync("", false, embed.Build());
             }
             else
@@ -1865,6 +1865,60 @@ namespace FredBotNETCore.Services
                 }
                 Guild.SetPrefix(context.Guild, prefix.Value);
                 await context.Channel.SendMessageAsync($"{context.User.Mention} set the prefix as **{Format.Sanitize(prefix.Value.ToString())}**.");
+            }
+        }
+
+        public async Task SetWelcomeMessageAsync(SocketCommandContext context, string message)
+        {
+            SocketTextChannel log = Extensions.GetLogChannel(context.Guild);
+            if (log != null)
+            {
+                if (message == null)
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 200, 220)
+                    };
+                    string prefix = Guild.Get(context.Guild).Prefix;
+                    embed.Title = $"Command: {prefix}setwelcomemessage";
+                    embed.Description = $"**Description:** Set the welcome message for the server.\n**Usage:** {prefix}setwelcomemessage [message]\n**Example:** {prefix}setwelcomemessage Welcome to **{Format.Sanitize(context.Guild.Name)}**!!";
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (message.Length > 400)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} the welcome message must be no more than 400 characters.");
+                    }
+                    else
+                    {
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        {
+                            Name = "Welcome Message Set",
+                            IconUrl = context.Guild.IconUrl
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            Text = $"ID: {context.User.Id}",
+                            IconUrl = context.User.GetAvatarUrl()
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Author = author,
+                            Color = new Color(0, 0, 255),
+                            Footer = footer
+                        };
+                        embed.WithCurrentTimestamp();
+                        embed.Description = $"{context.User.Mention} set the welcome as **{Format.Sanitize(message)}**.";
+                        Guild.SetWelcomeMessage(context.Guild, message);
+                        await log.SendMessageAsync("", false, embed.Build());
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} set the welcome message as **{Format.Sanitize(message)}**.");
+                    }
+                } 
+            }
+            else
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} you need to set the log channel to set the welcome message.");
             }
         }
     }

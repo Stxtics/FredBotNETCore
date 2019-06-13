@@ -12,6 +12,7 @@ namespace FredBotNETCore.Database
         public long? LogChannel { get; set; }
         public long? BanlogChannel { get; set; }
         public long? NotificationsChannel { get; set; }
+        public string WelcomeMessage { get; set; }
 
         public static bool Exists(SocketGuild guild)
         {
@@ -79,6 +80,14 @@ namespace FredBotNETCore.Database
                 {
                     guild.NotificationsChannel = (long)tableName["notifications_channel"];
                 }
+                if (DBNull.Value.Equals(tableName["welcome_message"]))
+                {
+                    guild.WelcomeMessage = null;
+                }
+                else
+                {
+                    guild.WelcomeMessage = (string)tableName["welcome_message"];
+                }
             }
             database.CloseConnection();
             return guild;
@@ -144,6 +153,24 @@ namespace FredBotNETCore.Database
             try
             {
                 string str = string.Format("UPDATE guilds SET prefix = \"{1}\" WHERE guild_id = {0} LIMIT 1", guild.Id, p);
+                MySqlDataReader reader = database.FireCommand(str);
+                reader.Close();
+                database.CloseConnection();
+                return;
+            }
+            catch (Exception)
+            {
+                database.CloseConnection();
+                return;
+            }
+        }
+
+        public static void SetWelcomeMessage(SocketGuild guild, string message)
+        {
+            Database database = new Database();
+            try
+            {
+                string str = string.Format("UPDATE guilds SET welcome_message = \"{1}\" WHERE guild_id = {0} LIMIT 1", guild.Id, message);
                 MySqlDataReader reader = database.FireCommand(str);
                 reader.Close();
                 database.CloseConnection();

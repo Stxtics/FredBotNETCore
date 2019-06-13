@@ -269,5 +269,14 @@ namespace FredBotNETCore.Modules
         {
             await adminService.SetPrefixAsync(Context, prefix);
         }
+
+        [Command("setwelcomemessage", RunMode = RunMode.Async)]
+        [Alias("welcomemessage", "changewelcomemessage")]
+        [Summary("Set the prefix for commands for the guild.")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        public async Task SetWelcomeMessage([Remainder] string message = null)
+        {
+            await adminService.SetWelcomeMessageAsync(Context, message);
+        }
     }
 }

@@ -902,7 +902,6 @@ namespace FredBotNETCore
             if (log != null)
             {
                 IEnumerable<SocketRole> verified = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Verified".ToUpper()), muted = user.Guild.Roles.Where(has => has.Name.ToUpper() == "Muted".ToUpper());
-                SocketTextChannel rules = user.Guild.GetTextChannel(528681885577248789), welcome = user.Guild.GetTextChannel(528683520864813086);
                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                 {
                     Name = "User Joined",
@@ -937,8 +936,9 @@ namespace FredBotNETCore
                 {
                     User.Add(user);
                 }
+                string welcomeMessage = Guild.Get(user.Guild).WelcomeMessage;
                 bool isVerified = User.IsVerified(user);
-                if (MutedUser.Get(user.Guild.Id, user.Id).Count > 0)
+                if (muted.Count() > 0 && MutedUser.Get(user.Guild.Id, user.Id).Count > 0)
                 {
                     RequestOptions options = new RequestOptions()
                     {
@@ -946,7 +946,7 @@ namespace FredBotNETCore
                     };
                     await user.AddRolesAsync(roles: muted, options: options);
                 }
-                if (!isVerified)
+                if (verified.Count() > 0 && isVerified)
                 {
                     RequestOptions options = new RequestOptions()
                     {
@@ -961,19 +961,18 @@ namespace FredBotNETCore
                     }
                     try
                     {
-                        await user.SendMessageAsync($"Hello {Format.Sanitize(user.Username)} ! Welcome back to Jiggmin's Village.\nYou have been added to the verified role as you verified yourself the last time you were here.");
+                        await user.SendMessageAsync($"Hello {Format.Sanitize(user.Username)} ! Welcome back to **{Format.Sanitize(user.Guild.Name)}**.\nYou have been added to the verified role as you have verified your PR2 account with me.");
                     }
                     catch (Discord.Net.HttpException)
                     {
                         //could not send message
                     }
                 }
-                else
+                if (welcomeMessage != null)
                 {
                     try
                     {
-                        await user.SendMessageAsync($"Hello {user.Username} ! Welcome to Jiggmin's Village.\nIf you would like to be verified type /verify in DMs " +
-                        $"with me or on the Server and follow the instructions.\nAnyway thank you for joining and don't forget to read {rules.Mention} and {welcome.Mention}.");
+                        await user.SendMessageAsync(welcomeMessage);
                     }
                     catch (Discord.Net.HttpException)
                     {
