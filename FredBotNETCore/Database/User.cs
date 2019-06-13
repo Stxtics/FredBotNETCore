@@ -48,16 +48,18 @@ namespace FredBotNETCore.Database
         public static List<User> GetTop()
         {
             List<User> users = new List<User>();
-            User user = new User();
+            User user;
             Database database = new Database();
 
             string str = string.Format("SELECT * FROM users ORDER BY balance desc LIMIT 10");
             MySqlDataReader tableName = database.FireCommand(str);
-            int count = 0;
-            while (tableName.Read() && count < 10)
+            while (tableName.Read())
             {
-                user.UserID = (long)tableName["user_id"];
-                user.Username = (string)tableName["username"];
+                user = new User
+                {
+                    UserID = (long)tableName["user_id"],
+                    Username = (string)tableName["username"]
+                };
                 if (DBNull.Value.Equals(tableName["pr2_name"]))
                 {
                     user.PR2Name = null;
@@ -84,7 +86,6 @@ namespace FredBotNETCore.Database
                     user.LastUsed = (string)tableName["last_used"];
                 }
                 users.Add(user);
-                count++;
             }
             database.CloseConnection();
             return users;
