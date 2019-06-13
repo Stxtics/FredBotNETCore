@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -54,7 +55,7 @@ namespace FredBotNETCore.Services
                             SocketUser user = Extensions.UserInGuild(context.Message, context.Client.GetGuild(528679522707701760), username);
                             User.SetValue(context.User, "balance", (User.GetUser("user_id", context.User.Id.ToString()).Balance - money).ToString());
                             User.SetValue(user, "balance", (User.GetUser("user_id", user.Id.ToString()).Balance + money).ToString());
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} you have successfully paid **{Format.Sanitize(user.Username)}#{user.Discriminator} ${money.ToString("N0")}**.\nYour new balance is ${(User.GetUser("user_id", context.User.Id.ToString()).Balance - money).ToString("N0")}.");
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} you have successfully paid **{Format.Sanitize(user.Username)}#{user.Discriminator} ${money.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}**.\nYour new balance is ${(User.GetUser("user_id", context.User.Id.ToString()).Balance - money).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}.");
                             try
                             {
                                 await user.SendMessageAsync($"{user.Mention} you have been paid **${money}** by **{Format.Sanitize(context.User.Username)}#{context.User.Discriminator}**");
@@ -92,7 +93,7 @@ namespace FredBotNETCore.Services
                 if (string.IsNullOrWhiteSpace(username))
                 {
                     int bal = User.GetUser("user_id", context.User.Id.ToString()).Balance;
-                    await context.Channel.SendMessageAsync($"{context.User.Mention} your balance is **${bal.ToString("N0")}**.");
+                    await context.Channel.SendMessageAsync($"{context.User.Mention} your balance is **${bal.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}**.");
                 }
                 else
                 {
@@ -104,7 +105,7 @@ namespace FredBotNETCore.Services
                             User.Add(user);
                         }
                         int bal = User.GetUser("user_id", user.Id.ToString()).Balance;
-                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance is **${bal.ToString("N0")}**.");
+                        await context.Channel.SendMessageAsync($"**{Format.Sanitize(user.Username)}#{user.Discriminator}'s** balance is **${bal.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}**.");
                     }
                     else
                     {
@@ -127,7 +128,7 @@ namespace FredBotNETCore.Services
             else
             {
                 int lottobal = int.Parse(File.ReadAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt")));
-                await context.Channel.SendMessageAsync($"{context.User.Mention} the jackpot is currently worth **${lottobal.ToString("N0")}**.");
+                await context.Channel.SendMessageAsync($"{context.User.Mention} the jackpot is currently worth **${lottobal.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}**.");
             }
         }
 
@@ -160,7 +161,7 @@ namespace FredBotNETCore.Services
                 {
                     try
                     {
-                        leaderboard = leaderboard + "**" + (i + 1).ToString() + ".** " + Format.Sanitize(context.Client.GetUser(ulong.Parse(user.UserID.ToString())).Username) + "#" + context.Client.GetUser(ulong.Parse(user.UserID.ToString())).Discriminator + " - $" + user.Balance.ToString("N0") + "\n";
+                        leaderboard = leaderboard + "**" + (i + 1).ToString() + ".** " + Format.Sanitize(context.Client.GetUser(ulong.Parse(user.UserID.ToString())).Username) + "#" + context.Client.GetUser(ulong.Parse(user.UserID.ToString())).Discriminator + " - $" + user.Balance.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB")) + "\n";
                         i++;
                     }
                     catch (Exception)
@@ -216,13 +217,13 @@ namespace FredBotNETCore.Services
                         {
                             Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
                             Author = auth,
-                            Description = $"Jackpot: ${lottobal.ToString("N0")}\nScratching Tickets..."
+                            Description = $"Jackpot: ${lottobal.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}\nScratching Tickets..."
                         };
                         IUserMessage message = await context.Channel.SendMessageAsync("", false, embed.Build());
                         await Task.Delay(500);
                         if (chance >= 100)
                         {
-                            embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0")}!";
+                            embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}!";
                             await message.ModifyAsync(x => x.Embed = embed.Build());
                             User.SetValue(context.User, "balance", (balance + lottobal).ToString());
                             File.WriteAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt"), "100");
@@ -232,14 +233,14 @@ namespace FredBotNETCore.Services
                             int random = Extensions.random.Next(100);
                             if (random <= chance)
                             {
-                                embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0")}!";
+                                embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} won the jackpot of ${lottobal.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}!";
                                 await message.ModifyAsync(x => x.Embed = embed.Build());
                                 User.SetValue(context.User, "balance", (balance + lottobal).ToString());
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt"), "100");
                             }
                             else
                             {
-                                embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} did not win the jackpot of ${lottobal.ToString("N0")}.";
+                                embed.Description = $"{Format.Sanitize(context.User.Username)}#{context.User.Discriminator} did not win the jackpot of ${lottobal.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}.";
                                 int newbal = lottobal + tickets;
                                 File.WriteAllText(Path.Combine(Extensions.downloadPath, "LottoBalance.txt"), newbal.ToString());
                                 await message.ModifyAsync(x => x.Embed = embed.Build());
@@ -1162,8 +1163,8 @@ namespace FredBotNETCore.Services
                             string name = Extensions.GetBetween(pr2info, "guild_name\":\"", "\",\"creation");
                             string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
                             string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
-                            string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0");
-                            string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0");
+                            string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
+                            string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
                             string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
                             string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
                             string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
@@ -1248,8 +1249,8 @@ namespace FredBotNETCore.Services
                             string name = Extensions.GetBetween(pr2info, "\"guild_name\":\"", "\",\"");
                             string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
                             string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
-                            string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0");
-                            string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0");
+                            string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
+                            string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
                             string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
                             string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
                             string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
@@ -1351,7 +1352,7 @@ namespace FredBotNETCore.Services
                                 }
                                 else
                                 {
-                                    exp = Math.Round(Math.Pow(1.25, level_) * 30).ToString("N0");
+                                    exp = Math.Round(Math.Pow(1.25, level_) * 30).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
                                 }
                                 embed.WithFooter(footer);
                                 EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -1402,7 +1403,7 @@ namespace FredBotNETCore.Services
                                     };
                                     embed.WithAuthor(author);
                                     embed.WithCurrentTimestamp();
-                                    embed.Description = $"**From rank {level_} to rank {level_2} you need {exp.ToString("N0")} EXP.**";
+                                    embed.Description = $"**From rank {level_} to rank {level_2} you need {exp.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))} EXP.**";
                                     await context.Channel.SendMessageAsync("", false, embed.Build());
                                 }
                             }
@@ -1606,7 +1607,7 @@ namespace FredBotNETCore.Services
                     foreach (string guild in guildlist)
                     {
                         string guildName = Extensions.GetBetween(guild, "\",\"guild_name\":\"", "\",\"gp_today\":\"");
-                        string guildGP = int.Parse(Extensions.GetBetween(guild, "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0");
+                        string guildGP = int.Parse(Extensions.GetBetween(guild, "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
                         guilds += $"[{Format.Sanitize(Uri.UnescapeDataString(guildName))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guildName)})\n";
                         gps += guildGP + "\n";
                         count++;
@@ -1760,13 +1761,13 @@ namespace FredBotNETCore.Services
                         embed.AddField(y =>
                         {
                             y.Name = "Score";
-                            y.Value = $"{Convert.ToInt32(stats.GetValue("credit")).ToString("N0")}";
+                            y.Value = $"{Convert.ToInt32(stats.GetValue("credit")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
                             y.IsInline = true;
                         });
                         embed.AddField(y =>
                         {
                             y.Name = "Completed WUs";
-                            y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0")}";
+                            y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
                             y.IsInline = true;
                         });
                         if (stats.GetValue("last") != null)
@@ -2546,7 +2547,7 @@ namespace FredBotNETCore.Services
                         string version = Extensions.GetBetween(responseString, "&version0=", "&title0=");
                         string title = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&title0=", "&rating0=")).Replace("+", " ");
                         string rating = Extensions.GetBetween(responseString, "&rating0=", "&playCount0=");
-                        string plays = int.Parse(Extensions.GetBetween(responseString, "&playCount0=", "&minLevel0=")).ToString("N0");
+                        string plays = int.Parse(Extensions.GetBetween(responseString, "&playCount0=", "&minLevel0=")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
                         string minLevel = Extensions.GetBetween(responseString, "&minLevel0=", "&note0=");
                         string note = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&note0=", "&userName0=")).Replace("+", " ");
                         string user = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
