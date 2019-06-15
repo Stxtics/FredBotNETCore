@@ -278,5 +278,15 @@ namespace FredBotNETCore.Modules
         {
             await adminService.SetWelcomeMessageAsync(Context, message);
         }
+
+        [Command("slowmode")]
+        [Alias("cooldown", "setslowmode")]
+        [Summary("Sets the slowmode for the channel")]
+        [RequireBotPermission(GuildPermission.ManageChannels)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        public async Task SetSlowmode(string time = null)
+        {
+            await adminService.SetSlowmodeAsync(Context, time);
+        }
     }
 }

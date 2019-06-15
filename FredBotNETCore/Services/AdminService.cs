@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace FredBotNETCore.Services
@@ -1919,6 +1920,125 @@ namespace FredBotNETCore.Services
             else
             {
                 await context.Channel.SendMessageAsync($"{context.User.Mention} you need to set the log channel to set the welcome message.");
+            }
+        }
+
+        public async Task SetSlowmodeAsync(SocketCommandContext context, string time)
+        {
+            if (time == null)
+            {
+                EmbedBuilder embed = new EmbedBuilder()
+                {
+                    Color = new Color(220, 200, 220)
+                };
+                string prefix = Guild.Get(context.Guild).Prefix;
+                embed.Title = $"Command: {prefix}slowmode";
+                embed.Description = $"**Description:** Set the slowmode for a channel.\n**Usage:** {prefix}slowmode [time]\n**Example:** {prefix}slowmode 60s";
+                await context.Channel.SendMessageAsync("", false, embed.Build());
+            }
+            else
+            {
+                Regex r = new Regex(@"^\d+(s|m|h)?$");
+                if (r.IsMatch(time))
+                {
+                    RequestOptions options = new RequestOptions()
+                    {
+                        AuditLogReason = $"Changed by: {Format.Sanitize(context.User.Username)}#{context.User.Discriminator}"
+                    };
+                    bool success = false;
+                    if (time.Contains("s"))
+                    {
+                        if (int.TryParse(time.Substring(0, time.Length - 1), out int seconds))
+                        {
+                            if (seconds >= 0 && seconds <= 21600)
+                            {
+                                Optional<int> slow = new Optional<int>(seconds);
+                                await (context.Channel as SocketTextChannel).ModifyAsync(x => x.SlowModeInterval = slow, options);
+                                success = true;
+                            }
+                            else
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} number of seconds must be from 0 to 21600.");
+                            }
+                        }
+                        else
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} number of seconds must be from 0 to 21600.");
+                        }
+                    }
+                    else if (time.Contains("m"))
+                    {
+                        if (int.TryParse(time.Substring(0, time.Length - 1), out int minutes))
+                        {
+                            if (minutes >= 0 && minutes <= 360)
+                            {
+                                int seconds = minutes * 60;
+                                Optional<int> slow = new Optional<int>(seconds);
+                                await (context.Channel as SocketTextChannel).ModifyAsync(x => x.SlowModeInterval = slow, options);
+                                success = true;
+                            }
+                            else
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} number of minutes must be from 0 to 360.");
+                            }
+                        }
+                        else
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} number of minutes must be from 0 to 360.");
+                        }
+                    }
+                    else if (time.Contains("h"))
+                    {
+                        if (int.TryParse(time.Substring(0, time.Length - 1), out int hours))
+                        {
+                            if (hours >= 0 && hours <= 6)
+                            {
+                                int seconds = hours * 3600;
+                                Optional<int> slow = new Optional<int>(seconds);
+                                await (context.Channel as SocketTextChannel).ModifyAsync(x => x.SlowModeInterval = slow, options);
+                                success = true;
+                            }
+                            else
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} number of hours must be from 0 to 6.");
+                            }
+                        }
+                        else
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} number of hours must be from 0 to 6.");
+                        }
+                    }
+                    else
+                    {
+                        if (int.TryParse(time.Substring(0, time.Length), out int seconds))
+                        {
+                            if (seconds >= 0 && seconds <= 21600)
+                            {
+                                Optional<int> slow = new Optional<int>(seconds);
+                                await (context.Channel as SocketTextChannel).ModifyAsync(x => x.SlowModeInterval = slow, options);
+                                success = true;
+                            }
+                            else
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} number of seconds must be from 0 to 21600.");
+                            }
+                        }
+                        else
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} number of seconds must be from 0 to 21600.");
+                        }
+                    }
+                    if (success)
+                    {
+                        await context.Message.DeleteAsync();
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} set slowmode to **{time}**.");
+                    }
+                }
+                else
+                {
+                    await context.Channel.SendMessageAsync($"{context.User.Mention} slowmode must be like **10s** where 10 is a whole number and s is s, m or h.");
+                }
+                
             }
         }
     }
