@@ -279,11 +279,11 @@ namespace FredBotNETCore
                         break;
                     }
                 }
-                if (channel is SocketTextChannel)
+                if (channel is SocketTextChannel textChannel && channel2 is SocketTextChannel textChannel2)
                 {
-                    if ((channel as SocketTextChannel).Name != (channel2 as SocketTextChannel).Name)
+                    if (textChannel.Name != textChannel2.Name)
                     {
-                        embed.Description = $"{user.Mention} renamed the text channel **{Format.Sanitize((channel as SocketTextChannel).Name)}** to {(channel2 as SocketTextChannel).Mention}.";
+                        embed.Description = $"{user.Mention} renamed the text channel **{Format.Sanitize(textChannel.Name)}** to {textChannel2.Mention}.";
                         if (reason != null)
                         {
                             embed.AddField(y =>
@@ -295,19 +295,19 @@ namespace FredBotNETCore
                         }
                         await log.SendMessageAsync("", false, embed.Build());
                     }
-                    else if ((channel as SocketTextChannel).Topic != (channel2 as SocketTextChannel).Topic)
+                    else if (textChannel.Topic != textChannel2.Topic)
                     {
-                        string topic1 = Format.Sanitize((channel as SocketTextChannel).Topic);
-                        string topic2 = Format.Sanitize((channel2 as SocketTextChannel).Topic);
+                        string topic1 = Format.Sanitize(textChannel.Topic);
+                        string topic2 = Format.Sanitize(textChannel2.Topic);
                         if (topic1.Length > 100)
                         {
-                            topic1 = (channel as SocketTextChannel).Topic.SplitInParts(100).ElementAt(0) + "...";
+                            topic1 = textChannel.Topic.SplitInParts(100).ElementAt(0) + "...";
                         }
                         if (topic2.Length > 100)
                         {
-                            topic2 = (channel2 as SocketTextChannel).Topic.SplitInParts(100).ElementAt(0) + "...";
+                            topic2 = textChannel2.Topic.SplitInParts(100).ElementAt(0) + "...";
                         }
-                        embed.Description = $"{user.Mention} changed the topic of {(channel as SocketTextChannel).Mention} from **{topic1}** to **{topic2}**.";
+                        embed.Description = $"{user.Mention} changed the topic of {textChannel.Mention} from **{topic1}** to **{topic2}**.";
                         if (reason != null)
                         {
                             embed.AddField(y =>
@@ -319,15 +319,40 @@ namespace FredBotNETCore
                         }
                         await log.SendMessageAsync("", false, embed.Build());
                     }
-                    else if ((channel as SocketTextChannel).IsNsfw != (channel2 as SocketTextChannel).IsNsfw)
+                    else if (textChannel.IsNsfw != textChannel2.IsNsfw)
                     {
-                        if ((channel as SocketTextChannel).IsNsfw)
+                        if (textChannel.IsNsfw)
                         {
-                            embed.Description = $"{user.Mention} set {(channel as SocketTextChannel).Mention} as SFW.";
+                            embed.Description = $"{user.Mention} set {textChannel.Mention} as SFW.";
                         }
                         else
                         {
-                            embed.Description = $"{user.Mention} set {(channel as SocketTextChannel).Mention} as NSFW.";
+                            embed.Description = $"{user.Mention} set {textChannel.Mention} as NSFW.";
+                        }
+                        if (reason != null)
+                        {
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Reason";
+                                y.Value = Format.Sanitize(reason);
+                                y.IsInline = false;
+                            });
+                        }
+                        await log.SendMessageAsync("", false, embed.Build());
+                    }
+                    else if (textChannel.SlowModeInterval != textChannel2.SlowModeInterval)
+                    {
+                        if (textChannel2.SlowModeInterval == 0)
+                        {
+                            embed.Description = $"{user.Mention} removed the slowmode in {textChannel.Mention}.";
+                        }
+                        else if (textChannel2.SlowModeInterval == 1)
+                        {
+                            embed.Description = $"{user.Mention} set {textChannel.Mention}'s slowmode as {textChannel2.SlowModeInterval} second.";
+                        }
+                        else
+                        {
+                            embed.Description = $"{user.Mention} set {textChannel.Mention}'s slowmode as {textChannel2.SlowModeInterval} seconds.";
                         }
                         if (reason != null)
                         {
