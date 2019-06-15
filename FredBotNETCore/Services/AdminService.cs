@@ -1915,7 +1915,7 @@ namespace FredBotNETCore.Services
                         await log.SendMessageAsync("", false, embed.Build());
                         await context.Channel.SendMessageAsync($"{context.User.Mention} set the welcome message as **{Format.Sanitize(message)}**.");
                     }
-                } 
+                }
             }
             else
             {
@@ -2038,7 +2038,84 @@ namespace FredBotNETCore.Services
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} slowmode must be like **10s** where 10 is a whole number and s is s, m or h.");
                 }
-                
+            }
+        }
+
+        public async Task LockChannelAsync(SocketCommandContext context)
+        {
+            SocketTextChannel tChannel = context.Channel as SocketTextChannel;
+            Overwrite permissions = tChannel.PermissionOverwrites.Where(x => x.TargetId == context.Guild.EveryoneRole.Id).First();
+            if (permissions.Permissions.SendMessages == PermValue.Deny)
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} this channel is already locked.");
+            }
+            else
+            {
+                SocketTextChannel log = Extensions.GetLogChannel(context.Guild);
+                if (log != null)
+                {
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = "Channel Locked",
+                        IconUrl = context.Guild.IconUrl
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {tChannel.Id}",
+                        IconUrl = context.User.GetAvatarUrl()
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Author = author,
+                        Color = new Color(0, 0, 255),
+                        Footer = footer
+                    };
+                    embed.WithCurrentTimestamp();
+                    embed.Description = $"{context.User.Mention} locked the channel {tChannel.Mention}.";
+                    await log.SendMessageAsync("", false, embed.Build());
+                }
+                await context.Message.DeleteAsync();
+                await context.Channel.SendMessageAsync($"{context.User.Mention} locked the channel.");
+                await tChannel.AddPermissionOverwriteAsync(context.Guild.EveryoneRole, permissions.Permissions.Modify(sendMessages: PermValue.Deny));
+            }
+        }
+
+        public async Task UnlockChannelAsync(SocketCommandContext context)
+        {
+            SocketTextChannel tChannel = context.Channel as SocketTextChannel;
+            Overwrite permissions = tChannel.PermissionOverwrites.Where(x => x.TargetId == context.Guild.EveryoneRole.Id).First();
+            if (permissions.Permissions.SendMessages == PermValue.Deny)
+            {
+                SocketTextChannel log = Extensions.GetLogChannel(context.Guild);
+                if (log != null)
+                {
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = "Channel Unlocked",
+                        IconUrl = context.Guild.IconUrl
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        Text = $"ID: {tChannel.Id}",
+                        IconUrl = context.User.GetAvatarUrl()
+                    };
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Author = author,
+                        Color = new Color(0, 0, 255),
+                        Footer = footer
+                    };
+                    embed.WithCurrentTimestamp();
+                    embed.Description = $"{context.User.Mention} unlocked the channel {tChannel.Mention}.";
+                    await log.SendMessageAsync("", false, embed.Build());
+                }
+                await tChannel.AddPermissionOverwriteAsync(context.Guild.EveryoneRole, permissions.Permissions.Modify(sendMessages: PermValue.Inherit));
+                await context.Message.DeleteAsync();
+                await context.Channel.SendMessageAsync($"{context.User.Mention} unlocked the channel.");
+            }
+            else
+            {
+                await context.Channel.SendMessageAsync($"{context.User.Mention} this channel is already unlocked.");
             }
         }
     }

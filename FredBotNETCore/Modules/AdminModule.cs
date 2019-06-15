@@ -288,5 +288,25 @@ namespace FredBotNETCore.Modules
         {
             await adminService.SetSlowmodeAsync(Context, time);
         }
+
+        [Command("lock")]
+        [Alias("lockchannel", "channellock")]
+        [Summary("Lock the current channel so members cannot message in it.")]
+        [RequireBotPermission(GuildPermission.ManageChannels)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        public async Task LockChannel()
+        {
+            await adminService.LockChannelAsync(Context);
+        }
+
+        [Command("unlock")]
+        [Alias("unlockchannel", "channelunlock")]
+        [Summary("Unlock the current channel so members can message in it.")]
+        [RequireBotPermission(GuildPermission.ManageChannels)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        public async Task UnlockChannel()
+        {
+            await adminService.UnlockChannelAsync(Context);
+        }
     }
 }
