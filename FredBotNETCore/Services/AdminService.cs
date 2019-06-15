@@ -1938,7 +1938,7 @@ namespace FredBotNETCore.Services
             }
             else
             {
-                Regex r = new Regex(@"^\d+(s|m|h)?$");
+                Regex r = new Regex(@"^\d+(s|S|m|M|h|H)?$");
                 if (r.IsMatch(time))
                 {
                     RequestOptions options = new RequestOptions()
