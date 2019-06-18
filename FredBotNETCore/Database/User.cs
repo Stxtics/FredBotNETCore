@@ -100,7 +100,11 @@ namespace FredBotNETCore.Database
 
             while (tableName.Read())
             {
-                string pr2Name = (string)tableName["pr2_name"];
+                string pr2Name = null;
+                if (!DBNull.Value.Equals(tableName["pr2_name"]))
+                {
+                    pr2Name = (string)tableName["pr2_name"];
+                }
 
                 if (pr2Name != null)
                 {
