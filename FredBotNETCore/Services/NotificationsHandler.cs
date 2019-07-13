@@ -40,7 +40,7 @@ namespace FredBotNETCore
                         guildId = Extensions.GetBetween(server_name, "guild_id\":\"", "\"");
                         if (guildId.Equals("0"))
                         {
-                            happyHour = Extensions.GetBetween(server_name, "happy_hour\":\"", "\"");
+                            happyHour = Extensions.GetBetween(server_name, "happy_hour\":", "}");
                             string serverName = Extensions.GetBetween(server_name, "server_name\":\"", "\"");
                             if (!serverName.Equals("Tournament"))
                             {

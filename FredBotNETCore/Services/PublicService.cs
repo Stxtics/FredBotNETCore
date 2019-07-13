@@ -2121,11 +2121,11 @@ namespace FredBotNETCore.Services
                     {
                         if (text.ToLower().Contains(server.ToLower()))
                         {
-                            string serverInfo = Extensions.GetBetween(text.ToLower(), "\"server_name\":\"" + server.ToLower(), "}");
+                            string serverInfo = Extensions.GetBetween(text.ToLower(), "\"server_name\":\"" + server.ToLower(), "}") + "}";
                             string pop = Extensions.GetBetween(serverInfo, "\",\"population\":\"", "\",\"status\":\"");
                             string status = Extensions.GetBetween(serverInfo, "\",\"status\":\"", "\",\"guild_id\":\"");
-                            int tournament = int.Parse(Extensions.GetBetween(serverInfo, "\",\"tournament\":\"", "\",\"happy_hour\":\""));
-                            int happyHour = int.Parse(Extensions.GetBetween(serverInfo, "\",\"happy_hour\":\"", "\""));
+                            int tournament = int.Parse(Extensions.GetBetween(serverInfo, "\",\"tournament\":\"", "\",\"happy_hour\":"));
+                            int happyHour = int.Parse(Extensions.GetBetween(serverInfo, "\",\"happy_hour\":", "}"));
                             string hh = "No";
                             string tourn = "No";
                             if (happyHour == 1)
@@ -2766,7 +2766,7 @@ namespace FredBotNETCore.Services
                         }
                         string pop = Extensions.GetBetween(server_id, "\",\"population\":\"", "\",\"status\":\"");
                         string status = Extensions.GetBetween(server_id, "\",\"status\":\"", "\",\"guild_id\":\"");
-                        string happyHour = Extensions.GetBetween(server_id, "\",\"happy_hour\":\"", "\"");
+                        string happyHour = Extensions.GetBetween(server_id, "\",\"happy_hour\":", "}");
                         int serverId = int.Parse(Extensions.GetBetween(server_id, "\"server_id\":\"", "\",\"server_name\":\""));
                         if (status.Equals("down", StringComparison.InvariantCultureIgnoreCase) && serverId < 12)
                         {
