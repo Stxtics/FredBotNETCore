@@ -17,8 +17,8 @@
   <ItemGroup>
     <PackageReference Include="coveralls.io" Version="1.4.2" />
     <PackageReference Include="Discord.Addons.Preconditions" Version="1.2.0-alpha3" />
-    <PackageReference Include="Discord.Net" Version="2.2.0-dev-20190612.2" />
-    <PackageReference Include="Discord.Net.Commands" Version="2.2.0-dev-20190612.2" />
+    <PackageReference Include="Discord.Net" Version="2.2.0-dev-20190629.2" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.2.0-dev-20190629.2" />
     <PackageReference Include="Google.Apis" Version="1.40.2" />
     <PackageReference Include="Google.Apis.Auth" Version="1.40.2" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.40.2.1593" />
