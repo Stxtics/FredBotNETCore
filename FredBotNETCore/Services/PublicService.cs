@@ -2441,7 +2441,7 @@ namespace FredBotNETCore.Services
                     string[] servers = text.Split('}');
                     foreach (string server_name in servers)
                     {
-                        string happyHour = Extensions.GetBetween(server_name, "hour\":\"", "\"");
+                        string happyHour = Extensions.GetBetween(server_name + "}", "happy_hour\":", "}");
                         if (happyHour.Equals("1"))
                         {
                             string serverName = Extensions.GetBetween(server_name, "server_name\":\"", "\"");
