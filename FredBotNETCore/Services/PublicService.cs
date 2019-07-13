@@ -2766,7 +2766,7 @@ namespace FredBotNETCore.Services
                         }
                         string pop = Extensions.GetBetween(server_id, "\",\"population\":\"", "\",\"status\":\"");
                         string status = Extensions.GetBetween(server_id, "\",\"status\":\"", "\",\"guild_id\":\"");
-                        string happyHour = Extensions.GetBetween(server_id, "\",\"happy_hour\":", "}");
+                        string happyHour = Extensions.GetBetween(server_id + "}", "\",\"happy_hour\":", "}");
                         int serverId = int.Parse(Extensions.GetBetween(server_id, "\"server_id\":\"", "\",\"server_name\":\""));
                         if (status.Equals("down", StringComparison.InvariantCultureIgnoreCase) && serverId < 12)
                         {
