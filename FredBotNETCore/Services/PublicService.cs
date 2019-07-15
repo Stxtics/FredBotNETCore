@@ -2305,14 +2305,6 @@ namespace FredBotNETCore.Services
                             Author = author,
                             Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
                         };
-                        foreach (string user_id in users)
-                        {
-                            string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
-                            if (name.Length > 0)
-                            {
-                                guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
-                            }
-                        }
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
                             IconUrl = context.User.GetAvatarUrl(),
@@ -2320,8 +2312,48 @@ namespace FredBotNETCore.Services
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
-                        embed.Description = $"{string.Join(", ", guildMembers)}";
-                        await context.Channel.SendMessageAsync("", false, embed.Build());
+                        bool overflow = false;
+                        foreach (string user_id in users)
+                        {
+                            string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
+                            if (name.Length > 0)
+                            {
+                                guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                            }
+                            if (string.Join(", ", guildMembers).Length + 14 > 2048)
+                            {
+                                guildMembers.RemoveAt(guildMembers.Count - 1);
+                                if (context.Channel is ITextChannel)
+                                {
+                                    overflow = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    embed.Description = $"{string.Join(", ", guildMembers)}";
+                                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                                    guildMembers.Clear();
+                                    guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                                }
+                            }
+                        }
+                        if (context.Channel is ITextChannel)
+                        {
+                            if (overflow)
+                            {
+                                embed.Description = $"{string.Join(", ", guildMembers)}, and {users.Length - guildMembers.Count} more";
+                            }
+                            else
+                            {
+                                embed.Description = $"{string.Join(", ", guildMembers)}";
+                            }
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
+                        }
+                        else
+                        {
+                            embed.Description = $"{string.Join(", ", guildMembers)}";
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
+                        }
                     }
                 }
             }
@@ -2391,14 +2423,6 @@ namespace FredBotNETCore.Services
                             Author = author,
                             Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256))
                         };
-                        foreach (string user_id in users)
-                        {
-                            string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
-                            if (name.Length > 0)
-                            {
-                                guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
-                            }
-                        }
                         EmbedFooterBuilder footer = new EmbedFooterBuilder()
                         {
                             IconUrl = context.User.GetAvatarUrl(),
@@ -2406,8 +2430,48 @@ namespace FredBotNETCore.Services
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
-                        embed.Description = $"{string.Join(", ", guildMembers)}";
-                        await context.Channel.SendMessageAsync("", false, embed.Build());
+                        bool overflow = false;
+                        foreach (string user_id in users)
+                        {
+                            string name = Extensions.GetBetween(user_id, "name\":\"", "\",\"power");
+                            if (name.Length > 0)
+                            {
+                                guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                            }
+                            if (string.Join(", ", guildMembers).Length + 14 > 2048)
+                            {
+                                guildMembers.RemoveAt(guildMembers.Count - 1);
+                                if (context.Channel is ITextChannel)
+                                {
+                                    overflow = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    embed.Description = $"{string.Join(", ", guildMembers)}";
+                                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                                    guildMembers.Clear();
+                                    guildMembers.Add($"[{Format.Sanitize(name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(name)})");
+                                }
+                            }
+                        }
+                        if (context.Channel is ITextChannel)
+                        {
+                            if (overflow)
+                            {
+                                embed.Description = $"{string.Join(", ", guildMembers)}, and {users.Length - guildMembers.Count} more";
+                            }
+                            else
+                            {
+                                embed.Description = $"{string.Join(", ", guildMembers)}";
+                            }
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
+                        }
+                        else
+                        {
+                            embed.Description = $"{string.Join(", ", guildMembers)}";
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
+                        }
                     }
                 }
             }
