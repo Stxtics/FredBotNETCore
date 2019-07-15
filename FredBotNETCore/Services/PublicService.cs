@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static FredBotNETCore.WeatherDataCurrent;
 
@@ -834,7 +835,7 @@ namespace FredBotNETCore.Services
                                         string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
                                         string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
                                         string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":");
-                                        string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
+                                        string guild = Regex.Unescape(Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\""));
                                         string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
                                         if (group == "0")
                                         {
@@ -907,7 +908,7 @@ namespace FredBotNETCore.Services
                                 string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
                                 string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
                                 string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":");
-                                string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
+                                string guild = Regex.Unescape(Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\""));
                                 string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
                                 if (group == "0")
                                 {
@@ -1020,7 +1021,7 @@ namespace FredBotNETCore.Services
                             string status = Extensions.GetBetween(pr2info, ",\"status\":\"", "\",\"loginDate\":\"");
                             string lastlogin = Extensions.GetBetween(pr2info, "\",\"loginDate\":\"", "\",\"registerDate\":\"");
                             string createdat = Extensions.GetBetween(pr2info, "\",\"registerDate\":\"", "\",\"hat\":");
-                            string guild = Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\"");
+                            string guild = Regex.Unescape(Extensions.GetBetween(pr2info, "\",\"guildName\":\"", "\",\"name\":\""));
                             string name = Uri.UnescapeDataString(Extensions.GetBetween(pr2info, "\",\"name\":\"", "\",\"userId"));
                             if (group == "0")
                             {
@@ -1160,13 +1161,13 @@ namespace FredBotNETCore.Services
                         }
                         else
                         {
-                            string name = Extensions.GetBetween(pr2info, "guild_name\":\"", "\",\"creation");
+                            string name = Regex.Unescape(Extensions.GetBetween(pr2info, "guild_name\":\"", "\",\"creation"));
                             string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
                             string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
                             string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
                             string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
                             string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
-                            string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
+                            string note = Regex.Unescape(Extensions.GetBetween(pr2info, "note\":\"", "\""));
                             string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
@@ -1246,13 +1247,13 @@ namespace FredBotNETCore.Services
                         }
                         else
                         {
-                            string name = Extensions.GetBetween(pr2info, "\"guild_name\":\"", "\",\"");
+                            string name = Regex.Unescape(Extensions.GetBetween(pr2info, "\"guild_name\":\"", "\",\""));
                             string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
                             string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
                             string gptotal = int.Parse(Extensions.GetBetween(pr2info, "gp_total\":\"", "\"")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
                             string gptoday = int.Parse(Extensions.GetBetween(pr2info, "gp_today\":\"", "\"")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
                             string guildpic = Extensions.GetBetween(pr2info, "emblem\":\"", "\"");
-                            string note = Extensions.GetBetween(pr2info, "note\":\"", "\"");
+                            string note = Regex.Unescape(Extensions.GetBetween(pr2info, "note\":\"", "\""));
                             string active = Extensions.GetBetween(pr2info, "active_count\":\"", "\"");
                             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                             {
@@ -1606,7 +1607,7 @@ namespace FredBotNETCore.Services
                     string guilds = "", gps = "";
                     foreach (string guild in guildlist)
                     {
-                        string guildName = Extensions.GetBetween(guild, "\",\"guild_name\":\"", "\",\"gp_today\":\"");
+                        string guildName = Regex.Unescape(Extensions.GetBetween(guild, "\",\"guild_name\":\"", "\",\"gp_today\":\""));
                         string guildGP = int.Parse(Extensions.GetBetween(guild, "\",\"gp_today\":\"", "\",\"gp_total\":\"")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
                         guilds += $"[{Format.Sanitize(Uri.UnescapeDataString(guildName))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(guildName)})\n";
                         gps += guildGP + "\n";
@@ -2377,7 +2378,7 @@ namespace FredBotNETCore.Services
                             await context.Channel.SendMessageAsync($"{context.User.Mention} the guild with ID **{id}** does not exist or could not be found.");
                             return;
                         }
-                        string gName = Extensions.GetBetween(text, "\"guild_name\":\"", "\",\"");
+                        string gName = Regex.Unescape(Extensions.GetBetween(text, "\"guild_name\":\"", "\",\""));
                         string[] users = Extensions.GetBetween(text, ",\"members\":[", "]").Split('}');
                         List<string> guildMembers = new List<string>();
                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
@@ -2605,7 +2606,7 @@ namespace FredBotNETCore.Services
                 }
                 HttpClient web = new HttpClient();
                 string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
-                string guild = Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
+                string guild = Regex.Unescape(Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\""));
                 string id = Extensions.GetBetween(userinfo, "\",\"userId\":\"", "\",\"hatColor2\":");
                 string guildinfo = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guild);
                 string owner = Extensions.GetBetween(guildinfo, "\",\"owner_id\":\"", "\",\"note\":\"");
@@ -2688,7 +2689,7 @@ namespace FredBotNETCore.Services
                 }
                 HttpClient web = new HttpClient();
                 string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
-                string guild = Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
+                string guild = Regex.Unescape(Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\""));
                 IReadOnlyCollection<SocketRole> roles = context.Guild.Roles;
                 foreach (IRole role in roles)
                 {
