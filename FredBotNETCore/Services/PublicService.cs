@@ -1744,6 +1744,7 @@ namespace FredBotNETCore.Services
                     catch (OperationCanceledException)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H API took too long to respond.");
+                        return;
                     }
                     try
                     {
