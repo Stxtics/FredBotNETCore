@@ -1110,7 +1110,7 @@ namespace FredBotNETCore.Services
                 if (Extensions.UserInGuild(context.Message, context.Guild, username) != null)
                 {
                     SocketUser user = Extensions.UserInGuild(context.Message, context.Guild, username);
-                    if (DiscordStaff.Get(context.Guild.Id, "u-" + user.Id).Count > 0 || DiscordStaff.Get(context.Guild.Id, "r-" + (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0 || user.Id == context.Client.CurrentUser.Id)
+                    if (DiscordStaff.Get(context.Guild.Id, "u-" + user.Id).Count > 0 || (context.Guild.GetUser(user.Id).Roles.Count > 1 && DiscordStaff.Get(context.Guild.Id, "r-" + (user as SocketGuildUser).Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0) || user.Id == context.Client.CurrentUser.Id)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} that user is a mod/admin, I can't do that.");
                         return;

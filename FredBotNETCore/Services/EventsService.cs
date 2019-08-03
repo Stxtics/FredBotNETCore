@@ -68,7 +68,7 @@ namespace FredBotNETCore.Services
             {
                 if (Extensions.GetLogChannel(channel.Guild) != null && channel != Extensions.GetLogChannel(channel.Guild))
                 {
-                    if (DiscordStaff.Get(channel.Guild.Id, "u-" + msg.Author.Id).Count <= 0 || DiscordStaff.Get(channel.Guild.Id, "r-" + channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0)
+                    if (DiscordStaff.Get(channel.Guild.Id, "u-" + msg.Author.Id).Count <= 0 || (channel.Guild.GetUser(msg.Author.Id).Roles.Count > 1 && DiscordStaff.Get(channel.Guild.Id, "r-" + channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0))
                     {
                         AutoMod mod = new AutoMod(_client);
                         await mod.FilterMessage(msg, channel);
