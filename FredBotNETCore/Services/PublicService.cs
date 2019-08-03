@@ -1001,7 +1001,7 @@ namespace FredBotNETCore.Services
                     string pr2info = null;
                     try
                     {
-                        pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info_2.php?user_id=" + id);
+                        pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?user_id=" + id);
                     }
                     catch (HttpRequestException)
                     {
