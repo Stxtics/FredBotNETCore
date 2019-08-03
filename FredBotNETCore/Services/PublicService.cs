@@ -1741,6 +1741,10 @@ namespace FredBotNETCore.Services
                         await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(fahuser)}** does not exist or could not be found.");
                         return;
                     }
+                    catch (OperationCanceledException)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H API took too long to respond.");
+                    }
                     try
                     {
                         JToken o = JObject.Parse(text).GetValue("teams");
