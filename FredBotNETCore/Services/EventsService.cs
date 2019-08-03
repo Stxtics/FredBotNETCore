@@ -50,6 +50,7 @@ namespace FredBotNETCore.Services
         {
             int users = _client.Guilds.Sum(g => g.MemberCount);
             await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
+            await _client.DownloadUsersAsync(_client.Guilds);
         }
 
         public async Task OnMessageEdited(Cacheable<IMessage, ulong> message, SocketMessage m, ISocketMessageChannel chl)
@@ -103,6 +104,7 @@ namespace FredBotNETCore.Services
                 await Task.Delay(new Random().Next(300000, 600000));
                 int users = _client.Guilds.Sum(g => g.MemberCount);
                 await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
+                await _client.DownloadUsersAsync(_client.Guilds);
             }
         }
     }
