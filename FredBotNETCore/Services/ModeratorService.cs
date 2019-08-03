@@ -2426,7 +2426,7 @@ namespace FredBotNETCore.Services
                 {
                     User.Add(context.User);
                 }
-                string pr2name = User.GetUser("user_id", context.User.Id.ToString()).PR2Name;
+                string pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
                 position = guildUsers.ToList().IndexOf(user);
                 foreach (SocketRole role in user.Roles)
                 {
