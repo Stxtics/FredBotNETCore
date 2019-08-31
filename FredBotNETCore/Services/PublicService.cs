@@ -2621,6 +2621,9 @@ namespace FredBotNETCore.Services
                         string minLevel = Extensions.GetBetween(responseString, "&minLevel0=", "&note0=");
                         string note = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&note0=", "&userName0=")).Replace("+", " ");
                         string user = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
+                        string updated = Extensions.GetBetween(responseString, "&time0=", "&levelID1=");
+                        DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                        DateTime date = start.AddSeconds(double.Parse(updated)).ToLocalTime();
                         if (title.Length <= 0)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} the level **{Format.Sanitize(level)}** does not exist or could not be found.");
@@ -2643,7 +2646,7 @@ namespace FredBotNETCore.Services
                         };
                         embed.WithFooter(footer);
                         embed.WithCurrentTimestamp();
-                        embed.Description = $"**By:** {Format.Sanitize(user)}\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n";
+                        embed.Description = $"**By:** [{Format.Sanitize(user)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user)})\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}\n";
                         if (note.Length > 0)
                         {
                             embed.Description += $"-----\n{Format.Sanitize(note)}";
