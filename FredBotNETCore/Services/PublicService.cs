@@ -2651,44 +2651,51 @@ namespace FredBotNETCore.Services
                     if (response != null)
                     {
                         string responseString = await response.Content.ReadAsStringAsync();
-                        string version = Extensions.GetBetween(responseString, "&version0=", "&title0=");
-                        string title = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&title0=", "&rating0=")).Replace("+", " ");
-                        string rating = Extensions.GetBetween(responseString, "&rating0=", "&playCount0=");
-                        string plays = int.Parse(Extensions.GetBetween(responseString, "&playCount0=", "&minLevel0=")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
-                        string minLevel = Extensions.GetBetween(responseString, "&minLevel0=", "&note0=");
-                        string note = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&note0=", "&userName0=")).Replace("+", " ");
-                        string user = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
-                        string updated = Extensions.GetBetween(responseString, "&time0=", "&levelID1=");
-                        DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                        DateTime date = start.AddSeconds(double.Parse(updated)).ToLocalTime();
-                        if (title.Length <= 0)
+                        if (responseString == null || responseString.Length < 1)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} the level **{Format.Sanitize(level)}** does not exist or could not be found.");
-                            return;
                         }
-                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                        else
                         {
-                            Name = $"-- {title} --",
-                            Url = "https://pr2hub.com/levels/" + Extensions.GetBetween(responseString, "levelID0=", "&version0=") + ".txt?version=" + version
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                            Author = author
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            IconUrl = context.User.GetAvatarUrl(),
-                            Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        embed.Description = $"**By:** [{Format.Sanitize(user)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user)})\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}\n";
-                        if (note.Length > 0)
-                        {
-                            embed.Description += $"-----\n{Format.Sanitize(note)}";
+                            string version = Extensions.GetBetween(responseString, "&version0=", "&title0=");
+                            string title = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&title0=", "&rating0=")).Replace("+", " ");
+                            string rating = Extensions.GetBetween(responseString, "&rating0=", "&playCount0=");
+                            string plays = int.Parse(Extensions.GetBetween(responseString, "&playCount0=", "&minLevel0=")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
+                            string minLevel = Extensions.GetBetween(responseString, "&minLevel0=", "&note0=");
+                            string note = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&note0=", "&userName0=")).Replace("+", " ");
+                            string user = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
+                            string updated = Extensions.GetBetween(responseString, "&time0=", "&levelID1=");
+                            DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                            DateTime date = start.AddSeconds(double.Parse(updated)).ToLocalTime();
+                            if (title.Length <= 0)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} the level **{Format.Sanitize(level)}** does not exist or could not be found.");
+                                return;
+                            }
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = $"-- {title} --",
+                                Url = "https://pr2hub.com/levels/" + Extensions.GetBetween(responseString, "levelID0=", "&version0=") + ".txt?version=" + version
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                                Author = author
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = context.User.GetAvatarUrl(),
+                                Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                            };
+                            embed.WithFooter(footer);
+                            embed.WithCurrentTimestamp();
+                            embed.Description = $"**By:** [{Format.Sanitize(user)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user)})\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}\n";
+                            if (note.Length > 0)
+                            {
+                                embed.Description += $"-----\n{Format.Sanitize(note)}";
+                            }
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
                         }
-                        await context.Channel.SendMessageAsync("", false, embed.Build());
                     }
                 }
             }
