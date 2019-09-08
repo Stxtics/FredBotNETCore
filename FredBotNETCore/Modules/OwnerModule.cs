@@ -9,6 +9,61 @@ namespace FredBotNETCore.Modules
 {
     public class OwnerModule : ModuleBase<SocketCommandContext>
     {
+        [Command("listservers")]
+        [Alias("serverlist", "listguilds", "guildlist")]
+        [Summary("Lists servers the bot is in.")]
+        [RequireOwner]
+        public async Task ListServers()
+        {
+            string ids = "", names = "";
+            foreach (SocketGuild guild in Context.Client.Guilds)
+            {
+                ids += guild.Id + "\n";
+                names += guild.Name + "\n";
+            }
+
+            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+            {
+                Name = Context.Client.CurrentUser.Username + "Servers",
+                IconUrl = Context.Client.CurrentUser.GetAvatarUrl()
+            };
+            EmbedBuilder embed = new EmbedBuilder()
+            {
+                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                Author = author
+            };
+            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+            {
+                IconUrl = Context.User.GetAvatarUrl(),
+                Text = $"Servers: {Context.Client.Guilds.Count}"
+            };
+            embed.AddField(y =>
+            {
+                y.Name = "ID";
+                y.Value = ids;
+                y.IsInline = true;
+            });
+            embed.AddField(y =>
+            {
+                y.Name = "Name";
+                y.Value = names;
+                y.IsInline = true;
+            });
+
+            await ReplyAsync("", false, embed.Build());
+        }
+
+        [Command("leaveserver")]
+        [Alias("serverleave")]
+        [Summary("Leaves the server with the specified ID.")]
+        [RequireOwner]
+        public async Task LeaveServer(ulong id)
+        {
+            SocketGuild guild = Context.Client.GetGuild(id);
+            await guild.LeaveAsync();
+            await ReplyAsync($"Successfully left server: **{Format.Sanitize(guild.Name)}**.");
+        }
+
         [Command("setbalance", RunMode = RunMode.Async)]
         [Alias("balanceset")]
         [Summary("Sets balance for a user")]
@@ -37,16 +92,6 @@ namespace FredBotNETCore.Modules
             DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             DateTime date = start.AddSeconds(time).ToLocalTime();
             await ReplyAsync($"{date.Day}/{date.Month}/{date.Year} - {date.TimeOfDay}");
-        }
-
-        [Command("leave", RunMode = RunMode.Async)]
-        [Alias("leaveserver")]
-        [Summary("Makes bot leave current server")]
-        [RequireOwner]
-        public async Task Leave()
-        {
-            await ReplyAsync("Leaving the server. Bye :frowning:");
-            await Context.Guild.LeaveAsync();
         }
 
         [Command("Turnoff", RunMode = RunMode.Async)]
