@@ -10,7 +10,7 @@ namespace FredBotNETCore.Modules
     public class OwnerModule : ModuleBase<SocketCommandContext>
     {
         [Command("listservers")]
-        [Alias("serverlist", "listguilds", "guildlist")]
+        [Alias("serverlist", "listguilds", "guildlist", "serverslist")]
         [Summary("Lists servers the bot is in.")]
         [RequireOwner]
         public async Task ListServers()
@@ -24,7 +24,7 @@ namespace FredBotNETCore.Modules
 
             EmbedAuthorBuilder author = new EmbedAuthorBuilder()
             {
-                Name = Context.Client.CurrentUser.Username + "Servers",
+                Name = Context.Client.CurrentUser.Username + " Servers",
                 IconUrl = Context.Client.CurrentUser.GetAvatarUrl()
             };
             EmbedBuilder embed = new EmbedBuilder()
@@ -37,6 +37,7 @@ namespace FredBotNETCore.Modules
                 IconUrl = Context.User.GetAvatarUrl(),
                 Text = $"Servers: {Context.Client.Guilds.Count}"
             };
+            embed.WithFooter(footer);
             embed.AddField(y =>
             {
                 y.Name = "ID";
