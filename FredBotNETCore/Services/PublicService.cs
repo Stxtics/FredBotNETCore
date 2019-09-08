@@ -376,12 +376,14 @@ namespace FredBotNETCore.Services
                                     if (pr2name.Equals(username, StringComparison.InvariantCultureIgnoreCase))
                                     {
                                         await context.Channel.SendMessageAsync($"{context.User.Mention} that is already your verified account.");
+                                        web.Dispose();
                                         return;
                                     }
                                     long id = User.GetUser("pr2_name", username).UserID;
                                     if (id != 0)
                                     {
                                         await context.Channel.SendMessageAsync($"{context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{Format.Sanitize(username)}**. Please contact an admin on the {Format.Sanitize(guild.Name)} Discord Server for futher assistance.");
+                                        web.Dispose();
                                         return;
                                     }
                                     User.SetValue(context.User, "pr2_name", username);
@@ -404,6 +406,7 @@ namespace FredBotNETCore.Services
                                     if (id != 0)
                                     {
                                         await context.Channel.SendMessageAsync($"{context.User.Mention} the Discord user with ID: **{id}** has already verified themselves with the PR2 Account: **{Format.Sanitize(username)}**. Please contact an admin on the Platform Racing Group Discord Server for futher assistance.");
+                                        web.Dispose();
                                         return;
                                     }
                                     User.SetValue(context.User, "pr2_name", username);
@@ -432,6 +435,7 @@ namespace FredBotNETCore.Services
                                     { "token", pr2token }
                                 };
                                 byte[] responsebytes = wc.UploadValues("https://pr2hub.com/message_send.php", "POST", reqparm);
+                                wc.Dispose();
                                 responseString = Encoding.UTF8.GetString(responsebytes);
                                 while (responseString.Contains("Error: You've sent 4 messages in the past 60 seconds. Please wait a bit before sending another message.") || responseString.Contains("Error: Slow down a bit, yo."))
                                 {
@@ -458,6 +462,7 @@ namespace FredBotNETCore.Services
                     }
                     tries += 1;
                 }
+                web.Dispose();
                 if (responseString.Equals("{\"success\":false,\"error\":\"Could not find a valid login token. Please log in again.\"}"))
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} the token of FredTheG.CactusBot has expired. Please contact a PR2 Staff Member so that they can update it.");
@@ -628,6 +633,7 @@ namespace FredBotNETCore.Services
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                 }
+                web.Dispose();
                 if (text != null)
                 {
                     string levelname = Extensions.GetBetween(text, "hint\":\"", "\"");
@@ -876,10 +882,12 @@ namespace FredBotNETCore.Services
                                     await Task.Delay(1000);
                                 }
                             }
+                            web.Dispose();
                         }
                         else
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} you can only view a maximum of 5 users at a time.");
+                            web.Dispose();
                             return;
                         }
                     }
@@ -894,6 +902,7 @@ namespace FredBotNETCore.Services
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                         }
+                        web.Dispose();
                         if (pr2info != null)
                         {
                             if (pr2info.Contains(value: "{\"success\":false,\"error\":\""))
@@ -1007,6 +1016,7 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
+                    web.Dispose();
                     if (pr2info != null)
                     {
                         if (pr2info.Contains(value: "{\"success\":false,\"error\":\""))
@@ -1095,6 +1105,7 @@ namespace FredBotNETCore.Services
                         embed.Title = $"Command: {prefix}guild";
                         embed.Description = $"**Description:** View a PR2 guild by name.\n**Usage:** {prefix}guild [PR2 guild name]\n**Example:** {prefix}guild PR2 Staff";
                     }
+                    web.Dispose();
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
@@ -1114,6 +1125,7 @@ namespace FredBotNETCore.Services
                         if (user == null)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
+                            web.Dispose();
                             return;
                         }
                         if (!User.Exists(user))
@@ -1124,6 +1136,7 @@ namespace FredBotNETCore.Services
                         if (pr2name == null)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
+                            web.Dispose();
                             return;
                         }
                         string pr2userinfo;
@@ -1134,12 +1147,14 @@ namespace FredBotNETCore.Services
                         catch (HttpRequestException)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                            web.Dispose();
                             return;
                         }
                         string guild = Extensions.GetBetween(pr2userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
                         if (guild.Length <= 0)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} that users account is not a member of a guild.");
+                            web.Dispose();
                             return;
                         }
                         guildname = guild;
@@ -1153,6 +1168,7 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
+                    web.Dispose();
                     if (pr2info != null)
                     {
                         if (pr2info.Contains(value: "{\"success\":false,\"error\":\""))
@@ -1239,6 +1255,7 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
+                    web.Dispose();
                     if (pr2info != null)
                     {
                         if (pr2info.Contains(value: "{\"success\":false,\"error\":\""))
@@ -1600,6 +1617,7 @@ namespace FredBotNETCore.Services
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                 }
+                web.Dispose();
                 if (text != null)
                 {
                     List<string> guildlist = text.Split('}').ToList();
@@ -1735,15 +1753,18 @@ namespace FredBotNETCore.Services
                     try
                     {
                         text = await web.GetStringAsync("https://stats.foldingathome.org/api/donor/" + fahuser.Replace(' ', '_'));
+                        web.Dispose();
                     }
                     catch (HttpRequestException)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(fahuser)}** does not exist or could not be found.");
+                        web.Dispose();
                         return;
                     }
                     catch (OperationCanceledException)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H API took too long to respond.");
+                        web.Dispose();
                         return;
                     }
                     try
@@ -1848,6 +1869,7 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
+                    web.Dispose();
                     if (text != null)
                     {
                         if (Extensions.GetBetween(text, "<title>", "</title>").Contains("PR2 Hub - Error Fetching Ban"))
@@ -1998,6 +2020,7 @@ namespace FredBotNETCore.Services
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                 }
+                web.Dispose();
                 if (text != null)
                 {
                     string[] pops = text.Split('}');
@@ -2083,6 +2106,7 @@ namespace FredBotNETCore.Services
                         if (user == null)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
+                            web.Dispose();
                             return;
                         }
                         if (!User.Exists(user))
@@ -2093,6 +2117,7 @@ namespace FredBotNETCore.Services
                         if (pr2name == null)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
+                            web.Dispose();
                             return;
                         }
                         string pr2userinfo = null;
@@ -2103,12 +2128,14 @@ namespace FredBotNETCore.Services
                         catch (HttpRequestException)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                            web.Dispose();
                             return;
                         }
                         string status = Extensions.GetBetween(pr2userinfo, ",\"status\":\"", "\",\"loginDate\":\"");
                         if (status.Equals("offline"))
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} that users account is offline.");
+                            web.Dispose();
                             return;
                         }
                         status = status.Substring(11);
@@ -2123,6 +2150,7 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
+                    web.Dispose();
                     if (text != null)
                     {
                         if (text.ToLower().Contains(server.ToLower()))
@@ -2252,6 +2280,7 @@ namespace FredBotNETCore.Services
                         if (user == null)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
+                            web.Dispose();
                             return;
                         }
                         if (!User.Exists(user))
@@ -2262,6 +2291,7 @@ namespace FredBotNETCore.Services
                         if (pr2name == null)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
+                            web.Dispose();
                             return;
                         }
                         string pr2userinfo;
@@ -2272,12 +2302,14 @@ namespace FredBotNETCore.Services
                         catch (HttpRequestException)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                            web.Dispose();
                             return;
                         }
                         string guild = Extensions.GetBetween(pr2userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
                         if (guild.Length <= 0)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} that users account is not a member of a guild.");
+                            web.Dispose();
                             return;
                         }
                         guildname = guild;
@@ -2291,6 +2323,7 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
+                    web.Dispose();
                     if (text != null)
                     {
                         if (text.Contains(value: "{\"success\":false,\"error\":\""))
@@ -2408,6 +2441,7 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
+                    web.Dispose();
                     if (text != null)
                     {
                         if (text.Contains(value: "{\"success\":false,\"error\":\""))
@@ -2506,6 +2540,7 @@ namespace FredBotNETCore.Services
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                 }
+                web.Dispose();
                 if (text != null)
                 {
                     string[] servers = text.Split('}');
@@ -2611,6 +2646,8 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
+                    web.Dispose();
+                    content.Dispose();
                     if (response != null)
                     {
                         string responseString = await response.Content.ReadAsStringAsync();
@@ -2682,6 +2719,7 @@ namespace FredBotNETCore.Services
                 string id = Extensions.GetBetween(userinfo, "\",\"userId\":\"", "\",\"hatColor2\":");
                 string guildinfo = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guild);
                 string owner = Extensions.GetBetween(guildinfo, "\",\"owner_id\":\"", "\",\"note\":\"");
+                web.Dispose();
                 if (id.Equals(owner))
                 {
                     int memberCount = int.Parse(Extensions.GetBetween(guildinfo, "\",\"member_count\":\"", "\",\"emblem\":\""));
@@ -2763,6 +2801,7 @@ namespace FredBotNETCore.Services
                 string userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
                 string guild = Regex.Unescape(Extensions.GetBetween(userinfo, "\",\"guildName\":\"", "\",\"name\":\""));
                 IReadOnlyCollection<SocketRole> roles = context.Guild.Roles;
+                web.Dispose();
                 foreach (IRole role in roles)
                 {
                     if (role.Name == guild)
@@ -2809,6 +2848,7 @@ namespace FredBotNETCore.Services
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                 }
+                web.Dispose();
                 if (text != null)
                 {
                     string[] serversinfo = text.Split('}');
@@ -2894,6 +2934,7 @@ namespace FredBotNETCore.Services
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                 }
+                web.Dispose();
                 if (text != null)
                 {
                     string[] staff = text.Split("player_search");
