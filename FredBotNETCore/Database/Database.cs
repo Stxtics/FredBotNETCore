@@ -7,7 +7,7 @@ namespace FredBotNETCore.Database
     {
         private readonly string server = File.ReadAllText(Path.Combine(Extensions.downloadPath, "ServerIP.txt"));
         private const string database = "FredBotDatabase";
-        private const string username = "root";
+        private const string username = "stxtics";
         private readonly string password = File.ReadAllText(Path.Combine(Extensions.downloadPath, "DatabasePassword.txt"));
         private readonly MySqlConnection dbConnection;
 
