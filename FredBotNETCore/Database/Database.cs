@@ -19,6 +19,7 @@ namespace FredBotNETCore.Database
                 UserID = username,
                 Password = password,
                 Database = database,
+                Port = 35898,
                 SslMode = MySqlSslMode.None
             };
 
