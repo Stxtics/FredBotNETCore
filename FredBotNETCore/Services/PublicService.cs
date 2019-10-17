@@ -770,7 +770,7 @@ namespace FredBotNETCore.Services
                     {
                         SocketUser user = null;
                         int argPos = 0;
-                        if (context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                        if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
                         {
                             user = context.Message.MentionedUsers.First();
                         }
@@ -1114,7 +1114,7 @@ namespace FredBotNETCore.Services
                     {
                         SocketUser user = null;
                         int argPos = 0;
-                        if (context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                        if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
                         {
                             user = context.Message.MentionedUsers.First();
                         }
@@ -1706,7 +1706,7 @@ namespace FredBotNETCore.Services
                     {
                         SocketUser user = null;
                         int argPos = 0;
-                        if (context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                        if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
                         {
                             user = context.Message.MentionedUsers.First();
                         }
@@ -2095,7 +2095,7 @@ namespace FredBotNETCore.Services
                     {
                         SocketUser user = null;
                         int argPos = 0;
-                        if (context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                        if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
                         {
                             user = context.Message.MentionedUsers.First();
                         }
@@ -2269,7 +2269,7 @@ namespace FredBotNETCore.Services
                     {
                         SocketUser user = null;
                         int argPos = 0;
-                        if (context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                        if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
                         {
                             user = context.Message.MentionedUsers.First();
                         }
