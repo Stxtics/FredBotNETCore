@@ -28,18 +28,21 @@ namespace FredBotNETCore.Services
                 System.Collections.Generic.IEnumerable<string> parts = eventArgs.Exception.ToString().SplitInParts(1990);
                 foreach (string part in parts)
                 {
-                    await user.SendMessageAsync("```" + part + "```");
+                    await user.SendMessageAsync("Global Catch\n```" + part + "```");
                 }
             };
         }
 
         private async Task LogException(LogMessage message)
         {
-            SocketUser user = _client.GetUser(181853112045142016);
-            System.Collections.Generic.IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1990);
-            foreach (string part in parts)
+            if (!message.Equals(null) && message.Exception != null)
             {
-                await user.SendMessageAsync("```" + part + "```");
+                SocketUser user = _client.GetUser(181853112045142016);
+                System.Collections.Generic.IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1990);
+                foreach (string part in parts)
+                {
+                    await user.SendMessageAsync("Command Catch\n```" + part + "```");
+                }
             }
         }
 
