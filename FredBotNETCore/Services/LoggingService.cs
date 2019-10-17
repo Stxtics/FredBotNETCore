@@ -22,6 +22,15 @@ namespace FredBotNETCore.Services
             _client.Log += Log;
             _commands.Log += LogException;
             _lavalink.Log += Log;
+            AppDomain.CurrentDomain.FirstChanceException += async (sender, eventArgs) =>
+            {
+                SocketUser user = _client.GetUser(181853112045142016);
+                System.Collections.Generic.IEnumerable<string> parts = eventArgs.Exception.ToString().SplitInParts(1990);
+                foreach (string part in parts)
+                {
+                    await user.SendMessageAsync("```" + part + "```");
+                }
+            };
         }
 
         private async Task LogException(LogMessage message)
