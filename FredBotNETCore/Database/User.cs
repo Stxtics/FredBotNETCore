@@ -74,7 +74,7 @@ namespace FredBotNETCore.Database
                 }
                 else
                 {
-                    user.JV2ID = int.Parse((string)tableName["jv2_id"]);
+                    user.JV2ID = (int)tableName["jv2_id"];
                 }
                 user.Balance = (int)tableName["balance"];
                 if (DBNull.Value.Equals(tableName["last_used"]))
@@ -142,7 +142,7 @@ namespace FredBotNETCore.Database
                 }
                 else
                 {
-                    user.JV2ID = int.Parse((string)tableName["jv2_id"]);
+                    user.JV2ID = (int)tableName["jv2_id"];
                 }
                 user.Balance = (int)tableName["balance"];
                 if (DBNull.Value.Equals(tableName["last_used"]))
