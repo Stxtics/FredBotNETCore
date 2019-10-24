@@ -30,6 +30,8 @@ namespace FredBotNETCore.Services
                 {
                     await user.SendMessageAsync("Global Catch\n```" + part + "```");
                 }
+                System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(eventArgs.Exception, true);
+                await user.SendMessageAsync("```File: " + trace.GetFrame(0).GetFileName() + "\nLine: " + trace.GetFrame(0).GetFileLineNumber() + "```");
             };
         }
 
