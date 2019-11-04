@@ -1758,12 +1758,6 @@ namespace FredBotNETCore.Services
                             text = await web.GetStringAsync("https://stats.foldingathome.org/api/donor/" + fahuser.Replace(' ', '_'));
                             web.Dispose();
                         }
-                        catch (HttpRequestException)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(fahuser)}** does not exist or could not be found.");
-                            web.Dispose();
-                            return;
-                        }
                         catch (OperationCanceledException)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H API took too long to respond.");
@@ -1825,7 +1819,13 @@ namespace FredBotNETCore.Services
                             await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H Api is currently down.");
                         }
                     }
-                    catch(AuthenticationException)
+                    catch (HttpRequestException)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(fahuser)}** does not exist or could not be found.");
+                        web.Dispose();
+                        return;
+                    }
+                    catch (AuthenticationException)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H certificate date is invalid.");
                         web.Dispose();
