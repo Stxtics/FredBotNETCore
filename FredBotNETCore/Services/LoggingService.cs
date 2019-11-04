@@ -25,10 +25,23 @@ namespace FredBotNETCore.Services
             AppDomain.CurrentDomain.FirstChanceException += async (sender, eventArgs) =>
             {
                 SocketUser user = _client.GetUser(181853112045142016);
+                if (eventArgs.Exception.ToString().Contains("The SSL connection could not be established"))
+                {
+                    return;
+                }
                 System.Collections.Generic.IEnumerable<string> parts = eventArgs.Exception.ToString().SplitInParts(1950);
+                bool first = true;
                 foreach (string part in parts)
                 {
-                    await user.SendMessageAsync("Global Catch\n```" + part + "```");
+                    if (first)
+                    {
+                        await user.SendMessageAsync("Global Catch\n```" + part + "```");
+                        first = false;
+                    }
+                    else
+                    {
+                        await user.SendMessageAsync("```" + part + "```");
+                    }
                 }
                 System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(eventArgs.Exception, true);
                 await user.SendMessageAsync("```File: " + trace.GetFrame(0).GetFileName() + "\nLine: " + trace.GetFrame(0).GetFileLineNumber() + "```");
