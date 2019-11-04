@@ -1732,100 +1732,104 @@ namespace FredBotNETCore.Services
                         }
                     }
                     HttpClient web = new HttpClient();
-                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                    {
-                        Name = fahuser,
-                        IconUrl = "https://pbs.twimg.com/profile_images/53706032/Fold003_400x400.png",
-                        Url = "https://stats.foldingathome.org/donor/" + fahuser.Replace(' ', '_')
-                    };
-                    EmbedBuilder embed = new EmbedBuilder()
-                    {
-                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                        Author = author
-                    };
-                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                    {
-                        IconUrl = context.User.GetAvatarUrl(),
-                        Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
-                    };
-                    embed.WithFooter(footer);
-                    embed.WithCurrentTimestamp();
-                    string text;
                     try
                     {
-                        text = await web.GetStringAsync("https://stats.foldingathome.org/api/donor/" + fahuser.Replace(' ', '_'));
-                        web.Dispose();
-                    }
-                    catch (AuthenticationException)
-                    {
-                        await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H certificate date is invalid.");
-                        return;
-                    }
-                    catch (HttpRequestException)
-                    {
-                        await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(fahuser)}** does not exist or could not be found.");
-                        web.Dispose();
-                        return;
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H API took too long to respond.");
-                        web.Dispose();
-                        return;
-                    }   
-                    try
-                    {
-                        JToken o = JObject.Parse(text).GetValue("teams");
-                        JArray array = JArray.Parse(o.ToString());
-                        JObject stats = new JObject();
-                        foreach (JObject jobject in array)
+                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                         {
-                            if (Convert.ToInt32(jobject.GetValue("team")) == 143016)
-                            {
-                                stats = jobject;
-                                break;
-                            }
+                            Name = fahuser,
+                            IconUrl = "https://pbs.twimg.com/profile_images/53706032/Fold003_400x400.png",
+                            Url = "https://stats.foldingathome.org/donor/" + fahuser.Replace(' ', '_')
+                        };
+                        EmbedBuilder embed = new EmbedBuilder()
+                        {
+                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                            Author = author
+                        };
+                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                        {
+                            IconUrl = context.User.GetAvatarUrl(),
+                            Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                        };
+                        embed.WithFooter(footer);
+                        embed.WithCurrentTimestamp();
+                        string text;
+                        try
+                        {
+                            text = await web.GetStringAsync("https://stats.foldingathome.org/api/donor/" + fahuser.Replace(' ', '_'));
+                            web.Dispose();
                         }
-                        if (stats.Count == 0)
+                        catch (HttpRequestException)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(fahuser)}** does not exist or could not be found.");
+                            web.Dispose();
                             return;
                         }
-                        embed.AddField(y =>
+                        catch (OperationCanceledException)
                         {
-                            y.Name = "Score";
-                            y.Value = $"{Convert.ToInt32(stats.GetValue("credit")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
-                            y.IsInline = true;
-                        });
-                        embed.AddField(y =>
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H API took too long to respond.");
+                            web.Dispose();
+                            return;
+                        }
+                        try
                         {
-                            y.Name = "Completed WUs";
-                            y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
-                            y.IsInline = true;
-                        });
-                        if (stats.GetValue("last") != null)
-                        {
+                            JToken o = JObject.Parse(text).GetValue("teams");
+                            JArray array = JArray.Parse(o.ToString());
+                            JObject stats = new JObject();
+                            foreach (JObject jobject in array)
+                            {
+                                if (Convert.ToInt32(jobject.GetValue("team")) == 143016)
+                                {
+                                    stats = jobject;
+                                    break;
+                                }
+                            }
+                            if (stats.Count == 0)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(fahuser)}** does not exist or could not be found.");
+                                return;
+                            }
                             embed.AddField(y =>
                             {
-                                y.Name = "Last WU";
-                                y.Value = $"{stats.GetValue("last")}";
+                                y.Name = "Score";
+                                y.Value = $"{Convert.ToInt32(stats.GetValue("credit")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
                                 y.IsInline = true;
                             });
-                        }
-                        else
-                        {
                             embed.AddField(y =>
                             {
-                                y.Name = "Last WU";
-                                y.Value = $"N/A";
+                                y.Name = "Completed WUs";
+                                y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
                                 y.IsInline = true;
                             });
+                            if (stats.GetValue("last") != null)
+                            {
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Last WU";
+                                    y.Value = $"{stats.GetValue("last")}";
+                                    y.IsInline = true;
+                                });
+                            }
+                            else
+                            {
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Last WU";
+                                    y.Value = $"N/A";
+                                    y.IsInline = true;
+                                });
+                            }
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
                         }
-                        await context.Channel.SendMessageAsync("", false, embed.Build());
+                        catch (JsonReaderException)
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H Api is currently down.");
+                        }
                     }
-                    catch (JsonReaderException)
+                    catch(AuthenticationException)
                     {
-                        await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H Api is currently down.");
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H certificate date is invalid.");
+                        web.Dispose();
+                        return;
                     }
                 }
             }
