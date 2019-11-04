@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -1755,6 +1756,11 @@ namespace FredBotNETCore.Services
                         text = await web.GetStringAsync("https://stats.foldingathome.org/api/donor/" + fahuser.Replace(' ', '_'));
                         web.Dispose();
                     }
+                    catch (AuthenticationException)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H certificate date is invalid.");
+                        return;
+                    }
                     catch (HttpRequestException)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(fahuser)}** does not exist or could not be found.");
@@ -1766,7 +1772,7 @@ namespace FredBotNETCore.Services
                         await context.Channel.SendMessageAsync($"{context.User.Mention} the F@H API took too long to respond.");
                         web.Dispose();
                         return;
-                    }
+                    }   
                     try
                     {
                         JToken o = JObject.Parse(text).GetValue("teams");
