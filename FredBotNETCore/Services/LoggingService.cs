@@ -25,7 +25,7 @@ namespace FredBotNETCore.Services
             AppDomain.CurrentDomain.FirstChanceException += async (sender, eventArgs) =>
             {
                 SocketUser user = _client.GetUser(181853112045142016);
-                System.Collections.Generic.IEnumerable<string> parts = eventArgs.Exception.ToString().SplitInParts(1990);
+                System.Collections.Generic.IEnumerable<string> parts = eventArgs.Exception.ToString().SplitInParts(1950);
                 foreach (string part in parts)
                 {
                     await user.SendMessageAsync("Global Catch\n```" + part + "```");
@@ -40,7 +40,7 @@ namespace FredBotNETCore.Services
             if (!message.Equals(null) && message.Exception != null)
             {
                 SocketUser user = _client.GetUser(181853112045142016);
-                System.Collections.Generic.IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1990);
+                System.Collections.Generic.IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1950);
                 foreach (string part in parts)
                 {
                     await user.SendMessageAsync("Command Catch\n```" + part + "```");
