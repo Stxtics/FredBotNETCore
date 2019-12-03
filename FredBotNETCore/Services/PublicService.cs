@@ -2682,7 +2682,14 @@ namespace FredBotNETCore.Services
                     else
                     {
                         mode = "title";
-                        search = option + " " + search;
+                        if (search == null)
+                        {
+                            search = option;
+                        }
+                        else
+                        {
+                            search = option + " " + search;
+                        }
                     }
 
                     string pr2token = File.ReadAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
@@ -3043,6 +3050,16 @@ namespace FredBotNETCore.Services
                                             content = new FormUrlEncodedContent(values);
                                             response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
                                             responseString = await response.Content.ReadAsStringAsync();
+                                            while (responseString.Equals("error=Slow down a bit, yo."))
+                                            {
+                                                await Task.Delay(250);
+                                                response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
+                                                responseString = await response.Content.ReadAsStringAsync();
+                                            }
+                                            if (page > 18)
+                                            {
+                                                break;
+                                            }
                                             page++;
                                         }
                                     }
@@ -3316,6 +3333,7 @@ namespace FredBotNETCore.Services
                                     await Task.Delay(500);
                                     text = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + Uri.EscapeDataString(search));
                                 }
+                                string name = Uri.UnescapeDataString(Extensions.GetBetween(text, "\",\"name\":\"", "\",\"userId"));
                                 values["mode"] = "user";
                                 values["order"] = "date";
                                 FormUrlEncodedContent content = new FormUrlEncodedContent(values);
@@ -3339,7 +3357,7 @@ namespace FredBotNETCore.Services
                                     {
                                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                         {
-                                            Name = $"Levels By: {search} - Page 1",
+                                            Name = $"Levels By: {name} - Page 1",
                                         };
                                         EmbedBuilder embed = new EmbedBuilder()
                                         {
@@ -3397,6 +3415,17 @@ namespace FredBotNETCore.Services
                                                 content = new FormUrlEncodedContent(values);
                                                 response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
                                                 responseString = await response.Content.ReadAsStringAsync();
+                                                while (responseString.Equals("error=Slow down a bit, yo."))
+                                                {
+                                                    await Task.Delay(250);
+                                                    response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
+                                                    responseString = await response.Content.ReadAsStringAsync();
+                                                }
+                                                if (page > 18)
+                                                {
+                                                    moreLevels = false;
+                                                    await context.Channel.SendMessageAsync($"{context.User.Mention} the maximum number of pages I can show is 18.");
+                                                }
                                             }
                                             else
                                             {
