@@ -2605,7 +2605,7 @@ namespace FredBotNETCore.Services
             }
         }
 
-        public async Task LevelAsync(SocketCommandContext context, [Remainder] string level)
+        public async Task LevelAsync(SocketCommandContext context, string option, [Remainder] string search)
         {
             List<AllowedChannel> channels = new List<AllowedChannel>();
             if (context.Channel is SocketTextChannel)
@@ -2614,7 +2614,7 @@ namespace FredBotNETCore.Services
             }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
-                if (string.IsNullOrWhiteSpace(level))
+                if (string.IsNullOrWhiteSpace(option))
                 {
                     EmbedBuilder embed = new EmbedBuilder()
                     {
@@ -2623,90 +2623,765 @@ namespace FredBotNETCore.Services
                     if (context.Channel is IDMChannel)
                     {
                         embed.Title = "Command: /level";
-                        embed.Description = "**Description:** Get PR2 level info.\n**Usage:** /level [PR2 level name]\n**Example:** /level Newbieland 2";
+                        embed.Description = "**Description:** Get PR2 level info.\n**Usage:** /level [t, id, u] [search]\n**Example:** /level id 50815";
                     }
                     else
                     {
                         string prefix = Guild.Get(context.Guild).Prefix;
                         embed.Title = $"Command: {prefix}level";
-                        embed.Description = $"**Description:** Get PR2 level info.\n**Usage:** {prefix}level [PR2 level name]\n**Example:** {prefix}level Newbieland 2";
+                        embed.Description = $"**Description:** Get PR2 level info.\n**Usage:** {prefix}level [t, id, u] [search]\n**Example:** {prefix}level id 50815";
                     }
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
                 {
+                    string mode = "";
+                    if (option.Equals("u") && !string.IsNullOrWhiteSpace(search))
+                    {
+                        mode = "user";
+                    }
+                    else if (option.Equals("id") && !string.IsNullOrWhiteSpace(search))
+                    {
+                        mode = "id";
+                    }
+                    else if (option.Equals("t") && !string.IsNullOrWhiteSpace(search))
+                    {
+                        mode = "title";
+                    }
+                    else
+                    {
+                        mode = "title";
+                        search = option + " " + search;
+                    }
+
                     string pr2token = File.ReadAllText(Path.Combine(Extensions.downloadPath, "PR2Token.txt"));
                     Dictionary<string, string> values = new Dictionary<string, string>
-                    {
-                        { "dir", "desc" },
-                        { "mode", "title" },
-                        { "order", "popularity" },
-                        { "page", "1" },
-                        { "search_str", level },
-                        { "token", pr2token }
-                    };
-                    HttpClient web = new HttpClient();
-                    FormUrlEncodedContent content = new FormUrlEncodedContent(values);
-                    HttpResponseMessage response = null;
-                    try
-                    {
-                        response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
-                    }
-                    catch (HttpRequestException)
-                    {
-                        await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
-                    }
-                    web.Dispose();
-                    content.Dispose();
-                    if (response != null)
-                    {
-                        string responseString = await response.Content.ReadAsStringAsync();
-                        if (responseString == null || responseString.Length < 1)
                         {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} the level **{Format.Sanitize(level)}** does not exist or could not be found.");
+                            { "dir", "desc" },
+                            { "mode", "title" },
+                            { "order", "popularity" },
+                            { "page", "1" },
+                            { "search_str", search },
+                            { "token", pr2token }
+                        };
+                    HttpClient web = new HttpClient();
+
+                    if (mode.Equals("title"))
+                    {
+                        FormUrlEncodedContent content = new FormUrlEncodedContent(values);
+                        HttpResponseMessage response = null;
+                        try
+                        {
+                            response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
+                        }
+                        catch (HttpRequestException)
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                        }
+                        content.Dispose();
+                        if (response != null)
+                        {
+                            string responseString = await response.Content.ReadAsStringAsync();
+                            if (responseString == null || responseString.Length < 1)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} the level **{Format.Sanitize(search)}** does not exist or could not be found.");
+                            }
+                            else
+                            {
+                                string id = Extensions.GetBetween(responseString, "levelID0=", "&version0=");
+
+                                if (id.Length < 1)
+                                {
+                                    await context.Channel.SendMessageAsync($"{context.User.Mention} the level **{Format.Sanitize(search)}** does not exist or could not be found.");
+                                }
+                                else
+                                {
+                                    string version = Extensions.GetBetween(responseString, "&version0=", "&title0=");
+                                    string user = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
+                                    string title = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&title0=", "&rating0=")).Replace("+", " ");
+                                    string rating = Extensions.GetBetween(responseString, "&rating0=", "&playCount0=");
+                                    string plays = int.Parse(Extensions.GetBetween(responseString, "&playCount0=", "&minLevel0=")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
+                                    string minLevel = Extensions.GetBetween(responseString, "&minLevel0=", "&note0=");
+                                    string note = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&note0=", "&userName0=")).Replace("+", " ");
+                                    string updated = Extensions.GetBetween(responseString, "&time0=", "&");
+                                    DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                                    DateTime date = start.AddSeconds(double.Parse(updated)).ToLocalTime();
+
+                                    string text = await web.GetStringAsync("https://pr2hub.com/levels/" + id + ".txt?version=" + version);
+                                    string userId = Extensions.GetBetween(text, "user_id=", "&");
+                                    string gravity = Extensions.GetBetween(text, "&gravity=", "&");
+                                    string maxTime = TimeSpan.FromSeconds(int.Parse(Extensions.GetBetween(text, "&max_time=", "&"))).ToString(@"h\:mm\:ss");
+                                    string song = Extensions.GetBetween(text, "&song=", "&");
+                                    string pass = Extensions.GetBetween(text, "&has_pass=", "&");
+                                    string items = text.Substring(text.IndexOf("&items="), text.Length - text.IndexOf("&items="));
+                                    if (items.Split("&").Count() > 2)
+                                    {
+                                        items = items.Split("&").ElementAt(1).Substring(6);
+                                    }
+                                    else
+                                    {
+                                        items = items.Substring(7, items.Length - 39);
+                                    }
+                                    string gameMode = CultureInfo.CreateSpecificCulture("en-GB").TextInfo.ToTitleCase(Extensions.GetBetween(text, "&gameMode=", "&"));
+                                    string cowboyChance = Extensions.GetBetween(text, "&cowboyChance=", "&");
+
+                                    if (cowboyChance.Length < 1)
+                                    {
+                                        cowboyChance = "0%";
+                                    }
+                                    else
+                                    {
+                                        cowboyChance += "%";
+                                    }
+
+                                    if (pass.Equals("1"))
+                                    {
+                                        pass = "Yes";
+                                    }
+                                    else
+                                    {
+                                        pass = "No";
+                                    }
+
+                                    if (maxTime.Equals("0:00:00"))
+                                    {
+                                        maxTime = "Unlimited";
+                                    }
+
+                                    if (gameMode.Length < 1)
+                                    {
+                                        gameMode = "Race";
+                                    }
+
+                                    if (version.Length < 1)
+                                    {
+                                        version = "1";
+                                    }
+
+                                    switch (song)
+                                    {
+                                        case "0":
+                                            {
+                                                song = "None";
+                                                break;
+                                            }
+                                        case "1":
+                                            {
+                                                song = "Miniature Fantasy - Dreamscaper";
+                                                break;
+                                            }
+                                        case "2":
+                                            {
+                                                song = "Under Fire - AP";
+                                                break;
+                                            }
+                                        case "3":
+                                            {
+                                                song = "Paradise on E - API";
+                                                break;
+                                            }
+                                        case "4":
+                                            {
+                                                song = "Crying Soul - Bounc3";
+                                                break;
+                                            }
+                                        case "5":
+                                            {
+                                                song = "My Vision - MrMaestro";
+                                                break;
+                                            }
+                                        case "6":
+                                            {
+                                                song = "Switchblade - SKAzini";
+                                                break;
+                                            }
+                                        case "7":
+                                            {
+                                                song = "The Wires - Cheez-R-Us";
+                                                break;
+                                            }
+                                        case "8":
+                                            {
+                                                song = "Before Mydnite - F-777";
+                                                break;
+                                            }
+                                        case "10":
+                                            {
+                                                song = "Broked It - SWiTCH";
+                                                break;
+                                            }
+                                        case "11":
+                                            {
+                                                song = "Hello? - TMM43";
+                                                break;
+                                            }
+                                        case "12":
+                                            {
+                                                song = "Pyrokinesis - Sean Tucker";
+                                                break;
+                                            }
+                                        case "13":
+                                            {
+                                                song = "Flowerz 'n' Herbz - Brunzolaitis";
+                                                break;
+                                            }
+                                        case "14":
+                                            {
+                                                song = "Instrumental #4 - Reasoner";
+                                                break;
+                                            }
+                                        case "15":
+                                            {
+                                                song = "Prismatic - Lunanova";
+                                                break;
+                                            }
+                                        default:
+                                            {
+                                                song = "Random";
+                                                break;
+                                            }
+                                    }
+
+                                    List<string> itemList = items.Split('`').ToList();
+                                    if (int.TryParse(itemList.First(), out int result))
+                                    {
+                                        List<string> itemList2 = new List<string>();
+                                        foreach (string item in itemList)
+                                        {
+                                            if (item.Equals("1"))
+                                            {
+                                                itemList2.Add("Laser Gun");
+                                            }
+                                            else if (item.Equals("2"))
+                                            {
+                                                itemList2.Add("Mine");
+                                            }
+                                            else if (item.Equals("3"))
+                                            {
+                                                itemList2.Add("Lightning");
+                                            }
+                                            else if (item.Equals("4"))
+                                            {
+                                                itemList2.Add("Teleport");
+                                            }
+                                            else if (item.Equals("5"))
+                                            {
+                                                itemList2.Add("Super Jump");
+                                            }
+                                            else if (item.Equals("6"))
+                                            {
+                                                itemList2.Add("Jet Pack");
+                                            }
+                                            else if (item.Equals("7"))
+                                            {
+                                                itemList2.Add("Speed Burst");
+                                            }
+                                            else if (item.Equals("8"))
+                                            {
+                                                itemList2.Add("Sword");
+                                            }
+                                            else if (item.Equals("9"))
+                                            {
+                                                itemList2.Add("Ice Wave");
+                                            }
+                                        }
+                                        itemList = itemList2;
+                                    }
+
+                                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                    {
+                                        Name = $"-- {title} ({id}) --",
+                                        Url = "https://pr2hub.com/levels/" + id + ".txt?version=" + version
+                                    };
+                                    EmbedBuilder embed = new EmbedBuilder()
+                                    {
+                                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                                        Author = author
+                                    };
+                                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                    {
+                                        IconUrl = context.User.GetAvatarUrl(),
+                                        Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                                    };
+                                    embed.WithFooter(footer);
+                                    embed.WithCurrentTimestamp();
+                                    embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(user)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user)}) ({userId})", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
+                                        $"\n{string.Format("{0,-25} {1,25}", $"**Version:** {version}", $"**Max Time:** {maxTime}")}" +
+                                        $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
+                                        $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {plays}", $"**Pass:** {pass}")}" +
+                                        $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
+                                        $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
+                                    Console.WriteLine(embed.Description);
+                                    if (note.Length > 0)
+                                    {
+                                        embed.Description += $"\n-----\n{Format.Sanitize(note)}";
+                                    }
+                                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                                }
+                            }
+                        }
+                    }
+                    else if (mode.Equals("id"))
+                    {
+                        if (!int.TryParse(search, out int id) || id < 1)
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} the level ID must be a positive whole number.");
                         }
                         else
                         {
-                            string version = Extensions.GetBetween(responseString, "&version0=", "&title0=");
-                            string title = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&title0=", "&rating0=")).Replace("+", " ");
-                            string rating = Extensions.GetBetween(responseString, "&rating0=", "&playCount0=");
-                            string plays = int.Parse(Extensions.GetBetween(responseString, "&playCount0=", "&minLevel0=")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
-                            string minLevel = Extensions.GetBetween(responseString, "&minLevel0=", "&note0=");
-                            string note = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&note0=", "&userName0=")).Replace("+", " ");
-                            string user = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&userName0=", "&group0=")).Replace("+", " ");
-                            string updated = Extensions.GetBetween(responseString, "&time0=", "&levelID1=");
-                            DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                            DateTime date = start.AddSeconds(double.Parse(updated)).ToLocalTime();
-                            if (title.Length <= 0)
+                            string text = null;
+                            try
                             {
-                                await context.Channel.SendMessageAsync($"{context.User.Mention} the level **{Format.Sanitize(level)}** does not exist or could not be found.");
-                                return;
+                                text = await web.GetStringAsync("https://pr2hub.com/levels/" + id + ".txt?");
                             }
-                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            catch (HttpRequestException e)
                             {
-                                Name = $"-- {title} --",
-                                Url = "https://pr2hub.com/levels/" + Extensions.GetBetween(responseString, "levelID0=", "&version0=") + ".txt?version=" + version
-                            };
-                            EmbedBuilder embed = new EmbedBuilder()
-                            {
-                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                                Author = author
-                            };
-                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                            {
-                                IconUrl = context.User.GetAvatarUrl(),
-                                Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
-                            };
-                            embed.WithFooter(footer);
-                            embed.WithCurrentTimestamp();
-                            embed.Description = $"**By:** [{Format.Sanitize(user)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user)})\n**Version:** {version}\n**Min Rank:** {minLevel}\n**Plays:** {plays}\n**Rating:** {rating}\n**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}\n";
-                            if (note.Length > 0)
-                            {
-                                embed.Description += $"-----\n{Format.Sanitize(note)}";
+                                if (e.Message.Equals("Response status code does not indicate success: 404 (Not Found)."))
+                                {
+                                    await context.Channel.SendMessageAsync($"{context.User.Mention} the level with ID **{id}** does not exist or could not be found.");
+                                }
+                                else
+                                {
+                                    await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                                }
                             }
-                            await context.Channel.SendMessageAsync("", false, embed.Build());
+                            if (text != null)
+                            {
+                                string version = Extensions.GetBetween(text, "&version=", "&");
+                                string userId = Extensions.GetBetween(text, "user_id=", "&");
+                                string cowboyChance = Extensions.GetBetween(text, "&cowboyChance=", "&");
+                                string title = Uri.UnescapeDataString(Extensions.GetBetween(text, "&title=", "&"));
+                                string note = Uri.UnescapeDataString(Extensions.GetBetween(text, "&note=", "&")).Replace("+", " ");
+                                string minLevel = Extensions.GetBetween(text, "&min_level=", "&");
+                                string song = Extensions.GetBetween(text, "&song=", "&");
+                                string gravity = Extensions.GetBetween(text, "&gravity=", "&");
+                                string maxTime = TimeSpan.FromSeconds(int.Parse(Extensions.GetBetween(text, "&max_time=", "&"))).ToString(@"h\:mm\:ss");
+                                string pass = Extensions.GetBetween(text, "&has_pass=", "&");
+                                string live = Extensions.GetBetween(text, "&live=", "&");
+                                string items = text.Substring(text.IndexOf("&items="), text.Length - text.IndexOf("&items="));
+                                if (items.Split("&").Count() > 2)
+                                {
+                                    items = items.Split("&").ElementAt(1).Substring(6);
+                                }
+                                else
+                                {
+                                    items = items.Substring(7, items.Length - 39);
+                                }
+                                string gameMode = CultureInfo.CreateSpecificCulture("en-GB").TextInfo.ToTitleCase(Extensions.GetBetween(text, "&gameMode=", "&"));
+                                string updated = Extensions.GetBetween(text, "&time=", "&");
+                                DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                                DateTime date = start.AddSeconds(double.Parse(updated)).ToLocalTime();
+
+                                string user = Uri.UnescapeDataString(Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/get_player_info.php?user_id=" + userId), "\"name\":\"", "\",\""));
+
+                                string plays = "", rating = "";
+
+                                values["mode"] = "user";
+                                values["search_str"] = user;
+
+                                FormUrlEncodedContent content = new FormUrlEncodedContent(values);
+                                HttpResponseMessage response = null;
+                                try
+                                {
+                                    response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
+                                }
+                                catch (HttpRequestException)
+                                {
+                                    await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                                }
+                                if (response != null)
+                                {
+                                    string responseString = await response.Content.ReadAsStringAsync();
+                                    bool found = false;
+                                    int page = 2;
+                                    while (responseString.Length > 0 && !found)
+                                    {
+                                        for (int i = 0; i < 6; i++)
+                                        {
+                                            string levelId = Extensions.GetBetween(responseString, "levelID" + i + "=", "&version" + i + "=");
+                                            if (levelId.Equals(id.ToString()))
+                                            {
+                                                rating = Extensions.GetBetween(responseString, "&rating" + i + "=", "&playCount" + i + "=");
+                                                plays = int.Parse(Extensions.GetBetween(responseString, "&playCount" + i + "=", "&minLevel" + i + "=")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
+                                                found = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!found)
+                                        {
+                                            values["page"] = page.ToString();
+                                            content = new FormUrlEncodedContent(values);
+                                            response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
+                                            responseString = await response.Content.ReadAsStringAsync();
+                                            page++;
+                                        }
+                                    }
+                                    if (found || live.Equals("0") || user.Length < 1)
+                                    {
+                                        if (cowboyChance.Length < 1)
+                                        {
+                                            cowboyChance = "0%";
+                                        }
+                                        else
+                                        {
+                                            cowboyChance += "%";
+                                        }
+
+                                        if (pass.Equals("1"))
+                                        {
+                                            pass = "Yes";
+                                        }
+                                        else
+                                        {
+                                            pass = "No";
+                                        }
+
+                                        if (live.Equals("0"))
+                                        {
+                                            live = "No";
+                                        }
+                                        else
+                                        {
+                                            live = "Yes";
+                                        }
+
+                                        if (maxTime.Equals("0:00:00"))
+                                        {
+                                            maxTime = "Unlimited";
+                                        }
+
+                                        if (gameMode.Length < 1)
+                                        {
+                                            gameMode = "Race";
+                                        }
+
+                                        if (version.Length < 1)
+                                        {
+                                            version = "1";
+                                        }
+
+                                        switch (song)
+                                        {
+                                            case "0":
+                                                {
+                                                    song = "None";
+                                                    break;
+                                                }
+                                            case "1":
+                                                {
+                                                    song = "Miniature Fantasy - Dreamscaper";
+                                                    break;
+                                                }
+                                            case "2":
+                                                {
+                                                    song = "Under Fire - AP";
+                                                    break;
+                                                }
+                                            case "3":
+                                                {
+                                                    song = "Paradise on E - API";
+                                                    break;
+                                                }
+                                            case "4":
+                                                {
+                                                    song = "Crying Soul - Bounc3";
+                                                    break;
+                                                }
+                                            case "5":
+                                                {
+                                                    song = "My Vision - MrMaestro";
+                                                    break;
+                                                }
+                                            case "6":
+                                                {
+                                                    song = "Switchblade - SKAzini";
+                                                    break;
+                                                }
+                                            case "7":
+                                                {
+                                                    song = "The Wires - Cheez-R-Us";
+                                                    break;
+                                                }
+                                            case "8":
+                                                {
+                                                    song = "Before Mydnite - F-777";
+                                                    break;
+                                                }
+                                            case "10":
+                                                {
+                                                    song = "Broked It - SWiTCH";
+                                                    break;
+                                                }
+                                            case "11":
+                                                {
+                                                    song = "Hello? - TMM43";
+                                                    break;
+                                                }
+                                            case "12":
+                                                {
+                                                    song = "Pyrokinesis - Sean Tucker";
+                                                    break;
+                                                }
+                                            case "13":
+                                                {
+                                                    song = "Flowerz 'n' Herbz - Brunzolaitis";
+                                                    break;
+                                                }
+                                            case "14":
+                                                {
+                                                    song = "Instrumental #4 - Reasoner";
+                                                    break;
+                                                }
+                                            case "15":
+                                                {
+                                                    song = "Prismatic - Lunanova";
+                                                    break;
+                                                }
+                                            default:
+                                                {
+                                                    song = "Random";
+                                                    break;
+                                                }
+                                        }
+
+                                        List<string> itemList = items.Split('`').ToList();
+                                        if (int.TryParse(itemList.First(), out int result))
+                                        {
+                                            List<string> itemList2 = new List<string>();
+                                            foreach (string item in itemList)
+                                            {
+                                                if (item.Equals("1"))
+                                                {
+                                                    itemList2.Add("Laser Gun");
+                                                }
+                                                else if (item.Equals("2"))
+                                                {
+                                                    itemList2.Add("Mine");
+                                                }
+                                                else if (item.Equals("3"))
+                                                {
+                                                    itemList2.Add("Lightning");
+                                                }
+                                                else if (item.Equals("4"))
+                                                {
+                                                    itemList2.Add("Teleport");
+                                                }
+                                                else if (item.Equals("5"))
+                                                {
+                                                    itemList2.Add("Super Jump");
+                                                }
+                                                else if (item.Equals("6"))
+                                                {
+                                                    itemList2.Add("Jet Pack");
+                                                }
+                                                else if (item.Equals("7"))
+                                                {
+                                                    itemList2.Add("Speed Burst");
+                                                }
+                                                else if (item.Equals("8"))
+                                                {
+                                                    itemList2.Add("Sword");
+                                                }
+                                                else if (item.Equals("9"))
+                                                {
+                                                    itemList2.Add("Ice Wave");
+                                                }
+                                            }
+                                            itemList = itemList2;
+                                        }
+
+                                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                        {
+                                            Name = $"-- {title} ({id}) --",
+                                            Url = "https://pr2hub.com/levels/" + id + ".txt?version=" + version
+                                        };
+                                        EmbedBuilder embed = new EmbedBuilder()
+                                        {
+                                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                                            Author = author
+                                        };
+                                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                        {
+                                            IconUrl = context.User.GetAvatarUrl(),
+                                            Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                                        };
+                                        embed.WithFooter(footer);
+                                        embed.WithCurrentTimestamp();
+                                        if (live.Equals("No"))
+                                        {
+                                            if (user.Length < 1)
+                                            {
+                                                embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** *Deleted User:* {userId}", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Version:** {version}", $"**Max Time:** {maxTime}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Pass:** {pass}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Game Mode:** {gameMode}", $"**Items:** {string.Join(", ", itemList)}")}";
+                                            }
+                                            else
+                                            {
+                                                embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(user)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user)}) ({userId})", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Version:** {version}", $"**Max Time:** {maxTime}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Pass:** {pass}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Game Mode:** {gameMode}", $"**Items:** {string.Join(", ", itemList)}")}";
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (user.Length < 1)
+                                            {
+                                                embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** *Deleted User:* {userId}", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Version:** {version}", $"**Max Time:** {maxTime}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {plays}", $"**Pass:** {pass}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
+                                            }
+                                            else
+                                            {
+                                                embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(user)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user)}) ({userId})", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Version:** {version}", $"**Max Time:** {maxTime}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {plays}", $"**Pass:** {pass}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
+                                            }
+                                        }
+                                        Console.WriteLine(embed.Description);
+                                        if (note.Length > 0)
+                                        {
+                                            embed.Description += $"\n-----\n{Format.Sanitize(note)}";
+                                        }
+                                        await context.Channel.SendMessageAsync("", false, embed.Build());
+                                    }
+                                    else
+                                    {
+                                        await context.Channel.SendMessageAsync($"{context.User.Mention} I was unable to find that level in searches.");
+                                    }
+                                }
+                                content.Dispose();
+                            }
                         }
                     }
+                    else if (mode.Equals("user"))
+                    {
+                        string text = null;
+                        try
+                        {
+                            text = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + Uri.EscapeDataString(search));
+                        }
+                        catch (HttpRequestException)
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                        }
+                        if (text != null)
+                        {
+                            if (text.Equals("{\"success\":false,\"error\":\"Could not find a user with that name.\"}"))
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(search)}** does not exist or could not be found.");
+                            }
+                            else
+                            {
+                                while (text.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
+                                {
+                                    await Task.Delay(500);
+                                    text = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + Uri.EscapeDataString(search));
+                                }
+                                values["mode"] = "user";
+                                values["order"] = "date";
+                                FormUrlEncodedContent content = new FormUrlEncodedContent(values);
+                                HttpResponseMessage response = null;
+                                try
+                                {
+                                    response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
+                                }
+                                catch (HttpRequestException)
+                                {
+                                    await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                                }
+                                if (response != null)
+                                {
+                                    string responseString = await response.Content.ReadAsStringAsync();
+                                    if (responseString == null || responseString.Length < 1)
+                                    {
+                                        await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(search)}** does not have any published levels.");
+                                    }
+                                    else
+                                    {
+                                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                        {
+                                            Name = $"Levels By: {search} - Page 1",
+                                        };
+                                        EmbedBuilder embed = new EmbedBuilder()
+                                        {
+                                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                                            Author = author
+                                        };
+                                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                        {
+                                            IconUrl = context.User.GetAvatarUrl(),
+                                            Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                                        };
+                                        embed.WithFooter(footer);
+                                        embed.WithCurrentTimestamp();
+                                        bool moreLevels = true;
+                                        int page = 1;
+                                        while (moreLevels)
+                                        {
+                                            string ids = "", titles = "";
+                                            for (int i = 0; i < 6; i++)
+                                            {
+                                                string levelId = Extensions.GetBetween(responseString, "levelID" + i + "=", "&version" + i + "=");
+                                                if (levelId.Length < 1)
+                                                {
+                                                    moreLevels = false;
+                                                }
+                                                else
+                                                {
+                                                    string title = Uri.UnescapeDataString(Extensions.GetBetween(responseString, "&title" + i + "=", "&rating" + i + "=").Replace("+", " "));
+                                                    ids += levelId + "\n";
+                                                    titles += title + "\n";
+                                                }
+                                            }
+                                            if (ids.Length > 0)
+                                            {
+                                                embed.AddField(y =>
+                                                {
+                                                    y.Name = "Title";
+                                                    y.Value = titles;
+                                                    y.IsInline = true;
+                                                });
+                                                embed.AddField(y =>
+                                                {
+                                                    y.Name = "ID";
+                                                    y.Value = ids;
+                                                    y.IsInline = true;
+                                                });
+                                                await context.Channel.SendMessageAsync("", false, embed.Build());
+                                            }
+                                            if (context.Channel is IDMChannel)
+                                            {
+                                                embed.Fields.Clear();
+                                                page++;
+                                                embed.Author.Name = $"Levels By: {search} - Page {page}";
+                                                values["page"] = page.ToString();
+                                                content = new FormUrlEncodedContent(values);
+                                                response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
+                                                responseString = await response.Content.ReadAsStringAsync();
+                                            }
+                                            else
+                                            {
+                                                moreLevels = false;
+                                            }
+                                        }
+                                    }
+                                }
+                                content.Dispose();
+                            }
+                        }
+                    }
+
+                    web.Dispose();
                 }
             }
         }
