@@ -265,7 +265,7 @@ namespace FredBotNETCore.Modules.Public
             await publicService.ServersAsync(Context, s1);
         }
 
-        [Command("staff")]
+        [Command("staff", RunMode = RunMode.Async)]
         [Alias("staffonline", "so")]
         [Summary("Returns a list of the current online PR2 Staff.")]
         public async Task Staff()
