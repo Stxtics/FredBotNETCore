@@ -2942,7 +2942,6 @@ namespace FredBotNETCore.Services
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {plays}", $"**Pass:** {pass}")}" +
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
-                                    Console.WriteLine(embed.Description);
                                     if (note.Length > 0)
                                     {
                                         embed.Description += $"\n-----\n{Format.Sanitize(note)}";
@@ -3278,7 +3277,6 @@ namespace FredBotNETCore.Services
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
                                             }
                                         }
-                                        Console.WriteLine(embed.Description);
                                         if (note.Length > 0)
                                         {
                                             embed.Description += $"\n-----\n{Format.Sanitize(note)}";
