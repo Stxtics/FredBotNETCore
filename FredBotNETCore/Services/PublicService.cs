@@ -1030,12 +1030,17 @@ namespace FredBotNETCore.Services
                     web.Dispose();
                     if (pr2info != null)
                     {
-                        if (pr2info.Contains(value: "{\"success\":false,\"error\":\""))
+                        if (pr2info.Equals("{\"success\":false,\"error\":\"Could not find a user with that ID.\"}"))
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} the user with ID **{id}** does not exist or could not be found.");
                         }
                         else
                         {
+                            while (pr2info.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
+                            {
+                                await Task.Delay(500);
+                                pr2info = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?user_id=" + id);
+                            }
                             string rank = Extensions.GetBetween(pr2info, "\"rank\":", ",\"hats\":");
                             string hats = Extensions.GetBetween(pr2info, ",\"hats\":", ",\"group\":\"");
                             string group = Extensions.GetBetween(pr2info, ",\"group\":\"", "\",\"friend\":");
@@ -1161,6 +1166,17 @@ namespace FredBotNETCore.Services
                             web.Dispose();
                             return;
                         }
+                        if (pr2userinfo.Equals("{\"success\":false,\"error\":\"Could not find a user with that name.\"}"))
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} that users account no longer exists.");
+                            web.Dispose();
+                            return;
+                        }
+                        while (pr2userinfo.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
+                        {
+                            await Task.Delay(500);
+                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
+                        }
                         string guild = Extensions.GetBetween(pr2userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
                         if (guild.Length <= 0)
                         {
@@ -1182,12 +1198,17 @@ namespace FredBotNETCore.Services
                     web.Dispose();
                     if (pr2info != null)
                     {
-                        if (pr2info.Contains(value: "{\"success\":false,\"error\":\""))
+                        if (pr2info.Equals("{\"success\":false,\"error\":\"Could not find a guild with that name.\"}"))
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} the guild **{Format.Sanitize(guildname)}** does not exist or could not be found.");
                         }
                         else
                         {
+                            while (pr2info.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
+                            {
+                                await Task.Delay(500);
+                                pr2info = await web.GetStringAsync("https://pr2hub.com/guild_info.php?getMembers=yes&name=" + guildname);
+                            }
                             string name = Regex.Unescape(Extensions.GetBetween(pr2info, "guild_name\":\"", "\",\"creation"));
                             string createdat = Extensions.GetBetween(pr2info, "creation_date\":\"", "\"");
                             string members = Extensions.GetBetween(pr2info, "member_count\":\"", "\"");
