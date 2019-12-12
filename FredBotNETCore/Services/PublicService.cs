@@ -3376,9 +3376,40 @@ namespace FredBotNETCore.Services
                     else if (mode.Equals("user"))
                     {
                         string text = null;
+                        string pr2name = search;
+                        if (context.Message.MentionedUsers.Count > 0)
+                        {
+                            SocketUser user = null;
+                            int argPos = 0;
+                            if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                            {
+                                user = context.Message.MentionedUsers.First();
+                            }
+                            else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
+                            {
+                                user = context.Message.MentionedUsers.ElementAt(1);
+                            }
+                            if (user == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that Discord user does not exist or could not be found.");
+                                web.Dispose();
+                                return;
+                            }
+                            if (!User.Exists(user))
+                            {
+                                User.Add(user);
+                            }
+                            pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
+                            if (pr2name == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
+                                web.Dispose();
+                                return;
+                            }
+                        }
                         try
                         {
-                            text = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + Uri.EscapeDataString(search));
+                            text = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + Uri.EscapeDataString(pr2name));
                         }
                         catch (HttpRequestException)
                         {
@@ -3388,17 +3419,18 @@ namespace FredBotNETCore.Services
                         {
                             if (text.Equals("{\"success\":false,\"error\":\"Could not find a user with that name.\"}"))
                             {
-                                await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(search)}** does not exist or could not be found.");
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(pr2name)}** does not exist or could not be found.");
                             }
                             else
                             {
                                 while (text.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
                                 {
                                     await Task.Delay(500);
-                                    text = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + Uri.EscapeDataString(search));
+                                    text = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + Uri.EscapeDataString(pr2name));
                                 }
                                 string name = Uri.UnescapeDataString(Extensions.GetBetween(text, "\",\"name\":\"", "\",\"userId"));
                                 values["mode"] = "user";
+                                values["search_str"] = pr2name;
                                 values["order"] = "date";
                                 FormUrlEncodedContent content = new FormUrlEncodedContent(values);
                                 HttpResponseMessage response = null;
@@ -3415,7 +3447,7 @@ namespace FredBotNETCore.Services
                                     string responseString = await response.Content.ReadAsStringAsync();
                                     if (responseString == null || responseString.Length < 1)
                                     {
-                                        await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(search)}** does not have any published levels.");
+                                        await context.Channel.SendMessageAsync($"{context.User.Mention} the user **{Format.Sanitize(pr2name)}** does not have any published levels.");
                                     }
                                     else
                                     {
