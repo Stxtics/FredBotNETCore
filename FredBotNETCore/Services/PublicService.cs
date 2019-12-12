@@ -3508,6 +3508,426 @@ namespace FredBotNETCore.Services
             }
         }
 
+        public async Task CampaignAsync(SocketCommandContext context, string page)
+        {
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
+            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            {
+                if (page != null && !int.TryParse(page, out int num))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220)
+                    };
+                    if (context.Channel is IDMChannel)
+                    {
+                        embed.Title = "Command: /campaign";
+                        embed.Description = "**Description:** Get levels on a page of Campaign.\n**Usage:** /campaign [page]\n**Example:** /campaign 1";
+                    }
+                    else
+                    {
+                        string prefix = Guild.Get(context.Guild).Prefix;
+                        embed.Title = $"Command: {prefix}campaign";
+                        embed.Description = $"**Description:** Get levels on a page of Campaign.\n**Usage:** {prefix}campaign [page]\n**Example:** {prefix}campaign 1";
+                    }
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {                   
+                    if (page == null)
+                    {
+                        page = "1";
+                    }
+                    num = int.Parse(page);
+                    if (num < 1 || num > 6)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} Campaign pages are numbered 1-6.");
+                    }
+                    else
+                    {
+                        HttpClient web = new HttpClient();
+                        string text = await web.GetStringAsync("https://pr2hub.com/files/lists/campaign/" + page);
+                        web.Dispose();
+                        string ids = "", titles = "", usernames = "";
+                        for (int i = 0; i < 9; i++)
+                        {
+                            string levelId = Extensions.GetBetween(text, "levelID" + i + "=", "&version" + i + "=");
+                            if (levelId.Length < 1)
+                            {
+                                break;
+                            }
+                            string title = Uri.UnescapeDataString(Extensions.GetBetween(text, "&title" + i + "=", "&rating" + i + "=").Replace("+", " "));
+                            string username = Uri.UnescapeDataString(Extensions.GetBetween(text, "&userName" + i + "=", "&group" + i + "=")).Replace("+", " ");
+                            ids += levelId + "\n";
+                            titles += title + "\n";
+                            usernames += username + "\n";
+                        }
+                        if (ids.Length < 1)
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} there are no levels on that page of Campaign.");
+                        }
+                        else
+                        {
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = $"Campaign - Page {page}",
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                                Author = author
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = context.User.GetAvatarUrl(),
+                                Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                            };
+                            embed.WithFooter(footer);
+                            embed.WithCurrentTimestamp();
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Title";
+                                y.Value = titles;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Username";
+                                y.Value = usernames;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "ID";
+                                y.Value = ids;
+                                y.IsInline = true;
+                            });
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
+                        }
+                    }
+                }
+            }
+        }
+
+        public async Task AllTimeBestAsync(SocketCommandContext context, string page)
+        {
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
+            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            {
+                if (page != null && !int.TryParse(page, out int num))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220)
+                    };
+                    if (context.Channel is IDMChannel)
+                    {
+                        embed.Title = "Command: /alltimebest";
+                        embed.Description = "**Description:** Get levels on a page of All Time Best.\n**Usage:** /alltimebest [page]\n**Example:** /alltimebest 1";
+                    }
+                    else
+                    {
+                        string prefix = Guild.Get(context.Guild).Prefix;
+                        embed.Title = $"Command: {prefix}alltimebest";
+                        embed.Description = $"**Description:** Get levels on a page of All Time Best.\n**Usage:** {prefix}alltimebest [page]\n**Example:** {prefix}alltimebest 1";
+                    }
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (page == null)
+                    {
+                        page = "1";
+                    }
+                    num = int.Parse(page);
+                    if (num < 1 || num > 9)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} All Time Best pages are numbered 1-9.");
+                    }
+                    else
+                    {
+                        HttpClient web = new HttpClient();
+                        string text = await web.GetStringAsync("https://pr2hub.com/files/lists/best/" + page);
+                        web.Dispose();
+                        string ids = "", titles = "", usernames = "";
+                        for (int i = 0; i < 9; i++)
+                        {
+                            string levelId = Extensions.GetBetween(text, "levelID" + i + "=", "&version" + i + "=");
+                            if (levelId.Length < 1)
+                            {
+                                break;
+                            }
+                            string title = Uri.UnescapeDataString(Extensions.GetBetween(text, "&title" + i + "=", "&rating" + i + "=").Replace("+", " "));
+                            string username = Uri.UnescapeDataString(Extensions.GetBetween(text, "&userName" + i + "=", "&group" + i + "=")).Replace("+", " ");
+                            ids += levelId + "\n";
+                            titles += title + "\n";
+                            usernames += username + "\n";
+                        }
+                        if (ids.Length < 1)
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} there are no levels on that page of All Time Best.");
+                        }
+                        else
+                        {
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = $"All Time Best - Page {page}",
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                                Author = author
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = context.User.GetAvatarUrl(),
+                                Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                            };
+                            embed.WithFooter(footer);
+                            embed.WithCurrentTimestamp();
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Title";
+                                y.Value = titles;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Username";
+                                y.Value = usernames;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "ID";
+                                y.Value = ids;
+                                y.IsInline = true;
+                            });
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
+                        }
+                    }
+                }
+            }
+        }
+
+        public async Task TodaysBestAsync(SocketCommandContext context, string page)
+        {
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
+            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            {
+                if (page != null && !int.TryParse(page, out int num))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220)
+                    };
+                    if (context.Channel is IDMChannel)
+                    {
+                        embed.Title = "Command: /todaysbest";
+                        embed.Description = "**Description:** Get levels on a page of Today's Best.\n**Usage:** /todaysbest [page]\n**Example:** /todaysbest 1";
+                    }
+                    else
+                    {
+                        string prefix = Guild.Get(context.Guild).Prefix;
+                        embed.Title = $"Command: {prefix}todaysbest";
+                        embed.Description = $"**Description:** Get levels on a page of Today's Best.\n**Usage:** {prefix}todaysbest [page]\n**Example:** {prefix}todaysbest 1";
+                    }
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (page == null)
+                    {
+                        page = "1";
+                    }
+                    num = int.Parse(page);
+                    if (num < 1 || num > 9)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} Today's Best pages are numbered 1-9.");
+                    }
+                    else
+                    {
+                        HttpClient web = new HttpClient();
+                        string text = await web.GetStringAsync("https://pr2hub.com/files/lists/best_today/" + page);
+                        web.Dispose();
+                        string ids = "", titles = "", usernames = "";
+                        for (int i = 0; i < 9; i++)
+                        {
+                            string levelId = Extensions.GetBetween(text, "levelID" + i + "=", "&version" + i + "=");
+                            if (levelId.Length < 1)
+                            {
+                                break;
+                            }
+                            string title = Uri.UnescapeDataString(Extensions.GetBetween(text, "&title" + i + "=", "&rating" + i + "=").Replace("+", " "));
+                            string username = Uri.UnescapeDataString(Extensions.GetBetween(text, "&userName" + i + "=", "&group" + i + "=")).Replace("+", " ");
+                            ids += levelId + "\n";
+                            titles += title + "\n";
+                            usernames += username + "\n";
+                        }
+                        if (ids.Length < 1)
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} there are no levels on that page of Today's Best.");
+                        }
+                        else
+                        {
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = $"Today's Best - Page {page}",
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                                Author = author
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = context.User.GetAvatarUrl(),
+                                Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                            };
+                            embed.WithFooter(footer);
+                            embed.WithCurrentTimestamp();
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Title";
+                                y.Value = titles;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Username";
+                                y.Value = usernames;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "ID";
+                                y.Value = ids;
+                                y.IsInline = true;
+                            });
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
+                        }
+                    }
+                }
+            }
+        }
+
+        public async Task NewestAsync(SocketCommandContext context, string page)
+        {
+            List<AllowedChannel> channels = new List<AllowedChannel>();
+            if (context.Channel is SocketTextChannel)
+            {
+                channels = AllowedChannel.Get(context.Guild.Id);
+            }
+            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            {
+                if (page != null && !int.TryParse(page, out int num))
+                {
+                    EmbedBuilder embed = new EmbedBuilder()
+                    {
+                        Color = new Color(220, 220, 220)
+                    };
+                    if (context.Channel is IDMChannel)
+                    {
+                        embed.Title = "Command: /newest";
+                        embed.Description = "**Description:** Get levels on a page of Newest.\n**Usage:** /newest [page]\n**Example:** /newest 1";
+                    }
+                    else
+                    {
+                        string prefix = Guild.Get(context.Guild).Prefix;
+                        embed.Title = $"Command: {prefix}newest";
+                        embed.Description = $"**Description:** Get levels on a page of Newest.\n**Usage:** {prefix}newest [page]\n**Example:** {prefix}newest 1";
+                    }
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                }
+                else
+                {
+                    if (page == null)
+                    {
+                        page = "1";
+                    }
+                    num = int.Parse(page);
+                    if (num < 1 || num > 9)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} Newest pages are numbered 1-9.");
+                    }
+                    else
+                    {
+                        HttpClient web = new HttpClient();
+                        string text = await web.GetStringAsync("https://pr2hub.com/files/lists/newest/" + page);
+                        web.Dispose();
+                        string ids = "", titles = "", usernames = "";
+                        for (int i = 0; i < 9; i++)
+                        {
+                            string levelId = Extensions.GetBetween(text, "levelID" + i + "=", "&version" + i + "=");
+                            if (levelId.Length < 1)
+                            {
+                                break;
+                            }
+                            string title = Uri.UnescapeDataString(Extensions.GetBetween(text, "&title" + i + "=", "&rating" + i + "=").Replace("+", " "));
+                            string username = Uri.UnescapeDataString(Extensions.GetBetween(text, "&userName" + i + "=", "&group" + i + "=")).Replace("+", " ");
+                            ids += levelId + "\n";
+                            titles += title + "\n";
+                            usernames += username + "\n";
+                        }
+                        if (ids.Length < 1)
+                        {
+                            await context.Channel.SendMessageAsync($"{context.User.Mention} there are no levels on that page of Newest.");
+                        }
+                        else
+                        {
+                            EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                            {
+                                Name = $"Newest - Page {page}",
+                            };
+                            EmbedBuilder embed = new EmbedBuilder()
+                            {
+                                Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                                Author = author
+                            };
+                            EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                            {
+                                IconUrl = context.User.GetAvatarUrl(),
+                                Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                            };
+                            embed.WithFooter(footer);
+                            embed.WithCurrentTimestamp();
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Title";
+                                y.Value = titles;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Username";
+                                y.Value = usernames;
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "ID";
+                                y.Value = ids;
+                                y.IsInline = true;
+                            });
+                            await context.Channel.SendMessageAsync("", false, embed.Build());
+                        }
+                    }
+                }
+            }
+        }
+
         public async Task VerifyGuildAsync(SocketCommandContext context)
         {
             List<AllowedChannel> channels = new List<AllowedChannel>();

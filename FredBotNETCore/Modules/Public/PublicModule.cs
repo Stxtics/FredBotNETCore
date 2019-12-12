@@ -241,6 +241,37 @@ namespace FredBotNETCore.Modules.Public
             await publicService.LevelAsync(Context, option, level);
         }
 
+        [Command("campaign", RunMode = RunMode.Async)]
+        [Alias("camp")]
+        [Summary("Get levels on a page of Campaign.")]
+        public async Task Campaign(string page = null)
+        {
+            await publicService.CampaignAsync(Context, page);
+        }
+
+        [Command("alltimebest", RunMode = RunMode.Async)]
+        [Alias("atb")]
+        [Summary("Get levels on a page of All Time Best.")]
+        public async Task AllTimeBest(string page = null)
+        {
+            await publicService.AllTimeBestAsync(Context, page);
+        }
+
+        [Command("todaysbest", RunMode = RunMode.Async)]
+        [Alias("today'sbest", "besttoday")]
+        [Summary("Get levels on a page of Today's Best.")]
+        public async Task TodaysBest(string page = null)
+        {
+            await publicService.TodaysBestAsync(Context, page);
+        }
+
+        [Command("newest", RunMode = RunMode.Async)]
+        [Summary("Get levels on a page of Newest.")]
+        public async Task Newest(string page = null)
+        {
+            await publicService.NewestAsync(Context, page);
+        }
+
         //[Command("verifyguild", RunMode = RunMode.Async)]
         //[Alias("addguild")]
         //[Summary("Creates a channel for the users guild.")]
