@@ -775,30 +775,33 @@ namespace FredBotNETCore.Services
                 {
                     if (context.Message.MentionedUsers.Count > 0)
                     {
-                        SocketUser user = null;
                         int argPos = 0;
-                        if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                        if (!(context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count == 1))
                         {
-                            user = context.Message.MentionedUsers.First();
-                        }
-                        else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
-                        {
-                            user = context.Message.MentionedUsers.ElementAt(1);
-                        }
-                        if (user == null)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
-                            return;
-                        }
-                        if (!User.Exists(user))
-                        {
-                            User.Add(user);
-                        }
-                        pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
-                        if (pr2name == null)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
-                            return;
+                            SocketUser user = null;
+                            if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || (context.Channel is SocketTextChannel && context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos)))
+                            {
+                                user = context.Message.MentionedUsers.First();
+                            }
+                            else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
+                            {
+                                user = context.Message.MentionedUsers.ElementAt(1);
+                            }
+                            if (user == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
+                                return;
+                            }
+                            if (!User.Exists(user))
+                            {
+                                User.Add(user);
+                            }
+                            pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
+                            if (pr2name == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
+                                return;
+                            }
                         }
                     }
                     pr2name = Uri.EscapeDataString(pr2name);
@@ -1134,63 +1137,66 @@ namespace FredBotNETCore.Services
                 {
                     if (context.Message.MentionedUsers.Count > 0)
                     {
-                        SocketUser user = null;
                         int argPos = 0;
-                        if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                        if (!(context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count == 1))
                         {
-                            user = context.Message.MentionedUsers.First();
+                            SocketUser user = null;
+                            if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || (context.Channel is SocketTextChannel && context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos)))
+                            {
+                                user = context.Message.MentionedUsers.First();
+                            }
+                            else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
+                            {
+                                user = context.Message.MentionedUsers.ElementAt(1);
+                            }
+                            if (user == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
+                                web.Dispose();
+                                return;
+                            }
+                            if (!User.Exists(user))
+                            {
+                                User.Add(user);
+                            }
+                            string pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
+                            if (pr2name == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
+                                web.Dispose();
+                                return;
+                            }
+                            string pr2userinfo;
+                            try
+                            {
+                                pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
+                            }
+                            catch (HttpRequestException)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                                web.Dispose();
+                                return;
+                            }
+                            if (pr2userinfo.Equals("{\"success\":false,\"error\":\"Could not find a user with that name.\"}"))
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that users account no longer exists.");
+                                web.Dispose();
+                                return;
+                            }
+                            while (pr2userinfo.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
+                            {
+                                await Task.Delay(500);
+                                pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
+                            }
+                            string guild = Extensions.GetBetween(pr2userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
+                            if (guild.Length <= 0)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that users account is not a member of a guild.");
+                                web.Dispose();
+                                return;
+                            }
+                            guildname = guild;
                         }
-                        else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
-                        {
-                            user = context.Message.MentionedUsers.ElementAt(1);
-                        }
-                        if (user == null)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
-                            web.Dispose();
-                            return;
-                        }
-                        if (!User.Exists(user))
-                        {
-                            User.Add(user);
-                        }
-                        string pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
-                        if (pr2name == null)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
-                            web.Dispose();
-                            return;
-                        }
-                        string pr2userinfo;
-                        try
-                        {
-                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
-                        }
-                        catch (HttpRequestException)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
-                            web.Dispose();
-                            return;
-                        }
-                        if (pr2userinfo.Equals("{\"success\":false,\"error\":\"Could not find a user with that name.\"}"))
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that users account no longer exists.");
-                            web.Dispose();
-                            return;
-                        }
-                        while (pr2userinfo.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
-                        {
-                            await Task.Delay(500);
-                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
-                        }
-                        string guild = Extensions.GetBetween(pr2userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
-                        if (guild.Length <= 0)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that users account is not a member of a guild.");
-                            web.Dispose();
-                            return;
-                        }
-                        guildname = guild;
                     }
                     string pr2info = null;
                     try
@@ -1752,30 +1758,33 @@ namespace FredBotNETCore.Services
                 {
                     if (context.Message.MentionedUsers.Count > 0)
                     {
-                        SocketUser user = null;
                         int argPos = 0;
-                        if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                        if (!(context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count == 1))
                         {
-                            user = context.Message.MentionedUsers.First();
-                        }
-                        else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
-                        {
-                            user = context.Message.MentionedUsers.ElementAt(1);
-                        }
-                        if (user == null)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
-                            return;
-                        }
-                        if (!User.Exists(user))
-                        {
-                            User.Add(user);
-                        }
-                        fahuser = User.GetUser("user_id", user.Id.ToString()).PR2Name;
-                        if (fahuser == null)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
-                            return;
+                            SocketUser user = null;
+                            if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || (context.Channel is SocketTextChannel && context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos)))
+                            {
+                                user = context.Message.MentionedUsers.First();
+                            }
+                            else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
+                            {
+                                user = context.Message.MentionedUsers.ElementAt(1);
+                            }
+                            if (user == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
+                                return;
+                            }
+                            if (!User.Exists(user))
+                            {
+                                User.Add(user);
+                            }
+                            fahuser = User.GetUser("user_id", user.Id.ToString()).PR2Name;
+                            if (fahuser == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
+                                return;
+                            }
                         }
                     }
                     HttpClient web = new HttpClient();
@@ -2161,64 +2170,67 @@ namespace FredBotNETCore.Services
                     HttpClient web = new HttpClient();
                     if (context.Message.MentionedUsers.Count > 0)
                     {
-                        SocketUser user = null;
                         int argPos = 0;
-                        if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                        if (!(context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count == 1))
                         {
-                            user = context.Message.MentionedUsers.First();
+                            SocketUser user = null;
+                            if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || (context.Channel is SocketTextChannel && context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos)))
+                            {
+                                user = context.Message.MentionedUsers.First();
+                            }
+                            else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
+                            {
+                                user = context.Message.MentionedUsers.ElementAt(1);
+                            }
+                            if (user == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
+                                web.Dispose();
+                                return;
+                            }
+                            if (!User.Exists(user))
+                            {
+                                User.Add(user);
+                            }
+                            string pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
+                            if (pr2name == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
+                                web.Dispose();
+                                return;
+                            }
+                            string pr2userinfo = null;
+                            try
+                            {
+                                pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
+                            }
+                            catch (HttpRequestException)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                                web.Dispose();
+                                return;
+                            }
+                            if (pr2userinfo.Equals("{\"success\":false,\"error\":\"Could not find a user with that name.\"}"))
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that users account no longer exists.");
+                                web.Dispose();
+                                return;
+                            }
+                            while (pr2userinfo.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
+                            {
+                                await Task.Delay(500);
+                                pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
+                            }
+                            string status = Extensions.GetBetween(pr2userinfo, ",\"status\":\"", "\",\"loginDate\":\"");
+                            if (status.Equals("offline"))
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that users account is offline.");
+                                web.Dispose();
+                                return;
+                            }
+                            status = status.Substring(11);
+                            server = status;
                         }
-                        else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
-                        {
-                            user = context.Message.MentionedUsers.ElementAt(1);
-                        }
-                        if (user == null)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
-                            web.Dispose();
-                            return;
-                        }
-                        if (!User.Exists(user))
-                        {
-                            User.Add(user);
-                        }
-                        string pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
-                        if (pr2name == null)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
-                            web.Dispose();
-                            return;
-                        }
-                        string pr2userinfo = null;
-                        try
-                        {
-                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
-                        }
-                        catch (HttpRequestException)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
-                            web.Dispose();
-                            return;
-                        }
-                        if (pr2userinfo.Equals("{\"success\":false,\"error\":\"Could not find a user with that name.\"}"))
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that users account no longer exists.");
-                            web.Dispose();
-                            return;
-                        }
-                        while (pr2userinfo.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
-                        {
-                            await Task.Delay(500);
-                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
-                        }
-                        string status = Extensions.GetBetween(pr2userinfo, ",\"status\":\"", "\",\"loginDate\":\"");
-                        if (status.Equals("offline"))
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that users account is offline.");
-                            web.Dispose();
-                            return;
-                        }
-                        status = status.Substring(11);
-                        server = status;
                     }
                     string text = null;
                     try
@@ -2346,63 +2358,66 @@ namespace FredBotNETCore.Services
                     HttpClient web = new HttpClient();
                     if (context.Message.MentionedUsers.Count > 0)
                     {
-                        SocketUser user = null;
                         int argPos = 0;
-                        if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                        if (!(context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count == 1))
                         {
-                            user = context.Message.MentionedUsers.First();
+                            SocketUser user = null;
+                            if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || (context.Channel is SocketTextChannel && context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos)))
+                            {
+                                user = context.Message.MentionedUsers.First();
+                            }
+                            else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
+                            {
+                                user = context.Message.MentionedUsers.ElementAt(1);
+                            }
+                            if (user == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
+                                web.Dispose();
+                                return;
+                            }
+                            if (!User.Exists(user))
+                            {
+                                User.Add(user);
+                            }
+                            string pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
+                            if (pr2name == null)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
+                                web.Dispose();
+                                return;
+                            }
+                            string pr2userinfo;
+                            try
+                            {
+                                pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
+                            }
+                            catch (HttpRequestException)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
+                                web.Dispose();
+                                return;
+                            }
+                            if (pr2userinfo.Equals("{\"success\":false,\"error\":\"Could not find a user with that name.\"}"))
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that users account no longer exists.");
+                                web.Dispose();
+                                return;
+                            }
+                            while (pr2userinfo.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
+                            {
+                                await Task.Delay(500);
+                                pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
+                            }
+                            string guild = Extensions.GetBetween(pr2userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
+                            if (guild.Length <= 0)
+                            {
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} that users account is not a member of a guild.");
+                                web.Dispose();
+                                return;
+                            }
+                            guildname = guild;
                         }
-                        else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
-                        {
-                            user = context.Message.MentionedUsers.ElementAt(1);
-                        }
-                        if (user == null)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that user does not exist or could not be found.");
-                            web.Dispose();
-                            return;
-                        }
-                        if (!User.Exists(user))
-                        {
-                            User.Add(user);
-                        }
-                        string pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
-                        if (pr2name == null)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
-                            web.Dispose();
-                            return;
-                        }
-                        string pr2userinfo;
-                        try
-                        {
-                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
-                        }
-                        catch (HttpRequestException)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
-                            web.Dispose();
-                            return;
-                        }
-                        if (pr2userinfo.Equals("{\"success\":false,\"error\":\"Could not find a user with that name.\"}"))
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that users account no longer exists.");
-                            web.Dispose();
-                            return;
-                        }
-                        while (pr2userinfo.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
-                        {
-                            await Task.Delay(500);
-                            pr2userinfo = await web.GetStringAsync("https://pr2hub.com/get_player_info.php?name=" + pr2name);
-                        }
-                        string guild = Extensions.GetBetween(pr2userinfo, "\",\"guildName\":\"", "\",\"name\":\"");
-                        if (guild.Length <= 0)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} that users account is not a member of a guild.");
-                            web.Dispose();
-                            return;
-                        }
-                        guildname = guild;
                     }
                     string text = null;
                     try
@@ -3379,32 +3394,35 @@ namespace FredBotNETCore.Services
                         string pr2name = search;
                         if (context.Message.MentionedUsers.Count > 0)
                         {
-                            SocketUser user = null;
                             int argPos = 0;
-                            if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos))
+                            if (!(context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count == 1))
                             {
-                                user = context.Message.MentionedUsers.First();
-                            }
-                            else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
-                            {
-                                user = context.Message.MentionedUsers.ElementAt(1);
-                            }
-                            if (user == null)
-                            {
-                                await context.Channel.SendMessageAsync($"{context.User.Mention} that Discord user does not exist or could not be found.");
-                                web.Dispose();
-                                return;
-                            }
-                            if (!User.Exists(user))
-                            {
-                                User.Add(user);
-                            }
-                            pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
-                            if (pr2name == null)
-                            {
-                                await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
-                                web.Dispose();
-                                return;
+                                SocketUser user = null;
+                                if ((context.Channel is IDMChannel && context.Message.HasStringPrefix("/", ref argPos)) || (context.Channel is SocketTextChannel && context.Message.HasStringPrefix(Guild.Get(context.Guild).Prefix, ref argPos)))
+                                {
+                                    user = context.Message.MentionedUsers.First();
+                                }
+                                else if (context.Message.HasMentionPrefix(context.Client.CurrentUser, ref argPos) && context.Message.MentionedUsers.Count > 1)
+                                {
+                                    user = context.Message.MentionedUsers.ElementAt(1);
+                                }
+                                if (user == null)
+                                {
+                                    await context.Channel.SendMessageAsync($"{context.User.Mention} that Discord user does not exist or could not be found.");
+                                    web.Dispose();
+                                    return;
+                                }
+                                if (!User.Exists(user))
+                                {
+                                    User.Add(user);
+                                }
+                                pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
+                                if (pr2name == null)
+                                {
+                                    await context.Channel.SendMessageAsync($"{context.User.Mention} that user has not linked their PR2 account.");
+                                    web.Dispose();
+                                    return;
+                                }
                             }
                         }
                         try
