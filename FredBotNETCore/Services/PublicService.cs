@@ -1868,6 +1868,18 @@ namespace FredBotNETCore.Services
                                     y.IsInline = true;
                                 });
                             }
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Active clients (within 50 days)";
+                                y.Value = $"{Convert.ToInt32(stats.GetValue("active_50")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
+                                y.IsInline = true;
+                            });
+                            embed.AddField(y =>
+                            {
+                                y.Name = "Active clients (within 7 days)";
+                                y.Value = $"{Convert.ToInt32(stats.GetValue("active_7")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
+                                y.IsInline = true;
+                            });
                             await context.Channel.SendMessageAsync("", false, embed.Build());
                         }
                         catch (JsonReaderException)
