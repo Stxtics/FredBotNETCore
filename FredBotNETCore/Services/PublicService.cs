@@ -3015,6 +3015,10 @@ namespace FredBotNETCore.Services
                                         }
                                         itemList = itemList2;
                                     }
+                                    if (itemList.First().Length < 1)
+                                    {
+                                        itemList[0] = "None";
+                                    }
 
                                     EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                     {
@@ -3326,6 +3330,10 @@ namespace FredBotNETCore.Services
                                                 }
                                             }
                                             itemList = itemList2;
+                                        }
+                                        if (itemList.First().Length < 1)
+                                        {
+                                            itemList[0] = "None";
                                         }
 
                                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
