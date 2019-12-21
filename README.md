@@ -12,7 +12,8 @@ If you have come across this and you would like to be in the Jiggmin's Village d
 ## Contributors
 - Stxtics (me)
 
-## Commands (Copied from help command of the bot)
+## Commands
+Copied from help command of the bot
 ### Admin
 #### temp
 Makes a user temp mod on the server.
