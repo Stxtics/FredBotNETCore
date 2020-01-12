@@ -2852,6 +2852,8 @@ namespace FredBotNETCore.Services
                                     }
                                     string gameMode = CultureInfo.CreateSpecificCulture("en-GB").TextInfo.ToTitleCase(Extensions.GetBetween(text, "&gameMode=", "&"));
                                     string cowboyChance = Extensions.GetBetween(text, "&cowboyChance=", "&");
+                                    string data = text.Substring(text.IndexOf("&data=") + 6);
+                                    int blockCount = data.Split("`").ElementAt(2).Count(x => x == ',') + 1;
 
                                     if (cowboyChance.Length < 1)
                                     {
@@ -3038,7 +3040,7 @@ namespace FredBotNETCore.Services
                                     embed.WithFooter(footer);
                                     embed.WithCurrentTimestamp();
                                     embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(user)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user)}) ({userId})", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
-                                        $"\n{string.Format("{0,-25} {1,25}", $"**Version:** {version}", $"**Max Time:** {maxTime}")}" +
+                                        $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {version}", $"**Max Time:** {maxTime}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {plays}", $"**Pass:** {pass}")}" +
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
@@ -3102,6 +3104,8 @@ namespace FredBotNETCore.Services
                                 string updated = Extensions.GetBetween(text, "&time=", "&");
                                 DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                                 DateTime date = start.AddSeconds(double.Parse(updated)).ToLocalTime();
+                                string data = text.Substring(text.IndexOf("&data=") + 6);
+                                int blockCount = data.Split("`").ElementAt(2).Count(x => x == ',') + 1;
 
                                 string user = Uri.UnescapeDataString(Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/get_player_info.php?user_id=" + userId), "\"name\":\"", "\",\""));
 
@@ -3358,7 +3362,7 @@ namespace FredBotNETCore.Services
                                             if (user.Length < 1)
                                             {
                                                 embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** *Deleted User:* {userId}", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
-                                                $"\n{string.Format("{0,-25} {1,25}", $"**Version:** {version}", $"**Max Time:** {maxTime}")}" +
+                                                $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {version}", $"**Max Time:** {maxTime}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Pass:** {pass}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Game Mode:** {gameMode}", $"**Items:** {string.Join(", ", itemList)}")}";
@@ -3366,7 +3370,7 @@ namespace FredBotNETCore.Services
                                             else
                                             {
                                                 embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(user)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user)}) ({userId})", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
-                                                $"\n{string.Format("{0,-25} {1,25}", $"**Version:** {version}", $"**Max Time:** {maxTime}")}" +
+                                                $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {version}", $"**Max Time:** {maxTime}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Pass:** {pass}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Game Mode:** {gameMode}", $"**Items:** {string.Join(", ", itemList)}")}";
@@ -3377,7 +3381,7 @@ namespace FredBotNETCore.Services
                                             if (user.Length < 1)
                                             {
                                                 embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** *Deleted User:* {userId}", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
-                                                $"\n{string.Format("{0,-25} {1,25}", $"**Version:** {version}", $"**Max Time:** {maxTime}")}" +
+                                                $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {version}", $"**Max Time:** {maxTime}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {plays}", $"**Pass:** {pass}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
@@ -3386,7 +3390,7 @@ namespace FredBotNETCore.Services
                                             else
                                             {
                                                 embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(user)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user)}) ({userId})", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
-                                                $"\n{string.Format("{0,-25} {1,25}", $"**Version:** {version}", $"**Max Time:** {maxTime}")}" +
+                                                $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {version}", $"**Max Time:** {maxTime}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {plays}", $"**Pass:** {pass}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
