@@ -916,8 +916,7 @@ namespace FredBotNETCore.Services
                         catch (HttpRequestException)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
-                        }
-                        web.Dispose();
+                        }                       
                         if (pr2info != null)
                         {
                             if (pr2info.Equals("{\"success\":false,\"error\":\"Could not find a user with that name.\"}"))
@@ -976,6 +975,7 @@ namespace FredBotNETCore.Services
                                 await context.Channel.SendMessageAsync("", false, embed.Build());
                             }
                         }
+                        web.Dispose();
                     }
                 }
             }
@@ -1035,8 +1035,7 @@ namespace FredBotNETCore.Services
                     catch (HttpRequestException)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
-                    }
-                    web.Dispose();
+                    }               
                     if (pr2info != null)
                     {
                         if (pr2info.Equals("{\"success\":false,\"error\":\"Could not find a user with that ID.\"}"))
@@ -1095,6 +1094,7 @@ namespace FredBotNETCore.Services
                             await context.Channel.SendMessageAsync("", false, embed.Build());
                         }
                     }
+                    web.Dispose();
                 }
             }
             else
@@ -1112,7 +1112,6 @@ namespace FredBotNETCore.Services
             }
             if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
             {
-                HttpClient web = new HttpClient();
                 if (guildname == null)
                 {
                     EmbedBuilder embed = new EmbedBuilder()
@@ -1130,11 +1129,11 @@ namespace FredBotNETCore.Services
                         embed.Title = $"Command: {prefix}guild";
                         embed.Description = $"**Description:** View a PR2 guild by name.\n**Usage:** {prefix}guild [PR2 guild name]\n**Example:** {prefix}guild PR2 Staff";
                     }
-                    web.Dispose();
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
                 {
+                    HttpClient web = new HttpClient();
                     if (context.Message.MentionedUsers.Count > 0)
                     {
                         int argPos = 0;
@@ -1207,7 +1206,6 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
-                    web.Dispose();
                     if (pr2info != null)
                     {
                         if (pr2info.Equals("{\"success\":false,\"error\":\"Could not find a guild with that name.\"}"))
@@ -1251,6 +1249,7 @@ namespace FredBotNETCore.Services
                             await context.Channel.SendMessageAsync("", false, embed.Build());
                         }
                     }
+                    web.Dispose();
                 }
             }
             else
@@ -1299,7 +1298,6 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
-                    web.Dispose();
                     if (pr2info != null)
                     {
                         if (pr2info.Equals("{\"success\":false,\"error\":\"Could not find a guild with that ID.\"}"))
@@ -1343,6 +1341,7 @@ namespace FredBotNETCore.Services
                             await context.Channel.SendMessageAsync("", false, embed.Build());
                         }
                     }
+                    web.Dispose();
                 }
             }
             else
@@ -1666,7 +1665,6 @@ namespace FredBotNETCore.Services
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                 }
-                web.Dispose();
                 if (text != null)
                 {
                     while (text.Equals("{\"success\":false,\"error\":\"Slow down a bit, yo.\"}"))
@@ -1718,6 +1716,7 @@ namespace FredBotNETCore.Services
                     embed.WithCurrentTimestamp();
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
+                web.Dispose();
             }
             else
             {
@@ -1946,8 +1945,7 @@ namespace FredBotNETCore.Services
                     catch (HttpRequestException)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
-                    }
-                    web.Dispose();
+                    }           
                     if (text != null)
                     {
                         if (Extensions.GetBetween(text, "<title>", "</title>").Contains("PR2 Hub - Error Fetching Ban"))
@@ -1963,6 +1961,7 @@ namespace FredBotNETCore.Services
                             else
                             {
                                 await context.Channel.SendMessageAsync($"{context.User.Mention} the ban with the ID **{id}** does not exist or could not be found.");
+                                web.Dispose();
                                 return;
                             }
                         }
@@ -2077,6 +2076,7 @@ namespace FredBotNETCore.Services
                             await context.Channel.SendMessageAsync("", false, embed.Build());
                         }
                     }
+                    web.Dispose();
                 }
             }
             else
@@ -2440,7 +2440,6 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
-                    web.Dispose();
                     if (text != null)
                     {
                         if (text.Equals("{\"success\":false,\"error\":\"Could not find a guild with that name.\"}"))
@@ -2517,6 +2516,7 @@ namespace FredBotNETCore.Services
                             }
                         }
                     }
+                    web.Dispose();
                 }
             }
             else
@@ -2565,7 +2565,6 @@ namespace FredBotNETCore.Services
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                     }
-                    web.Dispose();
                     if (text != null)
                     {
                         if (text.Equals("{\"success\":false,\"error\":\"Could not find a guild with that ID.\"}"))
@@ -2643,6 +2642,7 @@ namespace FredBotNETCore.Services
                             }
                         }
                     }
+                    web.Dispose();
                 }
             }
             else
@@ -4242,7 +4242,6 @@ namespace FredBotNETCore.Services
                 {
                     await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                 }
-                web.Dispose();
                 if (text != null)
                 {
                     while (text.Contains("Error: Please wait at least 10 seconds before refreshing the page again."))
@@ -4290,6 +4289,7 @@ namespace FredBotNETCore.Services
                         await context.Channel.SendMessageAsync("", false, embed.Build());
                     }
                 }
+                web.Dispose();
             }
             else
             {
