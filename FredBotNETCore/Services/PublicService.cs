@@ -3091,14 +3091,22 @@ namespace FredBotNETCore.Services
                                 string maxTime = TimeSpan.FromSeconds(int.Parse(Extensions.GetBetween(text, "&max_time=", "&"))).ToString(@"h\:mm\:ss");
                                 string pass = Extensions.GetBetween(text, "&has_pass=", "&");
                                 string live = Extensions.GetBetween(text, "&live=", "&");
-                                string items = text.Substring(text.IndexOf("&items="), text.Length - text.IndexOf("&items="));
+                                string items = "";
+                                if (text.Contains("&items="))
+                                {
+                                    items = text.Substring(text.IndexOf("&items="), text.Length - text.IndexOf("&items="));
+                                }
                                 if (items.Split("&").Count() > 2)
                                 {
                                     items = items.Split("&").ElementAt(1).Substring(6);
                                 }
-                                else
+                                else if (text.Contains("&items="))
                                 {
                                     items = items.Substring(7, items.Length - 39);
+                                }
+                                else
+                                {
+                                    items = "";
                                 }
                                 string gameMode = CultureInfo.CreateSpecificCulture("en-GB").TextInfo.ToTitleCase(Extensions.GetBetween(text, "&gameMode=", "&"));
                                 string updated = Extensions.GetBetween(text, "&time=", "&");
