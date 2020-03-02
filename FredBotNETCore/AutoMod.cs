@@ -188,7 +188,7 @@ namespace FredBotNETCore
 
         public bool EmojiSpam(SocketUserMessage msg)
         {
-            if (msg.Tags.Count(x => x.Type == TagType.Emoji) + rx.Matches(msg.Content).Count >= 5)
+            if (msg.Tags.Count(x => x.Type == TagType.Emoji) + rx.Matches(msg.Content).Count >= 6)
             {
                 return true;
             }
