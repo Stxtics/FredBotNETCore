@@ -297,18 +297,18 @@ namespace FredBotNETCore
                     await Task.Delay(100);
                     return true;
                 }
-                badMessage = EmojiSpam(msg);
-                if (badMessage)
-                {
-                    await msg.DeleteAsync();
-                    embed.Fields.ElementAt(0).Value = "Too many emojis";
-                    await log.SendMessageAsync("", false, embed.Build());
-                    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no emoji spamming.");
-                    await Task.Delay(5000);
-                    await message.DeleteAsync();
-                    await Task.Delay(100);
-                    return true;
-                }
+                //badMessage = EmojiSpam(msg);
+                //if (badMessage)
+                //{
+                //    await msg.DeleteAsync();
+                //    embed.Fields.ElementAt(0).Value = "Too many emojis";
+                //    await log.SendMessageAsync("", false, embed.Build());
+                //    message = await msg.Channel.SendMessageAsync($"{msg.Author.Mention} no emoji spamming.");
+                //    await Task.Delay(5000);
+                //    await message.DeleteAsync();
+                //    await Task.Delay(100);
+                //    return true;
+                //}
                 //badMessage = Spam(msg, channel);
                 //if (badMessage)
                 //{
