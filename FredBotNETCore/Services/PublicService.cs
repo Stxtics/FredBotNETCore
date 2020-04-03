@@ -3009,7 +3009,7 @@ namespace FredBotNETCore.Services
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {plays}", $"**Pass:** {pass}")}" +
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
-                                        $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
+                                        $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date:MMM}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
                                     if (note.Length > 0)
                                     {
                                         embed.Description += $"\n-----\n{Format.Sanitize(note)}";
@@ -3337,7 +3337,7 @@ namespace FredBotNETCore.Services
                                                 embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** *Deleted User:* {userId}", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
                                                 $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {version}", $"**Max Time:** {maxTime}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
-                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Pass:** {pass}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date:MMM}/{date.Year} - {date.TimeOfDay}", $"**Pass:** {pass}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Game Mode:** {gameMode}", $"**Items:** {string.Join(", ", itemList)}")}";
                                             }
                                             else
@@ -3345,7 +3345,7 @@ namespace FredBotNETCore.Services
                                                 embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(user.Name)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(user.Name)}) ({userId})", $"**Gravity:** {gravity}", $"**Cowboy Chance:** {cowboyChance}") +
                                                 $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {version}", $"**Max Time:** {maxTime}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
-                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Pass:** {pass}")}" +
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date:MMM}/{date.Year} - {date.TimeOfDay}", $"**Pass:** {pass}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Game Mode:** {gameMode}", $"**Items:** {string.Join(", ", itemList)}")}";
                                             }
                                         }
@@ -3358,7 +3358,7 @@ namespace FredBotNETCore.Services
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {plays}", $"**Pass:** {pass}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
-                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date:MMM}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
                                             }
                                             else
                                             {
@@ -3367,7 +3367,7 @@ namespace FredBotNETCore.Services
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {minLevel}", $"**Song:** {song}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {plays}", $"**Pass:** {pass}")}" +
                                                 $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
-                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date.ToString("MMM")}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
+                                                $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date:MMM}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {gameMode}")}";
                                             }
                                         }
                                         if (note.Length > 0)
