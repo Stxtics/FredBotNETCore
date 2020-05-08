@@ -227,7 +227,7 @@ namespace FredBotNETCore.Services
                 }
                 else
                 {
-                    await context.Guild.CreateRoleAsync(settings);
+                    await context.Guild.CreateRoleAsync(settings, default, default, default, default);
                     await context.Channel.SendMessageAsync($"{context.User.Mention} created role **{Format.Sanitize(settings)}**.");
                 }
             }

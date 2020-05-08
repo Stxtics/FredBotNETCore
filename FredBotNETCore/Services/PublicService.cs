@@ -3817,7 +3817,7 @@ namespace FredBotNETCore.Services
                     }
                     if (!exists)
                     {
-                        Discord.Rest.RestRole guildRole = await context.Guild.CreateRoleAsync(guild, null, null, false);
+                        Discord.Rest.RestRole guildRole = await context.Guild.CreateRoleAsync(guild, default, default, default, default);
                         SocketRole everyoneRole = context.Guild.EveryoneRole;
                         SocketRole mutedRole = context.Guild.Roles.Where(x => x.Name.ToUpper() == "Muted".ToUpper()).First();
                         Discord.Rest.RestTextChannel guildChannel = await context.Guild.CreateTextChannelAsync(guild.Replace(" ", "-"));

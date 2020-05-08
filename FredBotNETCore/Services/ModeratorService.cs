@@ -2054,7 +2054,7 @@ namespace FredBotNETCore.Services
                 if (!ended)
                 {
                     IAsyncEnumerable<IReadOnlyCollection<IUser>> user = message.GetReactionUsersAsync(Emote.Parse("<:artifact:530404386229321749>"), 9999);
-                    IReadOnlyCollection<IUser> users = user.ElementAt(0).Result;
+                    IReadOnlyCollection<IUser> users = user.ElementAtAsync(0).Result;
                     if (users.Count <= 1)
                     {
                         await giveawayChannel.SendMessageAsync("Nobody entered the giveaway.");
@@ -2917,7 +2917,7 @@ namespace FredBotNETCore.Services
                     IEnumerable<SocketRole> role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
                     if (role.Count() <= 0)
                     {
-                        await context.Guild.CreateRoleAsync("Muted", GuildPermissions.None.Modify(sendMessages: false, addReactions: false));
+                        await context.Guild.CreateRoleAsync("Muted", GuildPermissions.None.Modify(sendMessages: false, addReactions: false), default, default, default);
                         role = user.Guild.Roles.Where(input => input.Name.ToUpper() == "Muted".ToUpper());
                     }
                     RequestOptions options = new RequestOptions()
