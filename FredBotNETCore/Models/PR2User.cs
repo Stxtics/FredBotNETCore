@@ -2,6 +2,12 @@
 {
     public class PR2User
     {
+        public PR2User(bool success, string error)
+        {
+            Success = success;
+            Error = error;
+        }
+
         public bool Success { get; set; }
         public string Error { get; set; }
         public string Rank { get; set; }
@@ -65,6 +71,6 @@
         public string GuildId { get; set; }
         public string GuildName { get; set; }
         public string Name { get; set; }
-        public string UserId { get; set; }
+        public string Id { get; set; }
     }
 }
