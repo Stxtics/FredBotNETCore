@@ -780,49 +780,16 @@ namespace FredBotNETCore
                     Footer = footer
                 };
                 embed.WithCurrentTimestamp();
-                IUser iUser = null;
-                string reason = null;
-                foreach (Discord.Rest.RestAuditLogEntry audit in await channel2.Guild.GetAuditLogsAsync(1).FlattenAsync())
-                {
-                    if (audit.Action == ActionType.MessageDeleted && DateTime.Now.ToUniversalTime().AddSeconds(-5) > audit.CreatedAt.ToUniversalTime())
-                    {
-                        iUser = audit.User;
-                        reason = audit.Reason;
-                        break;
-                    }
-                }
 
-                if (iUser != null && iUser.Id != message2.Author.Id)
+                if (message2.Content.Length > 252)
                 {
-                    if (message2.Content.Length > 252)
-                    {
-                        embed.Description = $"{iUser.Mention} deleted a message by {message2.Author.Mention} in {channel2.Mention}.\nContent: **{Format.Sanitize(message2.Content).SplitInParts(252).ElementAt(0)}...**";
-                    }
-                    else
-                    {
-                        embed.Description = $"{iUser.Mention} deleted a message by {message2.Author.Mention} in {channel2.Mention}.\nContent: **{Format.Sanitize(message2.Content)}**";
-                    }
+                    embed.Description = $"{message2.Author.Mention} deleted their message in {channel2.Mention}.\nContent: **{Format.Sanitize(message2.Content).SplitInParts(252).ElementAt(0)}...**";
                 }
                 else
                 {
-                    if (message2.Content.Length > 252)
-                    {
-                        embed.Description = $"{message2.Author.Mention} deleted their message in {channel2.Mention}.\nContent: **{Format.Sanitize(message2.Content).SplitInParts(252).ElementAt(0)}...**";
-                    }
-                    else
-                    {
-                        embed.Description = $"{message2.Author.Mention} deleted their message in {channel2.Mention}.\nContent: **{Format.Sanitize(message2.Content)}**";
-                    }
+                    embed.Description = $"{message2.Author.Mention} deleted their message in {channel2.Mention}.\nContent: **{Format.Sanitize(message2.Content)}**";
                 }
-                if (reason != null)
-                {
-                    embed.AddField(y =>
-                    {
-                        y.Name = "Reason";
-                        y.Value = Format.Sanitize(reason);
-                        y.IsInline = false;
-                    });
-                }
+
                 await log.SendMessageAsync("", false, embed.Build());
             }
         }
