@@ -642,7 +642,7 @@ namespace FredBotNETCore.Services
                 if (text != null)
                 {
                     PR2Hint hint = JsonConvert.DeserializeObject<PR2Hint>(text);
-                    if (hint.FinderName == null)
+                    if (hint.FinderName == null || hint.FinderName.Length < 1)
                     {
                         await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!");
                     }
@@ -650,7 +650,7 @@ namespace FredBotNETCore.Services
                     {
                         SocketGuild guild = context.Client.GetGuild(528679522707701760);
                         long finderID = User.GetUser("pr2_name", hint.FinderName).UserID;
-                        if (hint.BubblesName != null)
+                        if (hint.BubblesName != null && hint.BubblesName.Length > 0)
                         {
                             long bubblesID = User.GetUser("pr2_name", hint.BubblesName).UserID;
                             if (finderID != 0 && bubblesID != 0)
