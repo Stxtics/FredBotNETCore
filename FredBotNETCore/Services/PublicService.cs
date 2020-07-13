@@ -2746,8 +2746,9 @@ namespace FredBotNETCore.Services
                             }
                             else
                             {
-                                PR2Level level = levelSearch.Levels.First();
-                                string text = await web.GetStringAsync("https://pr2hub.com/levels/" + level.Id + ".txt");
+                                string text = await web.GetStringAsync("https://pr2hub.com/level_data.php?level_id=" + levelSearch.Levels.First().Id + "&token=" + pr2token);
+                                PR2Level level = JsonConvert.DeserializeObject<PR2Level>(text);
+                                text = await web.GetStringAsync("https://pr2hub.com/levels/" + level.Id + ".txt");
                                 string data = text.Substring(text.IndexOf("&data=") + 6);
                                 int blockCount = data.Split("`").ElementAt(2).Count(x => x == ',') + 1;
                                 level.GameMode = CultureInfo.CreateSpecificCulture("en-GB").TextInfo.ToTitleCase(level.GameMode);
@@ -2907,7 +2908,7 @@ namespace FredBotNETCore.Services
                                 embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(level.Username)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(level.Username)}) ({level.UserId})", $"**Gravity:** {level.Gravity}", $"**Cowboy Chance:** {level.CowboyChance}%") +
                                     $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {level.Version}", $"**Max Time:** {(level.MaxTime == 0 ? "Infinite" : level.MaxTime.ToString())}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
                                     $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {level.MinLevel}", $"**Song:** {level.Song}")}" +
-                                    $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {level.PlayCount}", $"**Pass:** {(level.HasPass ? "Yes" : "No")}")}" +
+                                    $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {level.PlayCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}", $"**Pass:** {(level.HasPass ? "Yes" : "No")}")}" +
                                     $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {level.Rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
                                     $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date:MMM}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {level.GameMode}")}";
                                 if (level.Note != null)
@@ -3116,7 +3117,7 @@ namespace FredBotNETCore.Services
                                     embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(level.Username)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(level.Username)}) ({level.UserId})", $"**Gravity:** {level.Gravity}", $"**Cowboy Chance:** {level.CowboyChance}%") +
                                         $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {level.Version}", $"**Max Time:** {(level.MaxTime == 0 ? "Infinite" : level.MaxTime.ToString())}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {level.MinLevel}", $"**Song:** {level.Song}")}" +
-                                        $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {level.PlayCount}", $"**Pass:** {(level.HasPass ? "Yes" : "No")}")}" +
+                                        $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {level.PlayCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}", $"**Pass:** {(level.HasPass ? "Yes" : "No")}")}" +
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {level.Rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
                                         $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date:MMM}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {level.GameMode}")}";
                                     if (level.Note != null)
