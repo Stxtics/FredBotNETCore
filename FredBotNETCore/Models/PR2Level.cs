@@ -25,9 +25,6 @@ namespace FredBotNETCore.Models
         [JsonProperty("user_id")]
         public int UserId { get; set; }
 
-        [JsonProperty("credits")]
-        public string Credits { get; set; }
-
         [JsonProperty("title")]
         public string Title { get; set; }
 

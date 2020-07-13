@@ -1,4 +1,6 @@
-﻿namespace FredBotNETCore.Models
+﻿using Newtonsoft.Json;
+
+namespace FredBotNETCore.Models
 {
     public class PR2User
     {
@@ -8,10 +10,22 @@
             Error = error;
         }
 
+        [JsonProperty("success")]
         public bool Success { get; set; }
+
+        [JsonProperty("error")]
         public string Error { get; set; }
-        public string Rank { get; set; }
-        public string Hats { get; set; }
+
+        [JsonProperty("userId")]
+        public string Id { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("group")]
         public string Group
         {
             get
@@ -40,10 +54,23 @@
             }
         }
         private string _group;
-        public string Friend { get; set; }
-        public string Ignored { get; set; }
-        public string Status { get; set; }
-        public string LoginDate { get; set; }
+
+        [JsonProperty("trial_mod")]
+        public bool TrailMod { get; set; }
+
+        [JsonProperty("guildId")]
+        public string GuildId { get; set; }
+
+        [JsonProperty("guildName")]
+        public string GuildName { get; set; }
+
+        [JsonProperty("rank")]
+        public int Rank { get; set; }
+
+        [JsonProperty("hats")]
+        public int Hats { get; set; }
+
+        [JsonProperty("registerDate")]
         public string RegisterDate
         {
             get
@@ -60,17 +87,56 @@
             }
         }
         private string _registerDate;
+
+        [JsonProperty("loginDate")]
+        public string LoginDate { get; set; }
+
+        [JsonProperty("hat")]
         public string Hat { get; set; }
+
+        [JsonProperty("head")]
         public string Head { get; set; }
+
+        [JsonProperty("body")]
         public string Body { get; set; }
+
+        [JsonProperty("feet")]
         public string Feet { get; set; }
+
+        [JsonProperty("hatColor")]
         public string HatColor { get; set; }
+
+        [JsonProperty("headColor")]
         public string HeadColor { get; set; }
+
+        [JsonProperty("bodyColor")]
         public string BodyColor { get; set; }
+
+        [JsonProperty("feetColor")]
         public string FeetColor { get; set; }
-        public string GuildId { get; set; }
-        public string GuildName { get; set; }
-        public string Name { get; set; }
-        public string Id { get; set; }
+
+        [JsonProperty("hatColor2")]
+        public string HatColor2 { get; set; }
+
+        [JsonProperty("headColor2")]
+        public string HeadColor2 { get; set; }
+
+        [JsonProperty("bodyColor2")]
+        public string BodyColor2 { get; set; }
+
+        [JsonProperty("feetColor2")]
+        public string FeetColor2 { get; set; }
+
+        [JsonProperty("exp_points")]
+        public ulong ExpPoints { get; set; }
+
+        [JsonProperty("exp_to_rank")]
+        public ulong ExpToRank { get; set; }
+
+        [JsonProperty("friend")]
+        public int Friend { get; set; }
+
+        [JsonProperty("ignored")]
+        public int Ignored { get; set; }      
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FredBotNETCore.Models
 {
@@ -21,10 +22,22 @@ namespace FredBotNETCore.Models
         public PR2Guild Guild { get; set; }
 
         [JsonProperty("Members")]
-        private List<PR2GuildMember> Members
+        public List<PR2GuildMember> Members
         {
-            get => Guild.Members;
-            set => Guild.Members = value;
+            get
+            {
+                PR2GuildMember member = _members.Where(x => x.Id == Guild.OwnerId).FirstOrDefault();
+                if (member != null)
+                {
+                    member.IsOwner = true;
+                }
+                return _members;
+            }
+            set
+            {
+                _members = value;
+            }
         }
+        private List<PR2GuildMember> _members;
     }
 }

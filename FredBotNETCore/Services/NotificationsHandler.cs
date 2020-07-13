@@ -320,6 +320,10 @@ namespace FredBotNETCore
 
         public async Task AnnouceHintUpdatedAsync(string hint, bool newArti = false)
         {
+            if (hint.Length < 1)
+            {
+                return;
+            }
             foreach (SocketGuild guild in _client.Guilds)
             {
                 SocketTextChannel channel = Extensions.GetNotificationsChannel(guild);

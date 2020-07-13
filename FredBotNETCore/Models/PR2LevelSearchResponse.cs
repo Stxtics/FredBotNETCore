@@ -5,20 +5,19 @@ namespace FredBotNETCore.Models
 {
     public class PR2LevelSearchResponse
     {
-        public PR2LevelSearchResponse(bool success, List<PR2Level> levels = null, string error = null)
+        public PR2LevelSearchResponse(List<PR2Level> levels = null, string error = null)
         {
-            Success = success;
             Levels = levels;
             Error = error;
         }
 
-        [JsonProperty("success")]
-        public bool Success { get; set; }
+        [JsonProperty("error")]
+        public string Error { get; set; }
 
         [JsonProperty("levels")]
         public List<PR2Level> Levels { get; set; }
 
-        [JsonProperty("error")]
-        public string Error { get; set; }
+        [JsonProperty("hash")]
+        public string Hash { get; set; }
     }
 }

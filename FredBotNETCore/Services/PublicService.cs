@@ -859,7 +859,7 @@ namespace FredBotNETCore.Services
                                             embed.Description = $"{user.Status}\n" +
                                                 $"**Group:** {user.Group}\n" +
                                                 $"**Guild:** none\n" +
-                                                $"**Rank:** {user.Rank}\n" +
+                                                $"**Rank:** {user.Rank} ({user.ExpPoints:N0}/{user.ExpToRank:N0})\n" +
                                                 $"**Hats:** {user.Hats}\n" +
                                                 $"**Joined:** {user.RegisterDate}\n" +
                                                 $"**Active:** {user.LoginDate}";
@@ -869,7 +869,7 @@ namespace FredBotNETCore.Services
                                             embed.Description = $"{user.Status}\n" +
                                                 $"**Group:** {user.Group}\n" +
                                                 $"**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(user.GuildName))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(user.GuildName)})\n" +
-                                                $"**Rank:** {user.Rank}\n" +
+                                                $"**Rank:** {user.Rank} ({user.ExpPoints:N0}/{user.ExpToRank:N0})\n" +
                                                 $"**Hats:** {user.Hats}\n" +
                                                 $"**Joined:** {user.RegisterDate}\n" +
                                                 $"**Active:** {user.LoginDate}";
@@ -925,7 +925,7 @@ namespace FredBotNETCore.Services
                                     embed.Description = $"{user.Status}\n" +
                                         $"**Group:** {user.Group}\n" +
                                         $"**Guild:** none\n" +
-                                        $"**Rank:** {user.Rank}\n" +
+                                        $"**Rank:** {user.Rank} ({user.ExpPoints:N0}/{user.ExpToRank:N0})\n" +
                                         $"**Hats:** {user.Hats}\n" +
                                         $"**Joined:** {user.RegisterDate}\n" +
                                         $"**Active:** {user.LoginDate}";
@@ -935,7 +935,7 @@ namespace FredBotNETCore.Services
                                     embed.Description = $"{user.Status}\n" +
                                         $"**Group:** {user.Group}\n" +
                                         $"**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(user.GuildName))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(user.GuildName)})\n" +
-                                        $"**Rank:** {user.Rank}\n" +
+                                        $"**Rank:** {user.Rank} ({user.ExpPoints:N0}/{user.ExpToRank:N0})\n" +
                                         $"**Hats:** {user.Hats}\n" +
                                         $"**Joined:** {user.RegisterDate}\n" +
                                         $"**Active:** {user.LoginDate}";
@@ -1030,7 +1030,7 @@ namespace FredBotNETCore.Services
                                 embed.Description = $"{user.Status}\n" +
                                     $"**Group:** {user.Group}\n" +
                                     $"**Guild:** none\n" +
-                                    $"**Rank:** {user.Rank}\n" +
+                                    $"**Rank:** {user.Rank} ({user.ExpPoints:N0}/{user.ExpToRank:N0})\n" +
                                     $"**Hats:** {user.Hats}\n" +
                                     $"**Joined:** {user.RegisterDate}\n" +
                                     $"**Active:** {user.LoginDate}";
@@ -1040,7 +1040,7 @@ namespace FredBotNETCore.Services
                                 embed.Description = $"{user.Status}\n" +
                                     $"**Group:** {user.Group}\n" +
                                     $"**Guild:** [{Format.Sanitize(Uri.UnescapeDataString(user.GuildName))}](https://pr2hub.com/guild_search.php?name=" + $"{Uri.EscapeDataString(user.GuildName)})\n" +
-                                    $"**Rank:** {user.Rank}\n" +
+                                    $"**Rank:** {user.Rank} ({user.ExpPoints:N0}/{user.ExpToRank:N0})\n" +
                                     $"**Hats:** {user.Hats}\n" +
                                     $"**Joined:** {user.RegisterDate}\n" +
                                     $"**Active:** {user.LoginDate}";
@@ -2415,7 +2415,7 @@ namespace FredBotNETCore.Services
                             embed.WithFooter(footer);
                             embed.WithCurrentTimestamp();
                             bool overflow = false;
-                            foreach (PR2GuildMember member in response.Guild.Members)
+                            foreach (PR2GuildMember member in response.Members)
                             {
                                 guildMembers.Add($"[{Format.Sanitize(member.Name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(member.Name)})");
                                 if (string.Join(", ", guildMembers).Length + 14 > 2048)
@@ -2536,7 +2536,7 @@ namespace FredBotNETCore.Services
                             embed.WithFooter(footer);
                             embed.WithCurrentTimestamp();
                             bool overflow = false;
-                            foreach (PR2GuildMember member in response.Guild.Members)
+                            foreach (PR2GuildMember member in response.Members)
                             {
                                 guildMembers.Add($"[{Format.Sanitize(member.Name)}](https://pr2hub.com/player_search.php?name=" + $"{Uri.EscapeDataString(member.Name)})");
 
@@ -2739,191 +2739,182 @@ namespace FredBotNETCore.Services
                         content.Dispose();
                         if (response != null)
                         {
-                            string responseString = await response.Content.ReadAsStringAsync();
-                            if (responseString.StartsWith("error="))
+                            PR2LevelSearchResponse levelSearch = JsonConvert.DeserializeObject<PR2LevelSearchResponse>(await response.Content.ReadAsStringAsync());
+                            if (levelSearch.Levels.Count == 0)
                             {
-                                await context.Channel.SendMessageAsync($"{context.User.Mention} Error: {responseString.Split('=').Last()}");
+                                await context.Channel.SendMessageAsync($"{context.User.Mention} Error: That level does not exist or could not be found.");
                             }
                             else
                             {
-                                string id = Extensions.GetBetween(responseString, "levelID0=", "&version0=");
-                                if (id.Length < 1)
-                                {
-                                    await context.Channel.SendMessageAsync($"{context.User.Mention} Error: That level does not exist or could not be found.");
-                                }
-                                else
-                                {
-                                    string text = await web.GetStringAsync("https://pr2hub.com/level_data.php?level_id=" + id + "&token=" + pr2token);
-                                    PR2Level level = JsonConvert.DeserializeObject<PR2Level>(text);
-                                    text = await web.GetStringAsync("https://pr2hub.com/levels/" + id + ".txt");
-                                    string data = text.Substring(text.IndexOf("&data=") + 6);
-                                    int blockCount = data.Split("`").ElementAt(2).Count(x => x == ',') + 1;
-                                    level.GameMode = CultureInfo.CreateSpecificCulture("en-GB").TextInfo.ToTitleCase(level.GameMode);
+                                PR2Level level = levelSearch.Levels.First();
+                                string text = await web.GetStringAsync("https://pr2hub.com/levels/" + level.Id + ".txt");
+                                string data = text.Substring(text.IndexOf("&data=") + 6);
+                                int blockCount = data.Split("`").ElementAt(2).Count(x => x == ',') + 1;
+                                level.GameMode = CultureInfo.CreateSpecificCulture("en-GB").TextInfo.ToTitleCase(level.GameMode);
 
-                                    switch (level.Song)
-                                    {
-                                        case "0":
-                                            {
-                                                level.Song = "None";
-                                                break;
-                                            }
-                                        case "1":
-                                            {
-                                                level.Song = "Miniature Fantasy - Dreamscaper";
-                                                break;
-                                            }
-                                        case "2":
-                                            {
-                                                level.Song = "Under Fire - AP";
-                                                break;
-                                            }
-                                        case "3":
-                                            {
-                                                level.Song = "Paradise on E - API";
-                                                break;
-                                            }
-                                        case "4":
-                                            {
-                                                level.Song = "Crying Soul - Bounc3";
-                                                break;
-                                            }
-                                        case "5":
-                                            {
-                                                level.Song = "My Vision - MrMaestro";
-                                                break;
-                                            }
-                                        case "6":
-                                            {
-                                                level.Song = "Switchblade - SKAzini";
-                                                break;
-                                            }
-                                        case "7":
-                                            {
-                                                level.Song = "The Wires - Cheez-R-Us";
-                                                break;
-                                            }
-                                        case "8":
-                                            {
-                                                level.Song = "Before Mydnite - F-777";
-                                                break;
-                                            }
-                                        case "10":
-                                            {
-                                                level.Song = "Broked It - SWiTCH";
-                                                break;
-                                            }
-                                        case "11":
-                                            {
-                                                level.Song = "Hello? - TMM43";
-                                                break;
-                                            }
-                                        case "12":
-                                            {
-                                                level.Song = "Pyrokinesis - Sean Tucker";
-                                                break;
-                                            }
-                                        case "13":
-                                            {
-                                                level.Song = "Flowerz 'n' Herbz - Brunzolaitis";
-                                                break;
-                                            }
-                                        case "14":
-                                            {
-                                                level.Song = "Instrumental #4 - Reasoner";
-                                                break;
-                                            }
-                                        case "15":
-                                            {
-                                                level.Song = "Prismatic - Lunanova";
-                                                break;
-                                            }
-                                        default:
-                                            {
-                                                level.Song = "Random";
-                                                break;
-                                            }
-                                    }
-                                    DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                                    DateTime date = start.AddSeconds(level.Time).ToLocalTime();
-                                    List<string> itemList = level.Items.Split('`').ToList();
-                                    if (int.TryParse(itemList.First(), out int result))
-                                    {
-                                        List<string> itemList2 = new List<string>();
-                                        foreach (string item in itemList)
+                                switch (level.Song)
+                                {
+                                    case "0":
                                         {
-                                            if (item.Equals("1"))
-                                            {
-                                                itemList2.Add("Laser Gun");
-                                            }
-                                            else if (item.Equals("2"))
-                                            {
-                                                itemList2.Add("Mine");
-                                            }
-                                            else if (item.Equals("3"))
-                                            {
-                                                itemList2.Add("Lightning");
-                                            }
-                                            else if (item.Equals("4"))
-                                            {
-                                                itemList2.Add("Teleport");
-                                            }
-                                            else if (item.Equals("5"))
-                                            {
-                                                itemList2.Add("Super Jump");
-                                            }
-                                            else if (item.Equals("6"))
-                                            {
-                                                itemList2.Add("Jet Pack");
-                                            }
-                                            else if (item.Equals("7"))
-                                            {
-                                                itemList2.Add("Speed Burst");
-                                            }
-                                            else if (item.Equals("8"))
-                                            {
-                                                itemList2.Add("Sword");
-                                            }
-                                            else if (item.Equals("9"))
-                                            {
-                                                itemList2.Add("Ice Wave");
-                                            }
+                                            level.Song = "None";
+                                            break;
                                         }
-                                        itemList = itemList2;
-                                    }
-                                    if (itemList.First().Length < 1)
-                                    {
-                                        itemList[0] = "None";
-                                    }
-
-                                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                                    {
-                                        Name = $"-- {level.Title} ({id}) --",
-                                        Url = "https://pr2hub.com/levels/" + id + ".txt?version=" + level.Version
-                                    };
-                                    EmbedBuilder embed = new EmbedBuilder()
-                                    {
-                                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                                        Author = author
-                                    };
-                                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                                    {
-                                        IconUrl = context.User.GetAvatarUrl(),
-                                        Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
-                                    };
-                                    embed.WithFooter(footer);
-                                    embed.WithCurrentTimestamp();
-                                    embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(level.Username)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(level.Username)}) ({level.UserId})", $"**Gravity:** {level.Gravity}", $"**Cowboy Chance:** {level.CowboyChance}%") +
-                                        $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {level.Version}", $"**Max Time:** {(level.MaxTime == 0 ? "Infinite" : level.MaxTime.ToString())}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
-                                        $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {level.MinLevel}", $"**Song:** {level.Song}")}" +
-                                        $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {level.PlayCount}", $"**Pass:** {(level.HasPass ? "Yes" : "No")}")}" +
-                                        $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {level.Rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
-                                        $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date:MMM}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {level.GameMode}")}";
-                                    if (level.Note != null)
-                                    {
-                                        embed.Description += $"\n-----\n{Format.Sanitize(level.Note)}";
-                                    }
-                                    await context.Channel.SendMessageAsync("", false, embed.Build());
+                                    case "1":
+                                        {
+                                            level.Song = "Miniature Fantasy - Dreamscaper";
+                                            break;
+                                        }
+                                    case "2":
+                                        {
+                                            level.Song = "Under Fire - AP";
+                                            break;
+                                        }
+                                    case "3":
+                                        {
+                                            level.Song = "Paradise on E - API";
+                                            break;
+                                        }
+                                    case "4":
+                                        {
+                                            level.Song = "Crying Soul - Bounc3";
+                                            break;
+                                        }
+                                    case "5":
+                                        {
+                                            level.Song = "My Vision - MrMaestro";
+                                            break;
+                                        }
+                                    case "6":
+                                        {
+                                            level.Song = "Switchblade - SKAzini";
+                                            break;
+                                        }
+                                    case "7":
+                                        {
+                                            level.Song = "The Wires - Cheez-R-Us";
+                                            break;
+                                        }
+                                    case "8":
+                                        {
+                                            level.Song = "Before Mydnite - F-777";
+                                            break;
+                                        }
+                                    case "10":
+                                        {
+                                            level.Song = "Broked It - SWiTCH";
+                                            break;
+                                        }
+                                    case "11":
+                                        {
+                                            level.Song = "Hello? - TMM43";
+                                            break;
+                                        }
+                                    case "12":
+                                        {
+                                            level.Song = "Pyrokinesis - Sean Tucker";
+                                            break;
+                                        }
+                                    case "13":
+                                        {
+                                            level.Song = "Flowerz 'n' Herbz - Brunzolaitis";
+                                            break;
+                                        }
+                                    case "14":
+                                        {
+                                            level.Song = "Instrumental #4 - Reasoner";
+                                            break;
+                                        }
+                                    case "15":
+                                        {
+                                            level.Song = "Prismatic - Lunanova";
+                                            break;
+                                        }
+                                    default:
+                                        {
+                                            level.Song = "Random";
+                                            break;
+                                        }
                                 }
+                                DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                                DateTime date = start.AddSeconds(level.Time).ToLocalTime();
+                                List<string> itemList = level.Items.Split('`').ToList();
+                                if (int.TryParse(itemList.First(), out int result))
+                                {
+                                    List<string> itemList2 = new List<string>();
+                                    foreach (string item in itemList)
+                                    {
+                                        if (item.Equals("1"))
+                                        {
+                                            itemList2.Add("Laser Gun");
+                                        }
+                                        else if (item.Equals("2"))
+                                        {
+                                            itemList2.Add("Mine");
+                                        }
+                                        else if (item.Equals("3"))
+                                        {
+                                            itemList2.Add("Lightning");
+                                        }
+                                        else if (item.Equals("4"))
+                                        {
+                                            itemList2.Add("Teleport");
+                                        }
+                                        else if (item.Equals("5"))
+                                        {
+                                            itemList2.Add("Super Jump");
+                                        }
+                                        else if (item.Equals("6"))
+                                        {
+                                            itemList2.Add("Jet Pack");
+                                        }
+                                        else if (item.Equals("7"))
+                                        {
+                                            itemList2.Add("Speed Burst");
+                                        }
+                                        else if (item.Equals("8"))
+                                        {
+                                            itemList2.Add("Sword");
+                                        }
+                                        else if (item.Equals("9"))
+                                        {
+                                            itemList2.Add("Ice Wave");
+                                        }
+                                    }
+                                    itemList = itemList2;
+                                }
+                                if (itemList.First().Length < 1)
+                                {
+                                    itemList[0] = "None";
+                                }
+
+                                EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                                {
+                                    Name = $"-- {level.Title} ({level.Id}) --",
+                                    Url = "https://pr2hub.com/levels/" + level.Id + ".txt?version=" + level.Version
+                                };
+                                EmbedBuilder embed = new EmbedBuilder()
+                                {
+                                    Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                                    Author = author
+                                };
+                                EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                                {
+                                    IconUrl = context.User.GetAvatarUrl(),
+                                    Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                                };
+                                embed.WithFooter(footer);
+                                embed.WithCurrentTimestamp();
+                                embed.Description = string.Format("{0,-20} {1,-20} {2, 20}", $"**By:** [{Format.Sanitize(level.Username)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(level.Username)}) ({level.UserId})", $"**Gravity:** {level.Gravity}", $"**Cowboy Chance:** {level.CowboyChance}%") +
+                                    $"\n{string.Format("{0,-20} {1,-20} {2, 20}", $"**Version:** {level.Version}", $"**Max Time:** {(level.MaxTime == 0 ? "Infinite" : level.MaxTime.ToString())}", $"**Block Count:** {blockCount.ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}")}" +
+                                    $"\n{string.Format("{0,-25} {1,25}", $"**Min Rank:** {level.MinLevel}", $"**Song:** {level.Song}")}" +
+                                    $"\n{string.Format("{0,-25} {1,25}", $"**Plays:** {level.PlayCount}", $"**Pass:** {(level.HasPass ? "Yes" : "No")}")}" +
+                                    $"\n{string.Format("{0,-25} {1,25}", $"**Rating:** {level.Rating}", $"**Items:** {string.Join(", ", itemList)}")}" +
+                                    $"\n{string.Format("{0,-25} {1,25}", $"**Updated:** {date.Day}/{date:MMM}/{date.Year} - {date.TimeOfDay}", $"**Game Mode:** {level.GameMode}")}";
+                                if (level.Note != null)
+                                {
+                                    embed.Description += $"\n-----\n{Format.Sanitize(level.Note)}";
+                                }
+                                await context.Channel.SendMessageAsync("", false, embed.Build());
                             }
                         }
                     }
@@ -3210,10 +3201,10 @@ namespace FredBotNETCore.Services
                                 }
                                 if (response != null)
                                 {
-                                    string responseString = await response.Content.ReadAsStringAsync();
-                                    if (responseString.StartsWith("error="))
+                                    PR2LevelSearchResponse levelSearch = JsonConvert.DeserializeObject<PR2LevelSearchResponse>(await response.Content.ReadAsStringAsync());
+                                    if (levelSearch.Levels.Count == 0)
                                     {
-                                        await context.Channel.SendMessageAsync($"{context.User.Mention} Error: {responseString.Split('=').Last()}");
+                                        await context.Channel.SendMessageAsync($"{context.User.Mention} Error: That has no levels.");
                                     }
                                     else
                                     {
@@ -3237,19 +3228,9 @@ namespace FredBotNETCore.Services
                                         int page = 1;
                                         while (moreLevels)
                                         {
-                                            List<string> levels = responseString.Split('&').ToList();
                                             string ids = "", titles = "";
-                                            for (int i = 0; i < 6; i++)
+                                            foreach (PR2Level level in levelSearch.Levels)
                                             {
-                                                if (levels.Find(x => x.StartsWith("levelID" + i + "=")) == null)
-                                                {
-                                                    break;
-                                                }
-                                                PR2Level level = new PR2Level(true)
-                                                {
-                                                    Id = int.Parse(levels.Find(x => x.StartsWith("levelID" + i + "=")).Substring(9)),
-                                                    Title = Uri.UnescapeDataString(levels.Find(x => x.StartsWith("title" + i + "=")).Substring(7).Replace("+", " ")),
-                                                };
                                                 ids += level.Id + "\n";
                                                 titles += level.Title + "\n";
                                             }
@@ -3268,6 +3249,10 @@ namespace FredBotNETCore.Services
                                                     y.IsInline = true;
                                                 });
                                                 await context.Channel.SendMessageAsync("", false, embed.Build());
+                                                if (levelSearch.Levels.Count < 6)
+                                                {
+                                                    break;
+                                                }
                                             }
                                             if (context.Channel is IDMChannel)
                                             {
@@ -3277,12 +3262,12 @@ namespace FredBotNETCore.Services
                                                 values["page"] = page.ToString();
                                                 content = new FormUrlEncodedContent(values);
                                                 response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
-                                                responseString = await response.Content.ReadAsStringAsync();
-                                                while (responseString.Equals("error=Slow down a bit, yo."))
+                                                levelSearch = JsonConvert.DeserializeObject<PR2LevelSearchResponse>(await response.Content.ReadAsStringAsync());
+                                                while (levelSearch.Error == "Slow down a bit, yo.")
                                                 {
                                                     await Task.Delay(250);
                                                     response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
-                                                    responseString = await response.Content.ReadAsStringAsync();
+                                                    levelSearch = JsonConvert.DeserializeObject<PR2LevelSearchResponse>(await response.Content.ReadAsStringAsync());
                                                 }
                                                 if (page > 18)
                                                 {
