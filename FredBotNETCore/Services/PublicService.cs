@@ -639,7 +639,7 @@ namespace FredBotNETCore.Services
                     await context.Channel.SendMessageAsync($"{context.User.Mention} connection to PR2 Hub was not successfull.");
                 }
                 web.Dispose();
-                if (text != null)
+                if (text != null && text.Length > 0)
                 {
                     PR2Hint hint = JsonConvert.DeserializeObject<PR2Hint>(text);
                     if (hint.FinderName == null || hint.FinderName.Length < 1)
@@ -731,6 +731,10 @@ namespace FredBotNETCore.Services
                                 $"The bubble set will be awarded to the first person to find the artifact that doesn't have the set already!");
                         }
                     }
+                }
+                else
+                {
+                    await context.Channel.SendMessageAsync($"{context.User.Mention} PR2 Hub did not return a hint.");
                 }
             }
             else
