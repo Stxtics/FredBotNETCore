@@ -14,7 +14,7 @@ namespace FredBotNETCore.Models
         public int Power { get; set; }
 
         [JsonProperty("trial_mod")]
-        public bool TrailMod { get; set; }
+        public string TrailMod { get; set; }
 
         [JsonProperty("rank")]
         public int Rank { get; set; }

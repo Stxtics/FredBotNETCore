@@ -1197,11 +1197,11 @@ namespace FredBotNETCore.Services
                             };
                             embed.WithFooter(footer);
                             embed.WithCurrentTimestamp();
-                            embed.ThumbnailUrl = "https://pr2hub.com/emblems/" + response.Guild.Emblem;
+                            embed.ThumbnailUrl = response.Guild.Emblem;
                             embed.Description = $"**Created At:** {response.Guild.CreationDate}\n" +
                                 $"**Members:** {response.Guild.MemberCount} ({response.Guild.ActiveCount} active)\n" +
-                                $"**GP Total:** {response.Guild.GPTotal}\n" +
-                                $"**GP Today:** {response.Guild.GPToday}\n" +
+                                $"**GP Total:** {response.Guild.GPTotal:N0}\n" +
+                                $"**GP Today:** {response.Guild.GPToday:N0}\n" +
                                 $"**Description:** {Format.Sanitize(response.Guild.Note)}";
                             await context.Channel.SendMessageAsync("", false, embed.Build());
                         }
@@ -1287,11 +1287,11 @@ namespace FredBotNETCore.Services
                             };
                             embed.WithFooter(footer);
                             embed.WithCurrentTimestamp();
-                            embed.ThumbnailUrl = "https://pr2hub.com/emblems/" + response.Guild.Emblem;
+                            embed.ThumbnailUrl = response.Guild.Emblem;
                             embed.Description = $"**Created At:** {response.Guild.CreationDate}" +
                                 $"\n**Members:** {response.Guild.MemberCount} ({response.Guild.ActiveCount} active)" +
-                                $"\n**GP Total:** {response.Guild.GPTotal}" +
-                                $"\n**GP Today:** {response.Guild.GPToday}" +
+                                $"\n**GP Total:** {response.Guild.GPTotal:N0}" +
+                                $"\n**GP Today:** {response.Guild.GPToday:N0}" +
                                 $"\n**Description:** {Format.Sanitize(response.Guild.Note)}";
                             await context.Channel.SendMessageAsync("", false, embed.Build());
                         }

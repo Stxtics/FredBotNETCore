@@ -32,7 +32,18 @@ namespace FredBotNETCore.Models
         public int MemberCount { get; set; }
 
         [JsonProperty("emblem")]
-        public string Emblem { get; set; }
+        public string Emblem
+        {
+            get
+            {
+                return "https://pr2hub.com/emblems/" + _emblem;
+            }
+            set
+            {
+                _emblem = value;
+            }
+        }
+        private string _emblem;
 
         [JsonProperty("gp_total")]
         public int GPTotal { get; set; }
