@@ -13,9 +13,12 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Authentication;
+using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 using static FredBotNETCore.WeatherDataCurrent;
 
 namespace FredBotNETCore.Services
@@ -1743,104 +1746,12 @@ namespace FredBotNETCore.Services
                         }
                     }
                     HttpClient web = new HttpClient();
+
+                    string text;
                     try
                     {
-                        EmbedAuthorBuilder author = new EmbedAuthorBuilder()
-                        {
-                            Name = fahuser,
-                            IconUrl = "https://pbs.twimg.com/profile_images/53706032/Fold003_400x400.png",
-                            Url = "https://stats.foldingathome.org/donor/" + fahuser.Replace(' ', '_')
-                        };
-                        EmbedBuilder embed = new EmbedBuilder()
-                        {
-                            Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
-                            Author = author
-                        };
-                        EmbedFooterBuilder footer = new EmbedFooterBuilder()
-                        {
-                            IconUrl = context.User.GetAvatarUrl(),
-                            Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
-                        };
-                        embed.WithFooter(footer);
-                        embed.WithCurrentTimestamp();
-                        string text;
-                        try
-                        {
-                            text = await web.GetStringAsync("https://stats.foldingathome.org/api/donor/" + fahuser.Replace(' ', '_'));
-                            web.Dispose();
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} Error: The F@H API took too long to respond.");
-                            web.Dispose();
-                            return;
-                        }
-                        try
-                        {
-                            JToken o = JObject.Parse(text).GetValue("teams");
-                            JArray array = JArray.Parse(o.ToString());
-                            JObject stats = new JObject();
-                            foreach (JObject jobject in array)
-                            {
-                                if (Convert.ToInt32(jobject.GetValue("team")) == 143016)
-                                {
-                                    stats = jobject;
-                                    break;
-                                }
-                            }
-                            if (stats.Count == 0)
-                            {
-                                await context.Channel.SendMessageAsync($"{context.User.Mention} Error: That user does not exist or could not be found.");
-                                return;
-                            }
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Score";
-                                y.Value = $"{Convert.ToInt32(stats.GetValue("credit")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Completed WUs";
-                                y.Value = $"{Convert.ToInt32(stats.GetValue("wus")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
-                                y.IsInline = true;
-                            });
-                            if (stats.GetValue("last") != null)
-                            {
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Last WU";
-                                    y.Value = $"{stats.GetValue("last")}";
-                                    y.IsInline = true;
-                                });
-                            }
-                            else
-                            {
-                                embed.AddField(y =>
-                                {
-                                    y.Name = "Last WU";
-                                    y.Value = $"N/A";
-                                    y.IsInline = true;
-                                });
-                            }
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Active clients (within 50 days)";
-                                y.Value = $"{Convert.ToInt32(stats.GetValue("active_50")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
-                                y.IsInline = true;
-                            });
-                            embed.AddField(y =>
-                            {
-                                y.Name = "Active clients (within 7 days)";
-                                y.Value = $"{Convert.ToInt32(stats.GetValue("active_7")).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"))}";
-                                y.IsInline = true;
-                            });
-                            await context.Channel.SendMessageAsync("", false, embed.Build());
-                        }
-                        catch (JsonReaderException)
-                        {
-                            await context.Channel.SendMessageAsync($"{context.User.Mention} Error: The F@H Api is currently down.");
-                        }
+                        text = await web.GetStringAsync("https://folding.extremeoverclocking.com/xml/user_summary.php?un=" + fahuser.Replace(' ', '_') + "&t=143016");
+                        web.Dispose();
                     }
                     catch (HttpRequestException)
                     {
@@ -1848,12 +1759,128 @@ namespace FredBotNETCore.Services
                         web.Dispose();
                         return;
                     }
-                    catch (AuthenticationException)
+                    XmlDocument xmlDoc = new XmlDocument();
+                    xmlDoc.LoadXml(text);
+                    var attributes = xmlDoc.GetElementsByTagName("user").Item(0).ChildNodes;
+                    EmbedBuilder embed = new EmbedBuilder()
                     {
-                        await context.Channel.SendMessageAsync($"{context.User.Mention} Error: The F@H certificate date is invalid.");
-                        web.Dispose();
-                        return;
+                        Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
+                    };
+                    EmbedFooterBuilder footer = new EmbedFooterBuilder()
+                    {
+                        IconUrl = context.User.GetAvatarUrl(),
+                        Text = $"{context.User.Username}#{context.User.Discriminator}({context.User.Id})"
+                    };
+                    embed.WithFooter(footer);
+                    embed.WithCurrentTimestamp();
+                    string userid = null;
+                    string name = null;
+                    for (int i = 0; i < attributes.Count; i++)
+                    {
+                        var item = attributes.Item(i);
+                        switch (item.Name)
+                        {
+                            case "User_Name":
+                                name = item.InnerText;
+                                break;
+                            case "UserID":
+                                userid = item.InnerText;
+                                break;
+                            case "Team_Rank":
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Team Rank";
+                                    y.IsInline = true;
+                                    y.Value = int.Parse(item.InnerText).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
+                                });
+                                break;
+                            case "Overall_Rank":
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Overall Rank";
+                                    y.IsInline = true;
+                                    y.Value = int.Parse(item.InnerText).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
+                                });
+                                break;
+                            case "Change_Rank_24hr":
+                                if (int.Parse(item.InnerText) > 0)
+                                {
+                                    embed.AddField(y =>
+                                    {
+                                        y.Name = "24 Hour Rank Change";
+                                        y.IsInline = true;
+                                        y.Value = int.Parse(item.InnerText).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB")); ;
+                                    });
+                                }
+                                break;
+                            case "Change_Rank_7days":
+                                if (int.Parse(item.InnerText) > 0)
+                                {
+                                    embed.AddField(y =>
+                                    {
+                                        y.Name = "7 Day Rank Change";
+                                        y.IsInline = true;
+                                        y.Value = int.Parse(item.InnerText).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB")); ;
+                                    });
+                                }
+                                break;
+                            case "Points_24hr_Avg":
+                                if (int.Parse(item.InnerText) > 0)
+                                {
+                                    embed.AddField(y =>
+                                    {
+                                        y.Name = "24 Hour Average";
+                                        y.IsInline = true;
+                                        y.Value = int.Parse(item.InnerText).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB")); ;
+                                    });
+                                }
+                                break;
+                            case "Points_Last_7days":
+                                if (int.Parse(item.InnerText) > 0)
+                                {
+                                    embed.AddField(y =>
+                                    {
+                                        y.Name = "Points Last 7 Days";
+                                        y.IsInline = true;
+                                        y.Value = int.Parse(item.InnerText).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB")); ;
+                                    });
+                                }
+                                break;
+                            case "Points":
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "Points";
+                                    y.IsInline = true;
+                                    y.Value = int.Parse(item.InnerText).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
+                                });
+                                break;
+                            case "WUs":
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "WUs";
+                                    y.IsInline = true;
+                                    y.Value = int.Parse(item.InnerText).ToString("N0", CultureInfo.CreateSpecificCulture("en-GB"));
+                                });
+                                break;
+                            case "First_Record":
+                                embed.AddField(y =>
+                                {
+                                    y.Name = "First Record";
+                                    y.IsInline = true;
+                                    y.Value = item.InnerText.Substring(6, 2) + "." + item.InnerText.Substring(4, 2) + "." + item.InnerText.Substring(0, 4);
+                                });
+                                break;
+                        }
                     }
+
+                    EmbedAuthorBuilder author = new EmbedAuthorBuilder()
+                    {
+                        Name = name,
+                        IconUrl = "https://pbs.twimg.com/profile_images/53706032/Fold003_400x400.png",
+                        Url = $"https://folding.extremeoverclocking.com/user_summary.php?s=&u={userid}"
+                    };
+                    embed.WithAuthor(author);
+                    await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
             }
             else
