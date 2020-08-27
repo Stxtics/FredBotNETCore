@@ -236,9 +236,9 @@ namespace FredBotNETCore.Modules.Public
         [Command("level", RunMode = RunMode.Async)]
         [Alias("levelinfo", "search", "levels")]
         [Summary("Gets info about a PR2 level.")]
-        public async Task Level(string option = null, [Remainder] string level = null)
+        public async Task Level(string option = null, string page = null, [Remainder] string level = null)
         {
-            await publicService.LevelAsync(Context, option, level);
+            await publicService.LevelAsync(Context, option, page, level);
         }
 
         [Command("campaign", RunMode = RunMode.Async)]

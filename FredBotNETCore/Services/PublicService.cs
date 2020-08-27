@@ -2660,7 +2660,7 @@ namespace FredBotNETCore.Services
             }
         }
 
-        public async Task LevelAsync(SocketCommandContext context, string option, [Remainder] string search)
+        public async Task LevelAsync(SocketCommandContext context, string option, string page, [Remainder] string search)
         {
             List<AllowedChannel> channels = new List<AllowedChannel>();
             if (context.Channel is SocketTextChannel)
@@ -2678,41 +2678,96 @@ namespace FredBotNETCore.Services
                     if (context.Channel is IDMChannel)
                     {
                         embed.Title = "Command: /level";
-                        embed.Description = "**Description:** Get PR2 level info.\n**Usage:** /level [t, id, u] [search]\n**Example:** /level id 50815";
+                        embed.Description = "**Description:** Get PR2 level info.\n**Usage:** /level [t, id, u] [page (optional)] [search]\n**Example:** /level t 1 Newbieland 2";
                     }
                     else
                     {
                         string prefix = Guild.Get(context.Guild).Prefix;
                         embed.Title = $"Command: {prefix}level";
-                        embed.Description = $"**Description:** Get PR2 level info.\n**Usage:** {prefix}level [t, id, u] [search]\n**Example:** {prefix}level id 50815";
+                        embed.Description = $"**Description:** Get PR2 level info.\n**Usage:** {prefix}level [t, id, u] [page (optional)] [search]\n**Example:** {prefix}level t 1 Newbieland 2";
                     }
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
                 {
                     string mode = "";
-                    if (option.Equals("u") && !string.IsNullOrWhiteSpace(search))
+                    bool pageSet = false;
+                    if (string.IsNullOrWhiteSpace(search))
                     {
-                        mode = "user";
-                    }
-                    else if (option.Equals("id") && !string.IsNullOrWhiteSpace(search))
-                    {
-                        mode = "id";
-                    }
-                    else if (option.Equals("t") && !string.IsNullOrWhiteSpace(search))
-                    {
-                        mode = "title";
-                    }
-                    else
-                    {
-                        mode = "title";
-                        if (search == null)
+                        if (option.Equals("u"))
                         {
-                            search = option;
+                            mode = "user";
+                            search = page;
+                        }
+                        else if (option.Equals("id"))
+                        {
+                            mode = "id";
+                            search = page;
+                        }
+                        else if (option.Equals("t"))
+                        {
+                            mode = "title";
+                            search = page;
                         }
                         else
                         {
-                            search = option + " " + search;
+                            mode = "title";
+                            search = option + " " + page;
+                        }
+                        page = "1";
+                    }
+                    else if (string.IsNullOrWhiteSpace(page))
+                    {
+                        mode = "title";
+                        page = "1";
+                        search = option;
+                    }
+                    else
+                    {
+                        if (int.TryParse(page, out int result) && result < 19)
+                        {
+                            if (option.Equals("u"))
+                            {
+                                mode = "user";
+                                pageSet = true;
+                            }
+                            else if (option.Equals("id"))
+                            {
+                                mode = "id";
+                                search = page;
+                            }
+                            else if (option.Equals("t"))
+                            {
+                                mode = "title";
+                            }
+                            else
+                            {
+                                mode = "title";
+                                search = option + " " + search;
+                            }
+                        }
+                        else
+                        {
+                            if (option.Equals("u"))
+                            {
+                                mode = "user";
+                                search = page + " " + search;
+                            }
+                            else if (option.Equals("id"))
+                            {
+                                mode = "id";
+                                search = page;
+                            }
+                            else if (option.Equals("t"))
+                            {
+                                mode = "title";
+                                search = page + " " + search;
+                            }
+                            else
+                            {
+                                search = option + " " + page + " " + search;
+                            }
+                            page = "1";
                         }
                     }
 
@@ -2722,7 +2777,7 @@ namespace FredBotNETCore.Services
                             { "dir", "desc" },
                             { "mode", "title" },
                             { "order", "popularity" },
-                            { "page", "1" },
+                            { "page", page },
                             { "search_str", search },
                             { "token", pr2token }
                         };
@@ -3209,13 +3264,20 @@ namespace FredBotNETCore.Services
                                     PR2LevelSearchResponse levelSearch = JsonConvert.DeserializeObject<PR2LevelSearchResponse>(await response.Content.ReadAsStringAsync());
                                     if (levelSearch.Levels.Count == 0)
                                     {
-                                        await context.Channel.SendMessageAsync($"{context.User.Mention} Error: That has no levels.");
+                                        if (page == "1")
+                                        {
+                                            await context.Channel.SendMessageAsync($"{context.User.Mention} Error: That user has no levels.");
+                                        }
+                                        else
+                                        {
+                                            await context.Channel.SendMessageAsync($"{context.User.Mention} Error: That user has no levels on page {page}.");
+                                        }
                                     }
                                     else
                                     {
                                         EmbedAuthorBuilder author = new EmbedAuthorBuilder()
                                         {
-                                            Name = $"Levels By: {Uri.UnescapeDataString(pr2user.Name)} - Page 1",
+                                            Name = $"Levels By: {Uri.UnescapeDataString(pr2user.Name)} - Page {page}",
                                         };
                                         EmbedBuilder embed = new EmbedBuilder()
                                         {
@@ -3230,7 +3292,7 @@ namespace FredBotNETCore.Services
                                         embed.WithFooter(footer);
                                         embed.WithCurrentTimestamp();
                                         bool moreLevels = true;
-                                        int page = 1;
+                                        int pageCount = int.Parse(page);
                                         while (moreLevels)
                                         {
                                             string ids = "", titles = "";
@@ -3259,12 +3321,12 @@ namespace FredBotNETCore.Services
                                                     break;
                                                 }
                                             }
-                                            if (context.Channel is IDMChannel)
+                                            if (context.Channel is IDMChannel && !pageSet)
                                             {
                                                 embed.Fields.Clear();
-                                                page++;
-                                                embed.Author.Name = $"Levels By: {search} - Page {page}";
-                                                values["page"] = page.ToString();
+                                                pageCount++;
+                                                embed.Author.Name = $"Levels By: {Uri.UnescapeDataString(pr2user.Name)} - Page {pageCount}";
+                                                values["page"] = pageCount.ToString();
                                                 content = new FormUrlEncodedContent(values);
                                                 response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
                                                 levelSearch = JsonConvert.DeserializeObject<PR2LevelSearchResponse>(await response.Content.ReadAsStringAsync());
@@ -3274,7 +3336,7 @@ namespace FredBotNETCore.Services
                                                     response = await web.PostAsync("https://pr2hub.com/search_levels.php?", content);
                                                     levelSearch = JsonConvert.DeserializeObject<PR2LevelSearchResponse>(await response.Content.ReadAsStringAsync());
                                                 }
-                                                if (page > 18)
+                                                if (pageCount > 18)
                                                 {
                                                     moreLevels = false;
                                                     await context.Channel.SendMessageAsync($"{context.User.Mention} the maximum number of pages I can show is 18.");
