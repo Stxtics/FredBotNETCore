@@ -4,7 +4,6 @@ using Discord.WebSocket;
 using FredBotNETCore.Database;
 using FredBotNETCore.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -12,13 +11,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Security.Authentication;
-using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.Linq;
 using static FredBotNETCore.WeatherDataCurrent;
 
 namespace FredBotNETCore.Services
@@ -905,7 +901,7 @@ namespace FredBotNETCore.Services
                         catch (HttpRequestException)
                         {
                             await context.Channel.SendMessageAsync($"{context.User.Mention} Error: Connection to PR2 Hub was not successfull.");
-                        }                       
+                        }
                         if (pr2info != null)
                         {
                             PR2User user = JsonConvert.DeserializeObject<PR2User>(pr2info);
@@ -1010,7 +1006,7 @@ namespace FredBotNETCore.Services
                     catch (HttpRequestException)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} Error: Connection to PR2 Hub was not successfull.");
-                    }               
+                    }
                     if (pr2info != null)
                     {
                         PR2User user = JsonConvert.DeserializeObject<PR2User>(pr2info);
@@ -1761,7 +1757,7 @@ namespace FredBotNETCore.Services
                     }
                     XmlDocument xmlDoc = new XmlDocument();
                     xmlDoc.LoadXml(text);
-                    var attributes = xmlDoc.GetElementsByTagName("user").Item(0).ChildNodes;
+                    XmlNodeList attributes = xmlDoc.GetElementsByTagName("user").Item(0).ChildNodes;
                     EmbedBuilder embed = new EmbedBuilder()
                     {
                         Color = new Color(Extensions.random.Next(256), Extensions.random.Next(256), Extensions.random.Next(256)),
@@ -1777,7 +1773,7 @@ namespace FredBotNETCore.Services
                     string name = null;
                     for (int i = 0; i < attributes.Count; i++)
                     {
-                        var item = attributes.Item(i);
+                        XmlNode item = attributes.Item(i);
                         switch (item.Name)
                         {
                             case "User_Name":
@@ -1928,7 +1924,7 @@ namespace FredBotNETCore.Services
                     catch (HttpRequestException)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} Error: Connection to PR2 Hub was not successfull.");
-                    }           
+                    }
                     if (text != null)
                     {
                         if (Extensions.GetBetween(text, "<title>", "</title>").Contains("PR2 Hub - Error Fetching Ban"))
@@ -3272,7 +3268,7 @@ namespace FredBotNETCore.Services
                                 await context.Channel.SendMessageAsync($"{context.User.Mention} Error: {pr2user.Error}");
                             }
                             else
-                            { 
+                            {
                                 values["mode"] = "user";
                                 values["search_str"] = pr2name;
                                 values["order"] = "date";
@@ -3415,7 +3411,7 @@ namespace FredBotNETCore.Services
                     await context.Channel.SendMessageAsync("", false, embed.Build());
                 }
                 else
-                {                   
+                {
                     if (page == null)
                     {
                         page = "1";
