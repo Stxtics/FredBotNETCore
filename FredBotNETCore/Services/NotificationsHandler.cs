@@ -100,6 +100,18 @@ namespace FredBotNETCore
                         }
                     }
                     #endregion
+
+                    #region Check Members Downloaded
+
+                    foreach (var guild in _client.Guilds)
+                    {
+                        if (!guild.HasAllMembers)
+                        {
+                            await guild.DownloadUsersAsync();
+                        }
+                    }
+
+                    #endregion
                 }
                 catch (HttpRequestException)
                 {
