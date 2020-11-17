@@ -103,13 +103,13 @@ namespace FredBotNETCore
 
                     #region Check Members Downloaded
 
-                    foreach (var guild in _client.Guilds)
-                    {
-                        if (!guild.HasAllMembers)
-                        {
-                            await guild.DownloadUsersAsync();
-                        }
-                    }
+                    //foreach (var guild in _client.Guilds)
+                    //{
+                    //    if (!guild.HasAllMembers)
+                    //    {
+                    //        await guild.DownloadUsersAsync();
+                    //    }
+                    //}
 
                     #endregion
                 }

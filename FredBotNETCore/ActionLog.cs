@@ -750,7 +750,7 @@ namespace FredBotNETCore
             IMessage message2 = await message.GetOrDownloadAsync();
             SocketTextChannel channel2 = channel as SocketTextChannel;
             SocketTextChannel log = Extensions.GetLogChannel((channel as SocketGuildChannel).Guild);
-            if (log != null)
+            if (log != null && message2 != null)
             {
                 if (channel2.Id == log.Id)
                 {
