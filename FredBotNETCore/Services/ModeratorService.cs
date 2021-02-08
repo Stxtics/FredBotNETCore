@@ -2470,7 +2470,7 @@ namespace FredBotNETCore.Services
                 }
                 embed.AddField(y =>
                 {
-                    y.Name = "JV2 Name";
+                    y.Name = "JV Name";
                     y.Value = "N/A";
                     y.IsInline = true;
                 });
