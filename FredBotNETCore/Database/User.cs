@@ -175,5 +175,23 @@ namespace FredBotNETCore.Database
                 return;
             }
         }
+
+        public static void SetJVID(string userId, string id)
+        {
+            Database database = new Database();
+            try
+            {
+                string str = string.Format("UPDATE users SET jv2_id = \"{1}\" WHERE user_id = {0} LIMIT 1", userId, id);
+                MySqlDataReader reader = database.FireCommand(str);
+                reader.Close();
+                database.CloseConnection();
+                return;
+            }
+            catch (Exception)
+            {
+                database.CloseConnection();
+                return;
+            }
+        }
     }
 }

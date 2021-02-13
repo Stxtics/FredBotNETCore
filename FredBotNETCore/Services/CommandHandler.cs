@@ -35,6 +35,11 @@ namespace FredBotNETCore
             {
                 return;
             }
+            if (msg.Author.IsWebhook)
+            {
+                HandleJVVerification(msg);
+                return;
+            }
 
             if (msg.Channel is SocketTextChannel channel)
             {
@@ -84,6 +89,26 @@ namespace FredBotNETCore
                     if (result.Error.Value != CommandError.UnknownCommand)
                     {
                         await context.Channel.SendMessageAsync($"Oh no an error occurred. Details of this error have been sent to **{(await _client.GetApplicationInfoAsync()).Owner.Username}#{(await _client.GetApplicationInfoAsync()).Owner.Discriminator}** so that he can fix it.");
+                    }
+                }
+            }
+        }
+
+        private void HandleJVVerification(SocketUserMessage msg)
+        {
+            if (msg.Channel.Id == 809403597058080798)
+            {
+                int argPos = 0;
+                if (msg.HasStringPrefix("/", ref argPos))
+                {
+                    string[] msgSplit = msg.Content.Split(" ");
+                    if (msgSplit.First().Equals("/jv_verify_complete") && msgSplit.Count() == 3)
+                    {
+                        User user = User.GetUser("user_id", msgSplit[1]);
+                        if (user != null)
+                        {
+                            User.SetJVID(msgSplit[1], msgSplit[2]);
+                        }
                     }
                 }
             }
