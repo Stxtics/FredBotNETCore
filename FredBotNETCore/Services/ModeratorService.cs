@@ -2426,7 +2426,7 @@ namespace FredBotNETCore.Services
                 {
                     User.Add(context.User);
                 }
-                string pr2name = User.GetUser("user_id", user.Id.ToString()).PR2Name;
+                User dbUser = User.GetUser("user_id", user.Id.ToString());
                 position = guildUsers.ToList().IndexOf(user);
                 foreach (SocketRole role in user.Roles)
                 {
@@ -2459,21 +2459,24 @@ namespace FredBotNETCore.Services
                     y.Value = date;
                     y.IsInline = true;
                 });
-                if (pr2name != null)
+                if (dbUser.PR2Name != null)
                 {
                     embed.AddField(y =>
                     {
                         y.Name = "PR2 Name";
-                        y.Value = Format.Sanitize(pr2name);
+                        y.Value = $"[{Format.Sanitize(dbUser.PR2Name)}](https://pr2hub.com/player_search.php?name={Uri.EscapeDataString(dbUser.PR2Name)})";
                         y.IsInline = true;
                     });
                 }
-                embed.AddField(y =>
+                if (dbUser.JV2ID != null)
                 {
-                    y.Name = "JV2 Name";
-                    y.Value = "N/A";
-                    y.IsInline = true;
-                });
+                    embed.AddField(y =>
+                    {
+                        y.Name = "JV2 User ID";
+                        y.Value = $"[{dbUser.JV2ID}](https://jiggmin2.com/forums/member.php?action=profile&uid={dbUser.JV2ID})";
+                        y.IsInline = true;
+                    });
+                }
                 if ((user.Roles.Count - 1) > 0)
                 {
                     embed.AddField(y =>
