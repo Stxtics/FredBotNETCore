@@ -2472,7 +2472,7 @@ namespace FredBotNETCore.Services
                 {
                     embed.AddField(y =>
                     {
-                        y.Name = "JV2 User ID";
+                        y.Name = "JV User ID";
                         y.Value = $"[{dbUser.JV2ID}](https://jiggmin2.com/forums/member.php?action=profile&uid={dbUser.JV2ID})";
                         y.IsInline = true;
                     });
