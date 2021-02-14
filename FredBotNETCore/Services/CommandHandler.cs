@@ -31,13 +31,13 @@ namespace FredBotNETCore
             }
 
             bool badMessage = false;
-            if (msg.Author.IsBot)
-            {
-                return;
-            }
             if (msg.Author.IsWebhook)
             {
                 HandleJVVerification(msg);
+                return;
+            }
+            if (msg.Author.IsBot)
+            {
                 return;
             }
 
