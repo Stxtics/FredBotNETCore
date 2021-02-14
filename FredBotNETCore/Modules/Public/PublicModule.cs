@@ -66,8 +66,8 @@ namespace FredBotNETCore.Modules.Public
             await publicService.DailyAsync(Context);
         }
 
-        [Command("verify", RunMode = RunMode.Async)]
-        [Alias("verifyme")]
+        [Command("verifypr2", RunMode = RunMode.Async)]
+        [Alias("pr2verify")]
         [Summary("Link your PR2 account to your Discord account.")]
         public async Task Verify()
         {
