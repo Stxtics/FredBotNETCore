@@ -317,13 +317,14 @@ namespace FredBotNETCore
                         SocketTextChannel channel = Extensions.GetNotificationsChannel(guild);
                         if (channel != null)
                         {
-                            RequestOptions options = new RequestOptions()
+                            if (channel.Guild.CurrentUser.GetPermissions(channel).MentionEveryone == false)
                             {
-                                AuditLogReason = "Announcing happy hour on " + Name
-                            };
-                            await role.ModifyAsync(x => x.Mentionable = true, options);
-                            await channel.SendMessageAsync($"{role.Mention} A happy hour has just started on Server: {Name}");
-                            await role.ModifyAsync(x => x.Mentionable = false, options);
+                                await channel.SendMessageAsync($"I am missing permission: Mention all roles.");
+                            }
+                            else
+                            {
+                                await channel.SendMessageAsync($"{role.Mention} A happy hour has just started on Server: {Name}");
+                            }
                         }
                     }
                 }
@@ -341,30 +342,28 @@ namespace FredBotNETCore
                 SocketTextChannel channel = Extensions.GetNotificationsChannel(guild);
                 if (channel != null)
                 {
-                    SocketRole arti = guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).FirstOrDefault();
-                    SocketRole updates = guild.Roles.Where(x => x.Name.ToUpper() == "ArtiUpdates".ToUpper()).FirstOrDefault();
-                    RequestOptions options = new RequestOptions()
+                    if (channel.Guild.CurrentUser.GetPermissions(channel).MentionEveryone == false)
                     {
-                        AuditLogReason = "Announcing new artifact"
-                    };
-                    if (newArti)
-                    {
-                        if (arti != null)
-                        {
-                            await arti.ModifyAsync(x => x.Mentionable = true, options);
-                            await channel.SendMessageAsync($"{arti.Mention} Hmm... I seem to have misplaced the artifact. Maybe you can help me find it?\n" +
-                                    $"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**. Maybe I can remember more later!!");
-                            await arti.ModifyAsync(x => x.Mentionable = false, options);
-                        }
+                        await channel.SendMessageAsync($"I am missing permission: Mention all roles.");
                     }
                     else
                     {
-                        if (updates != null)
+                        SocketRole arti = guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).FirstOrDefault();
+                        SocketRole updates = guild.Roles.Where(x => x.Name.ToUpper() == "ArtiUpdates".ToUpper()).FirstOrDefault();
+                        if (newArti)
                         {
-                            options.AuditLogReason = "Announcing hint update";
-                            await updates.ModifyAsync(x => x.Mentionable = true, options);
-                            await channel.SendMessageAsync($"{updates.Mention} Artifact hint updated. New hint: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**");
-                            await updates.ModifyAsync(x => x.Mentionable = false, options);
+                            if (arti != null)
+                            {
+                                await channel.SendMessageAsync($"{arti.Mention} Hmm... I seem to have misplaced the artifact. Maybe you can help me find it?\n" +
+                                        $"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**. Maybe I can remember more later!!");
+                            }
+                        }
+                        else
+                        {
+                            if (updates != null)
+                            {
+                                await channel.SendMessageAsync($"{updates.Mention} Artifact hint updated. New hint: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**");
+                            }
                         }
                     }
                 }

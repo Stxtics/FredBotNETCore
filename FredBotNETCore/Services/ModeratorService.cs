@@ -129,14 +129,15 @@ namespace FredBotNETCore.Services
                 SocketRole role = context.Guild.Roles.Where(x => x.Name.ToUpper() == "Macroer".ToUpper()).FirstOrDefault();
                 if (role != null)
                 {
-                    RequestOptions options = new RequestOptions()
+                    if (channel.Guild.CurrentUser.GetPermissions(channel).MentionEveryone == false)
                     {
-                        AuditLogReason = $"Notified by {context.User.Username}#{context.User.Discriminator}."
-                    };
-                    await context.Message.DeleteAsync();
-                    await role.ModifyAsync(x => x.Mentionable = true, options);
-                    await channel.SendMessageAsync($"Servers have just been restarted. Check your macros!! {role.Mention}");
-                    await role.ModifyAsync(x => x.Mentionable = false, options);
+                        await channel.SendMessageAsync($"{context.User.Mention} I am missing permission: Mention all roles.");
+                    }
+                    else
+                    {
+                        await context.Message.DeleteAsync();
+                        await channel.SendMessageAsync($"Servers have just been restarted. Check your macros!! {role.Mention}");
+                    }
                 }
                 else
                 {
