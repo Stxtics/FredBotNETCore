@@ -299,7 +299,7 @@ namespace FredBotNETCore.Modules
         }
 
         [Command("userinfo", RunMode = RunMode.Async)]
-        [Alias("uinfo", "whois")]
+        [Alias("uinfo", "jvwhois")]
         [Summary("Returns information about a user.")]
         [RequireUserPermission(GuildPermission.KickMembers)]
         public async Task UserInfo([Remainder] string username = null)
