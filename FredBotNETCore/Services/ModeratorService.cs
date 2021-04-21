@@ -2039,7 +2039,7 @@ namespace FredBotNETCore.Services
                 while (count < divide)
                 {
                     await Task.Delay(temptime / divide);
-                    message = await context.Channel.GetMessageAsync(message.Id) as IUserMessage;
+                    message = await giveawayChannel.GetMessageAsync(message.Id) as IUserMessage;
                     if (message.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:"))
                     {
                         count += divide;
