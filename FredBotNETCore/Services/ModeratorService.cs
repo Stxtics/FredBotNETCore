@@ -2043,6 +2043,7 @@ namespace FredBotNETCore.Services
                     if (message == null)
                     {
                         await context.Channel.SendMessageAsync($"{context.User.Mention} I could not find the giveaway message in {giveawayChannel.Mention}.");
+                        return;
                     }
                     else if (message.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:"))
                     {
