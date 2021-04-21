@@ -2040,7 +2040,11 @@ namespace FredBotNETCore.Services
                 {
                     await Task.Delay(temptime / divide);
                     message = await giveawayChannel.GetMessageAsync(message.Id) as IUserMessage;
-                    if (message.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:"))
+                    if (message == null)
+                    {
+                        await context.Channel.SendMessageAsync($"{context.User.Mention} I could not find the giveaway message in {giveawayChannel.Mention}.");
+                    }
+                    else if (message.Content.Equals(":confetti_ball: **Giveaway Ended** :confetti_ball:"))
                     {
                         count += divide;
                         ended = true;
