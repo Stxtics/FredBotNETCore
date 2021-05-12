@@ -650,7 +650,7 @@ namespace FredBotNETCore.Services
                     if (JsonConvert.DeserializeObject<PR2ArtifactHint>(text).Current == null)
                     {
                         PR2Hint hint = JsonConvert.DeserializeObject<PR2Hint>(text);
-                        DateTime start = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                        DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                         DateTime endDate = start.AddSeconds(hint.UpdatedTime);
                         string date = $"\nThe artifact was last updated on {endDate.Day} {endDate:MMMM} {endDate.Year} at {endDate.ToLongTimeString()}";
                         if (hint.FinderName == null || hint.FinderName.Length < 1)
@@ -746,12 +746,16 @@ namespace FredBotNETCore.Services
                     else
                     {
                         PR2ArtifactHint hint = JsonConvert.DeserializeObject<PR2ArtifactHint>(text);
-                        string message = $"The artifact is currently at **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.Level.Title))} " +
+                        string message = $"The current level of the week is **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.Level.Title))} " +
                             $"by {Format.Sanitize(Uri.UnescapeDataString(hint.Current.Level.Author.Name))} ({hint.Current.Level.Id})**.";
 
-                        if (hint.Current.FirstFinder != null)
+                        if (hint.Current.FirstFinder == null)
                         {
-                            message += $"\nThe first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.FirstFinder.Name))}**!";
+                            message += $"\nSee if you can find the hidden artifact!";
+                        }
+                        else
+                        {
+                            message += $"\nThe first person to find the hidden artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.FirstFinder.Name))}**!";
 
                             if (hint.Current.BubblesWinner == null)
                             {
@@ -762,8 +766,14 @@ namespace FredBotNETCore.Services
                                 message += $"\nSince they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.BubblesWinner.Name))}** instead!";
                             }
                         }
-                        DateTime updated = DateTimeOffset.FromUnixTimeSeconds(hint.Current.UpdatedTime).DateTime;
-                        message += $"\nThe artifact was last updated on **{updated.Day} {updated:MMMM} {updated.Year} at {updated.ToLongTimeString()}**.";
+
+                        if (hint.Scheduled != null)
+                        {
+                            DateTime scheduled = DateTimeOffset.FromUnixTimeSeconds(hint.Scheduled.SetTime).DateTime;
+                            message += $"\nThe next level of the week will be **{Format.Sanitize(Uri.UnescapeDataString(hint.Scheduled.Level.Title))} " +
+                            $"by {Format.Sanitize(Uri.UnescapeDataString(hint.Scheduled.Level.Author.Name))} ({hint.Scheduled.Level.Id})**, which " +
+                            $"will take effect on **{scheduled:MMMM} {scheduled.Day}, {scheduled.Year} at {scheduled.ToLongTimeString()}**.";
+                        }
 
                         await context.Channel.SendMessageAsync(message);
                     }
