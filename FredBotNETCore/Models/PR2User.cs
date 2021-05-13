@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 
 namespace FredBotNETCore.Models
 {
@@ -71,25 +72,35 @@ namespace FredBotNETCore.Models
         public int Hats { get; set; }
 
         [JsonProperty("registerDate")]
+        public long RegisterDateEpoch;
+
         public string RegisterDate
         {
             get
             {
-                if (_registerDate.Equals("1/Jan/1970"))
+                if (RegisterDateEpoch == 0)
                 {
-                    _registerDate = "Age of Heroes";
+                    return "Age of Heroes";
                 }
-                return _registerDate;
-            }
-            set
-            {
-                _registerDate = value;
+                else
+                {
+                    DateTimeOffset date = DateTimeOffset.FromUnixTimeSeconds(RegisterDateEpoch);
+                    return  $"{date.Day}/{date:MMM}/{date.Year}";
+                }
             }
         }
-        private string _registerDate;
 
         [JsonProperty("loginDate")]
-        public string LoginDate { get; set; }
+        public long LoginDateEpoch { get; set; }
+
+        public string LoginDate
+        {
+            get
+            {
+                DateTimeOffset date = DateTimeOffset.FromUnixTimeSeconds(LoginDateEpoch);
+                return $"{date.Day}/{date:MMM}/{date.Year}";
+            }
+        }
 
         [JsonProperty("hat")]
         public string Hat { get; set; }
