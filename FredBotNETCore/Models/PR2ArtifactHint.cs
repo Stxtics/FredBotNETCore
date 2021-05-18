@@ -39,6 +39,11 @@ namespace FredBotNETCore.Models
 
         [JsonProperty("author")]
         public PR2User Author { get; set; }
+
+        public override string ToString()
+        {
+            return Title + " by " + Author.Name;
+        }
     }
 
     public partial class Scheduled

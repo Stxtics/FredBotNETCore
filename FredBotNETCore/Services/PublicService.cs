@@ -638,7 +638,7 @@ namespace FredBotNETCore.Services
                 string text = null;
                 try
                 {
-                    text = await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt");
+                    text = await web.GetStringAsync("https://pr2hub.com/files/level_of_the_week.json");
                 }
                 catch (HttpRequestException)
                 {
@@ -647,136 +647,36 @@ namespace FredBotNETCore.Services
                 web.Dispose();
                 if (text != null && text.Length > 0)
                 {
-                    if (JsonConvert.DeserializeObject<PR2ArtifactHint>(text).Current == null)
+                    PR2ArtifactHint hint = JsonConvert.DeserializeObject<PR2ArtifactHint>(text);
+
+                    string message = $"The current level of the week is **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.Level.ToString()))} ({hint.Current.Level.Id})**.";
+
+                    if (hint.Current.FirstFinder == null)
                     {
-                        PR2Hint hint = JsonConvert.DeserializeObject<PR2Hint>(text);
-                        DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                        DateTime endDate = start.AddSeconds(hint.UpdatedTime);
-                        string date = $"\nThe artifact was last updated on {endDate.Day} {endDate:MMMM} {endDate.Year} at {endDate.ToLongTimeString()}";
-                        if (hint.FinderName == null || hint.FinderName.Length < 1)
-                        {
-                            await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!{date}");
-                        }
-                        else
-                        {
-                            SocketGuild guild = context.Client.GetGuild(528679522707701760);
-                            long finderID = User.GetUser("pr2_name", hint.FinderName).UserID;
-                            if (hint.BubblesName != null && hint.BubblesName.Length > 0)
-                            {
-                                long bubblesID = User.GetUser("pr2_name", hint.BubblesName).UserID;
-                                if (finderID != 0 && bubblesID != 0)
-                                {
-                                    if (Extensions.UserInGuild(null, guild, finderID.ToString()) != null)
-                                    {
-                                        SocketGuildUser user = guild.GetUser(ulong.Parse(finderID.ToString()));
-                                        if (hint.FinderName == hint.BubblesName)
-                                        {
-                                            await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                                $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!{date}");
-                                        }
-                                        else if (Extensions.UserInGuild(null, guild, bubblesID.ToString()) != null)
-                                        {
-                                            SocketGuildUser user2 = guild.GetUser(ulong.Parse(bubblesID.ToString()));
-                                            await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                                $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!\n" +
-                                                $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(hint.BubblesName))} ({Format.Sanitize(user2.Username)}#{user2.Discriminator})** instead!{date}");
-                                        }
-                                        else
-                                        {
-                                            await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                                $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!\n" +
-                                                $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(hint.BubblesName))}** instead!{date}");
-                                        }
-                                    }
-                                    else if (Extensions.UserInGuild(null, guild, bubblesID.ToString()) != null)
-                                    {
-                                        SocketGuildUser user = guild.GetUser(ulong.Parse(bubblesID.ToString()));
-                                        await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                            $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))}**!\n" +
-                                            $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(hint.BubblesName))} ({Format.Sanitize(user.Username)}#{user.Discriminator})** instead!{date}");
-                                    }
-                                    else if (hint.FinderName == hint.BubblesName)
-                                    {
-                                        await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                            $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))}**!\n{date}");
-                                    }
-                                    else
-                                    {
-                                        await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                            $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))}**!\n" +
-                                            $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(hint.BubblesName))}** instead!{date}");
-                                    }
-                                }
-                                else if (hint.FinderName == hint.BubblesName)
-                                {
-                                    await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                            $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))}**!{date}");
-                                }
-                                else
-                                {
-                                    await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                        $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))}**!\n" +
-                                        $"Since they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(hint.BubblesName))}** instead!{date}");
-                                }
-                            }
-                            else if (finderID != 0)
-                            {
-                                if (Extensions.UserInGuild(null, guild, finderID.ToString()) != null)
-                                {
-                                    SocketGuildUser user = guild.GetUser(ulong.Parse(finderID.ToString()));
-                                    await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                        $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))} ({Format.Sanitize(user.Username)}#{user.Discriminator})**!\n" +
-                                        $"The bubble set will be awarded to the first person to find the artifact that doesn't have the set already!{date}");
-                                }
-                                else
-                                {
-                                    await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                        $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))}**!\n" +
-                                        $"The bubble set will be awarded to the first person to find the artifact that doesn't have the set already!{date}");
-                                }
-                            }
-                            else
-                            {
-                                await context.Channel.SendMessageAsync($"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint.Hint))}**. Maybe I can remember more later!!\n" +
-                                    $"The first person to find this artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.FinderName))}**!\n" +
-                                    $"The bubble set will be awarded to the first person to find the artifact that doesn't have the set already!{date}");
-                            }
-                        }
+                        message += $"\nSee if you can find the hidden artifact!";
                     }
                     else
                     {
-                        PR2ArtifactHint hint = JsonConvert.DeserializeObject<PR2ArtifactHint>(text);
-                        string message = $"The current level of the week is **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.Level.Title))} " +
-                            $"by {Format.Sanitize(Uri.UnescapeDataString(hint.Current.Level.Author.Name))} ({hint.Current.Level.Id})**.";
+                        message += $"\nThe first person to find the hidden artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.FirstFinder.Name))}**!";
 
-                        if (hint.Current.FirstFinder == null)
+                        if (hint.Current.BubblesWinner == null)
                         {
-                            message += $"\nSee if you can find the hidden artifact!";
+                            message += $"\nThe bubble set will be awarded to the first person to find the artifact that doesn't have the set already!";
                         }
-                        else
+                        else if (hint.Current.BubblesWinner.Name != hint.Current.FirstFinder.Name)
                         {
-                            message += $"\nThe first person to find the hidden artifact was **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.FirstFinder.Name))}**!";
-
-                            if (hint.Current.BubblesWinner == null)
-                            {
-                                message += $"\nThe bubble set will be awarded to the first person to find the artifact that doesn't have the set already!";
-                            }
-                            else if (hint.Current.BubblesWinner.Name != hint.Current.FirstFinder.Name)
-                            {
-                                message += $"\nSince they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.BubblesWinner.Name))}** instead!";
-                            }
+                            message += $"\nSince they already have the bubble set, the prize was awarded to **{Format.Sanitize(Uri.UnescapeDataString(hint.Current.BubblesWinner.Name))}** instead!";
                         }
-
-                        if (hint.Scheduled != null)
-                        {
-                            DateTime scheduled = DateTimeOffset.FromUnixTimeSeconds(hint.Scheduled.SetTime).DateTime;
-                            message += $"\nThe next level of the week will be **{Format.Sanitize(Uri.UnescapeDataString(hint.Scheduled.Level.Title))} " +
-                            $"by {Format.Sanitize(Uri.UnescapeDataString(hint.Scheduled.Level.Author.Name))} ({hint.Scheduled.Level.Id})**, which " +
-                            $"will take effect on **{scheduled:MMMM} {scheduled.Day}, {scheduled.Year} at {scheduled.ToLongTimeString()}**.";
-                        }
-
-                        await context.Channel.SendMessageAsync(message);
                     }
+
+                    if (hint.Scheduled != null)
+                    {
+                        DateTime scheduled = DateTimeOffset.FromUnixTimeSeconds(hint.Scheduled.SetTime).DateTime;
+                        message += $"\nThe next level of the week will be **{Format.Sanitize(Uri.UnescapeDataString(hint.Scheduled.Level.ToString()))} ({hint.Scheduled.Level.Id})**, " +
+                            $"which will take effect on **{scheduled:MMMM} {scheduled.Day}, {scheduled.Year} at {scheduled.ToLongTimeString()}**.";
+                    }
+
+                    await context.Channel.SendMessageAsync(message);
                 }
                 else
                 {

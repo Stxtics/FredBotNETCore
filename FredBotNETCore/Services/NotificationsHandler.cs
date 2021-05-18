@@ -1,5 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using FredBotNETCore.Models;
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -20,11 +22,8 @@ namespace FredBotNETCore
         public async Task CheckStatus()
         {
             HttpClient web = new HttpClient();
-            string hint = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "{\"hint\":\"", "\",\"finder_name\":\"");
-            string finder = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"finder_name\":\"", "\",\"bubbles_name\":\"");
-            string bubbles = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"bubbles_name\":\"", "\",\"updated_time\":");
-            string time = Extensions.GetBetween(await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt"), "\",\"updated_time\":", "}");
-            bool valid = false;
+            PR2ArtifactHint previousHint = JsonConvert.DeserializeObject<PR2ArtifactHint>(await web.GetStringAsync("https://pr2hub.com/files/level_of_the_week.json"));
+
             while (true)
             {
                 try
@@ -59,45 +58,32 @@ namespace FredBotNETCore
                     #endregion
 
                     #region Arti
-                    string artifactHint = await web.GetStringAsync("https://pr2hub.com/files/artifact_hint.txt");
-                    if (!hint.Equals(Extensions.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"")))
+                    PR2ArtifactHint currentHint = JsonConvert.DeserializeObject<PR2ArtifactHint>(await web.GetStringAsync("https://pr2hub.com/files/level_of_the_week.json"));
+                    if (previousHint.Current.Level.ToString() != currentHint.Current.Level.ToString())
                     {
-                        hint = Extensions.GetBetween(artifactHint, "{\"hint\":\"", "\",\"finder_name\":\"");
-                        if (!time.Equals(Extensions.GetBetween(artifactHint, "\",\"updated_time\":", "}")))
+                        if (previousHint.Current.SetTime != currentHint.Current.SetTime)
                         {
-                            time = Extensions.GetBetween(artifactHint, "\",\"updated_time\":", "}");
-                            valid = true;
+                            await AnnouceCurrentArtiAsync(currentHint.Current.Level.ToString());
                         }
-                        if (valid)
+                    }
+                    if (previousHint.Current.FirstFinder?.Name != currentHint.Current.FirstFinder?.Name && currentHint.Current.FirstFinder != null)
+                    {
+                        if (currentHint.Current.FirstFinder.Name == currentHint.Current.BubblesWinner?.Name)
                         {
-                            await AnnouceHintUpdatedAsync(hint, true);
-                            valid = false;
+                            await AnnounceArtifactFoundAsync(currentHint.Current.FirstFinder.Name, true);
                         }
                         else
                         {
-                            await AnnouceHintUpdatedAsync(hint, false);
+                            await AnnounceArtifactFoundAsync(currentHint.Current.FirstFinder.Name);
                         }
                     }
-                    if (!finder.Equals(Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"bubbles_name\":\"")))
+                    if (previousHint.Current.BubblesWinner?.Name != currentHint.Current.BubblesWinner?.Name && currentHint.Current.BubblesWinner != null)
                     {
-                        finder = Extensions.GetBetween(artifactHint, "\",\"finder_name\":\"", "\",\"bubbles_name\":\"");
-                        bubbles = Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":");
-                        if (finder.Length > 0 && finder == bubbles)
-                        {
-                            await AnnounceArtifactFoundAsync(finder, true);
-                        }
-                        else if (finder.Length > 0)
-                        {
-                            await AnnounceArtifactFoundAsync(finder);
-                        }
+                        await AnnounceBubblesAwardedAsync(currentHint.Current.BubblesWinner.Name);
                     }
-                    if (!bubbles.Equals(Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":")))
+                    if (previousHint.Scheduled?.UpdatedTime != currentHint.Scheduled?.UpdatedTime && currentHint.Scheduled != null)
                     {
-                        bubbles = Extensions.GetBetween(artifactHint, "\",\"bubbles_name\":\"", "\",\"updated_time\":");
-                        if (bubbles.Length > 0)
-                        {
-                            await AnnounceBubblesAwardedAsync(bubbles);
-                        }
+                        await AnnounceScheduledArtiAsync(currentHint.Scheduled);
                     }
                     #endregion
 
@@ -331,7 +317,7 @@ namespace FredBotNETCore
             }
         }
 
-        public async Task AnnouceHintUpdatedAsync(string hint, bool newArti = false)
+        public async Task AnnouceCurrentArtiAsync(string hint)
         {
             if (hint.Length < 1)
             {
@@ -349,21 +335,9 @@ namespace FredBotNETCore
                     else
                     {
                         SocketRole arti = guild.Roles.Where(x => x.Name.ToUpper() == "Arti".ToUpper()).FirstOrDefault();
-                        SocketRole updates = guild.Roles.Where(x => x.Name.ToUpper() == "ArtiUpdates".ToUpper()).FirstOrDefault();
-                        if (newArti)
+                        if (arti != null)
                         {
-                            if (arti != null)
-                            {
-                                await channel.SendMessageAsync($"{arti.Mention} Hmm... I seem to have misplaced the artifact. Maybe you can help me find it?\n" +
-                                        $"Here's what I remember: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**. Maybe I can remember more later!!");
-                            }
-                        }
-                        else
-                        {
-                            if (updates != null)
-                            {
-                                await channel.SendMessageAsync($"{updates.Mention} Artifact hint updated. New hint: **{Format.Sanitize(Uri.UnescapeDataString(hint))}**");
-                            }
+                            await channel.SendMessageAsync($"{arti.Mention} The current level of the week has just been updated.\nIt is now at **{Format.Sanitize(Uri.UnescapeDataString(hint))}**.");
                         }
                     }
                 }
@@ -379,11 +353,11 @@ namespace FredBotNETCore
                 {
                     if (bubbles)
                     {
-                        await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the artifact and has received a bubble set!");
+                        await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the hidden artifact and has received a bubble set!");
                     }
                     else
                     {
-                        await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the artifact!");
+                        await channel.SendMessageAsync($"**{Format.Sanitize(finder)}** has found the hidden artifact!");
                     }
                 }
             }
@@ -397,6 +371,28 @@ namespace FredBotNETCore
                 if (channel != null)
                 {
                     await channel.SendMessageAsync($"**{Format.Sanitize(bubbles)}** has been awarded a bubble set!");
+                }
+            }
+        }
+
+        public async Task AnnounceScheduledArtiAsync(Scheduled scheduled)
+        {
+            foreach (SocketGuild guild in _client.Guilds)
+            {
+                SocketTextChannel channel = Extensions.GetNotificationsChannel(guild);
+                SocketRole artiUpdates = guild.Roles.Where(x => x.Name.ToUpper() == "ArtiUpdates".ToUpper()).FirstOrDefault();
+                if (channel != null && artiUpdates != null)
+                {
+                    if (channel.Guild.CurrentUser.GetPermissions(channel).MentionEveryone == false)
+                    {
+                        await channel.SendMessageAsync($"I am missing permission: Mention all roles.");
+                    }
+                    else
+                    {
+                        DateTime time = DateTimeOffset.FromUnixTimeSeconds(scheduled.SetTime).DateTime;
+                        await channel.SendMessageAsync($"{artiUpdates.Mention} The next level of the week will be **{Format.Sanitize(scheduled.Level.ToString())}**, " +
+                            $"which will take effect on **{time:MMMM} {time.Day}, {time.Year} at {time.ToLongTimeString()}**.");
+                    }
                 }
             }
         }
