@@ -673,7 +673,7 @@ namespace FredBotNETCore.Services
                     {
                         DateTime scheduled = DateTimeOffset.FromUnixTimeSeconds(hint.Scheduled.SetTime).DateTime;
                         message += $"\nThe next level of the week will be **{Format.Sanitize(Uri.UnescapeDataString(hint.Scheduled.Level.ToString()))} ({hint.Scheduled.Level.Id})**, " +
-                            $"which will take effect on **{scheduled:MMMM} {scheduled.Day}, {scheduled.Year} at {scheduled.ToLongTimeString()}**.";
+                            $"which will take effect on **{scheduled:MMMM} {scheduled.Day}, {scheduled.Year} at {scheduled.ToLongTimeString()} UTC**.";
                     }
 
                     await context.Channel.SendMessageAsync(message);
