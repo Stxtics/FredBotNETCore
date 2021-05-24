@@ -77,7 +77,7 @@ namespace FredBotNETCore
                             await AnnounceArtifactFoundAsync(currentHint.Current.FirstFinder.Name);
                         }
                     }
-                    if (previousHint.Current.BubblesWinner?.Name != currentHint.Current.BubblesWinner?.Name && currentHint.Current.BubblesWinner != null)
+                    if (previousHint.Current.BubblesWinner?.Name != currentHint.Current.BubblesWinner?.Name && currentHint.Current.BubblesWinner?.Name.Length > 0)
                     {
                         await AnnounceBubblesAwardedAsync(currentHint.Current.BubblesWinner.Name);
                     }
@@ -85,6 +85,7 @@ namespace FredBotNETCore
                     {
                         await AnnounceScheduledArtiAsync(currentHint.Scheduled);
                     }
+                    previousHint = currentHint;
                     #endregion
 
                     #region Check Members Downloaded
