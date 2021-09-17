@@ -618,7 +618,7 @@ namespace FredBotNETCore.Services
                 embed.AddField(y =>
                 {
                     y.Name = "Extra";
-                    y.Value = $"Country: **{country}**\nSunrise: **{sunriseDate.TimeOfDay.ToString().Substring(0, sunriseDate.TimeOfDay.ToString().Length - 3)}**\nSunset: **{sunsetDate.TimeOfDay.ToString().Substring(0, sunsetDate.TimeOfDay.ToString().Length - 3)}**";
+                    y.Value = $"Country: **{country}**\nSunrise: **{sunriseDate.TimeOfDay.ToString()[0..^3]}**\nSunset: **{sunsetDate.TimeOfDay.ToString()[0..^3]}**";
                     y.IsInline = true;
                 });
                 await context.Channel.SendMessageAsync("", false, embed.Build());
@@ -632,7 +632,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 HttpClient web = new HttpClient();
                 string text = null;
@@ -696,7 +696,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (string.IsNullOrWhiteSpace(pr2name))
                 {
@@ -751,7 +751,7 @@ namespace FredBotNETCore.Services
                         }
                     }
                     pr2name = Uri.EscapeDataString(pr2name);
-                    if (pr2name.Contains("_"))
+                    if (pr2name.Contains('_'))
                     {
                         pr2name = pr2name.Replace("_", " ");
                     }
@@ -770,7 +770,7 @@ namespace FredBotNETCore.Services
                     if (pr2name.Contains("%20%7C%20") && context.Channel is IDMChannel)
                     {
                         string[] pr2users = pr2name.Split("%20%7C%20");
-                        if (pr2users.Count() <= 5)
+                        if (pr2users.Length <= 5)
                         {
                             foreach (string pr2user in pr2users)
                             {
@@ -910,7 +910,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out _))
                 {
@@ -1014,7 +1014,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (guildname == null)
                 {
@@ -1168,7 +1168,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (string.IsNullOrWhiteSpace(id) || !int.TryParse(id, out _))
                 {
@@ -1258,7 +1258,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 string lvl2 = "0";
                 if (string.IsNullOrEmpty(lvl))
@@ -1282,7 +1282,7 @@ namespace FredBotNETCore.Services
                 }
                 else
                 {
-                    if (lvl.Contains(" "))
+                    if (lvl.Contains(' '))
                     {
                         string[] levels = lvl.Split(" ");
                         lvl = levels[0];
@@ -1392,7 +1392,7 @@ namespace FredBotNETCore.Services
         public async Task RoleAsync(SocketCommandContext context, string roleName)
         {
             List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
-            if (channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (roleName == null)
                 {
@@ -1488,7 +1488,7 @@ namespace FredBotNETCore.Services
         public async Task ListJoinableRolesAsync(SocketCommandContext context)
         {
             List<AllowedChannel> channels = AllowedChannel.Get(context.Guild.Id);
-            if (channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 EmbedAuthorBuilder auth = new EmbedAuthorBuilder()
                 {
@@ -1554,7 +1554,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 HttpClient web = new HttpClient();
                 string text = null;
@@ -1633,7 +1633,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (fahuser == null)
                 {
@@ -1839,7 +1839,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (id == null || !int.TryParse(id, out int id2))
                 {
@@ -2018,7 +2018,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (s != null)
                 {
@@ -2078,7 +2078,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (string.IsNullOrWhiteSpace(server))
                 {
@@ -2161,7 +2161,7 @@ namespace FredBotNETCore.Services
                                 web.Dispose();
                                 return;
                             }
-                            server = pr2user.Status.Substring(11);
+                            server = pr2user.Status[11..];
                         }
                     }
                     string text = null;
@@ -2261,7 +2261,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (guildname == null)
                 {
@@ -2444,7 +2444,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (id == null || !int.TryParse(id, out _))
                 {
@@ -2566,7 +2566,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 HttpClient web = new HttpClient();
                 List<string> hhServers = new List<string>();
@@ -2637,7 +2637,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (string.IsNullOrWhiteSpace(option))
                 {
@@ -2778,7 +2778,7 @@ namespace FredBotNETCore.Services
                                 string text = await web.GetStringAsync("https://pr2hub.com/level_data.php?level_id=" + levelSearch.Levels.First().Id + "&token=" + pr2token);
                                 PR2Level level = JsonConvert.DeserializeObject<PR2Level>(text);
                                 text = await web.GetStringAsync("https://pr2hub.com/levels/" + level.Id + ".txt");
-                                string data = text.Substring(text.IndexOf("&data=") + 6);
+                                string data = text[(text.IndexOf("&data=") + 6)..];
                                 int blockCount = data.Split("`").ElementAt(2).Count(x => x == ',') + 1;
                                 level.GameMode = CultureInfo.CreateSpecificCulture("en-GB").TextInfo.ToTitleCase(level.GameMode);
 
@@ -2974,7 +2974,7 @@ namespace FredBotNETCore.Services
                             }
                             if (text != null)
                             {
-                                string data = text.Substring(text.IndexOf("&data=") + 6);
+                                string data = text[(text.IndexOf("&data=") + 6)..];
                                 int blockCount = data.Split("`").ElementAt(2).Count(x => x == ',') + 1;
                                 text = await web.GetStringAsync("https://pr2hub.com/level_data.php?level_id=" + id + "&token=" + pr2token);
                                 PR2Level level = JsonConvert.DeserializeObject<PR2Level>(text);
@@ -3336,7 +3336,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (page != null && !int.TryParse(page, out int num))
                 {
@@ -3452,7 +3452,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (page != null && !int.TryParse(page, out int num))
                 {
@@ -3568,7 +3568,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (page != null && !int.TryParse(page, out int num))
                 {
@@ -3684,7 +3684,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (page != null && !int.TryParse(page, out int num))
                 {
@@ -3800,7 +3800,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (!User.Exists(context.User))
                 {
@@ -3884,7 +3884,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (!User.Exists(context.User))
                 {
@@ -3930,7 +3930,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 if (s1 != null)
                 {
@@ -3989,7 +3989,7 @@ namespace FredBotNETCore.Services
             {
                 channels = AllowedChannel.Get(context.Guild.Id);
             }
-            if (context.Channel is IDMChannel || channels.Count() <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Count() > 0)
+            if (context.Channel is IDMChannel || channels.Count <= 0 || channels.Where(x => x.ChannelID.ToString() == context.Channel.Id.ToString()).Any())
             {
                 HttpClient web = new HttpClient();
                 string text = null;

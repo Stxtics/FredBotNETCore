@@ -24,12 +24,14 @@ namespace FredBotNETCore
             HttpClient web = new HttpClient();
             PR2ArtifactHint previousHint = JsonConvert.DeserializeObject<PR2ArtifactHint>(await web.GetStringAsync("https://pr2hub.com/files/level_of_the_week.json"));
 
+#if !DEBUG
+
             while (true)
             {
                 try
                 {
                     await Task.Delay(TimeSpan.FromSeconds(10));
-                    #region HH
+#region HH
                     string status = await web.GetStringAsync("https://pr2hub.com/files/server_status_2.txt");
                     string[] servers = status.Split('}');
                     string happyHour = "", guildId = "";
@@ -55,9 +57,9 @@ namespace FredBotNETCore
                         }
                     }
 
-                    #endregion
+#endregion
 
-                    #region Arti
+#region Arti
                     PR2ArtifactHint currentHint = JsonConvert.DeserializeObject<PR2ArtifactHint>(await web.GetStringAsync("https://pr2hub.com/files/level_of_the_week.json"));
                     if (previousHint.Current.Level.ToString() != currentHint.Current.Level.ToString())
                     {
@@ -86,9 +88,9 @@ namespace FredBotNETCore
                         await AnnounceScheduledArtiAsync(currentHint.Scheduled);
                     }
                     previousHint = currentHint;
-                    #endregion
+#endregion
 
-                    #region Check Members Downloaded
+#region Check Members Downloaded
 
                     foreach (var guild in _client.Guilds)
                     {
@@ -98,7 +100,7 @@ namespace FredBotNETCore
                         }
                     }
 
-                    #endregion
+#endregion
                 }
                 catch (HttpRequestException)
                 {
@@ -109,6 +111,7 @@ namespace FredBotNETCore
                     await Extensions.LogError(_client, e.Message + e.StackTrace);
                 }
             }
+#endif
         }
 
         public string Name;
@@ -392,7 +395,7 @@ namespace FredBotNETCore
                     {
                         DateTime time = DateTimeOffset.FromUnixTimeSeconds(scheduled.SetTime).DateTime;
                         await channel.SendMessageAsync($"{artiUpdates.Mention} The next level of the week will be **{Format.Sanitize(scheduled.Level.ToString())}**, " +
-                            $"which will take effect on **{time:MMMM} {time.Day}, {time.Year} at {time.ToLongTimeString()}**.");
+                            $"which will take effect on **{time:MMMM} {time.Day}, {time.Year} at {time.ToLongTimeString()} UTC**.");
                     }
                 }
             }

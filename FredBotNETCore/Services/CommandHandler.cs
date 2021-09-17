@@ -25,7 +25,14 @@ namespace FredBotNETCore
 
         public async Task OnMessageReceived(SocketMessage m)
         {
-            if (!(m is SocketUserMessage msg))
+#if DEBUG
+            if (m.Author.Id != 181853112045142016)
+            {
+                return;
+            }
+#endif
+
+            if (m is not SocketUserMessage msg)
             {
                 return;
             }
@@ -94,7 +101,7 @@ namespace FredBotNETCore
             }
         }
 
-        private void HandleJVVerification(SocketUserMessage msg)
+        private static void HandleJVVerification(SocketUserMessage msg)
         {
             if (msg.Channel.Id == 809403597058080798)
             {
@@ -102,7 +109,7 @@ namespace FredBotNETCore
                 if (msg.HasStringPrefix("/", ref argPos))
                 {
                     string[] msgSplit = msg.Content.Split(" ");
-                    if (msgSplit.First().Equals("/jv_verify_complete") && msgSplit.Count() == 3)
+                    if (msgSplit.First().Equals("/jv_verify_complete") && msgSplit.Length == 3)
                     {
                         User user = User.GetUser("user_id", msgSplit[1]);
                         if (user != null)
@@ -114,7 +121,7 @@ namespace FredBotNETCore
             }
         }
 
-        private void LogCommandUsage(SocketCommandContext context)
+        private static void LogCommandUsage(SocketCommandContext context)
         {
             if (context.Channel is IGuildChannel)
             {

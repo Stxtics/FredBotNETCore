@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using FredBotNETCore.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Victoria;
 
@@ -52,7 +53,7 @@ namespace FredBotNETCore.Services
             if (!message.Equals(null) && message.Exception != null)
             {
                 SocketUser user = _client.GetUser(181853112045142016);
-                System.Collections.Generic.IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1950);
+                IEnumerable<string> parts = message.Exception.ToString().SplitInParts(1950);
                 foreach (string part in parts)
                 {
                     await user.SendMessageAsync("Command Catch\n```" + part + "```");

@@ -27,7 +27,7 @@ namespace FredBotNETCore
             await Task.Delay(-1);
         }
 
-        private IServiceProvider InstallServices()
+        private static IServiceProvider InstallServices()
         {
             IServiceCollection services = new ServiceCollection()
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig

@@ -31,6 +31,8 @@ namespace FredBotNETCore.Services
 
             _client.Ready += OnReady;
 
+#if !DEBUG
+
             ActionLog log = new ActionLog();
 
             _client.MessageUpdated += OnMessageEdited;
@@ -48,6 +50,8 @@ namespace FredBotNETCore.Services
             _client.RoleDeleted += log.AnnounceRoleDeleted;
             _client.RoleUpdated += log.AnnounceRoleUpdated;
             _client.JoinedGuild += log.OnGuildJoin;
+
+#endif
         }
 
         private async Task OnReady()
@@ -62,9 +66,9 @@ namespace FredBotNETCore.Services
             }
         }
 
-        public async Task OnMessageEdited(Cacheable<IMessage, ulong> message, SocketMessage m, ISocketMessageChannel chl)
+        public async Task OnMessageEdited(Cacheable<IMessage, ulong> message, SocketMessage m)
         {
-            if (!(m is SocketUserMessage msg))
+            if (m is not SocketUserMessage msg)
             {
                 return;
             }
@@ -107,7 +111,7 @@ namespace FredBotNETCore.Services
                     sb.Append($"{time.Minutes}m ");  /*Pulls the Uptime in Minutes*/
                 }
                 sb.Append($"{time.Seconds}s ");  /*Pulls the Uptime in Seconds*/
-                await _client.SetGameAsync($"/help for {sb.ToString()}", null, type: ActivityType.Playing);
+                await _client.SetGameAsync($"/help for {sb}", null, type: ActivityType.Playing);
                 await Task.Delay(new Random().Next(300000, 600000));
                 await _client.SetGameAsync($"/help in {_client.Guilds.Count} servers", null, type: ActivityType.Watching);
                 await Task.Delay(new Random().Next(300000, 600000));
