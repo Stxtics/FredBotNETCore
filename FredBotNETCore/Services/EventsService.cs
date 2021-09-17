@@ -1,21 +1,25 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using FredBotNETCore.Database;
+using FredBotNETCore.Models;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Victoria;
 
 namespace FredBotNETCore.Services
 {
     public class EventsService
     {
         private readonly DiscordSocketClient _client;
+        private readonly LavaNode<CustomLavaPlayer> _lavaNode;
 
-        public EventsService(DiscordSocketClient client)
+        public EventsService(DiscordSocketClient client, LavaNode<CustomLavaPlayer> lavaNode)
         {
             _client = client;
+            _lavaNode = lavaNode;
         }
 
         public void SetupEvents()
@@ -51,6 +55,11 @@ namespace FredBotNETCore.Services
             int users = _client.Guilds.Sum(g => g.MemberCount);
             await _client.SetGameAsync($"/help with {users} users", null, type: ActivityType.Listening);
             await _client.DownloadUsersAsync(_client.Guilds);
+
+            if (!_lavaNode.IsConnected)
+            {
+                await _lavaNode.ConnectAsync();
+            }
         }
 
         public async Task OnMessageEdited(Cacheable<IMessage, ulong> message, SocketMessage m, ISocketMessageChannel chl)

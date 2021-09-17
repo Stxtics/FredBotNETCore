@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FredBotNETCore.Models;
 using System;
 using System.Threading.Tasks;
 using Victoria;
@@ -11,17 +12,17 @@ namespace FredBotNETCore.Services
     {
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
-        private readonly Lavalink _lavalink;
+        private readonly LavaNode<CustomLavaPlayer> _lavaNode;
 
-        public LoggingService(DiscordSocketClient client, CommandService commands, Lavalink lavalink)
+        public LoggingService(DiscordSocketClient client, CommandService commands, LavaNode<CustomLavaPlayer> lavaNode)
         {
             _client = client;
             _commands = commands;
-            _lavalink = lavalink;
+            _lavaNode = lavaNode;
 
             _client.Log += Log;
             _commands.Log += LogException;
-            _lavalink.Log += Log;
+            _lavaNode.OnLog += Log;
             //AppDomain.CurrentDomain.FirstChanceException += async (sender, eventArgs) =>
             //{
             //    SocketUser user = _client.GetUser(181853112045142016);

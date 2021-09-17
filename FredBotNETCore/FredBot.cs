@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FredBotNETCore.Models;
 using FredBotNETCore.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -15,7 +16,6 @@ namespace FredBotNETCore
         {
             IServiceProvider services = InstallServices();
 
-            services.GetRequiredService<Lavalink>();
             services.GetRequiredService<LoggingService>();
 
             await services.GetRequiredService<StartupService>().StartAsync();
@@ -23,10 +23,6 @@ namespace FredBotNETCore
             services.GetRequiredService<CommandHandler>();
 
             Task.WaitAny(Task.Factory.StartNew(() => services.GetRequiredService<EventsService>().SetupEvents()), Task.Factory.StartNew(() => services.GetRequiredService<EventsService>().GameLoop()), Task.Factory.StartNew(() => services.GetRequiredService<NotificationsHandler>().CheckStatus()));
-
-            await Task.Delay(5000);
-
-            await services.GetRequiredService<AudioService>().SetupNodes();
 
             await Task.Delay(-1);
         }
@@ -51,12 +47,15 @@ namespace FredBotNETCore
                 .AddSingleton<AudioService>()
                 .AddSingleton<ModeratorService>()
                 .AddSingleton<PublicService>()
-                .AddSingleton<Lavalink>()
                 .AddSingleton<CommandHandler>()
                 .AddSingleton<StartupService>()
                 .AddSingleton<EventsService>()
                 .AddSingleton<NotificationsHandler>()
-                .AddSingleton<LoggingService>();
+                .AddSingleton<LoggingService>()
+                .AddLavaNode<CustomLavaPlayer>(x =>
+                {
+                    x.SelfDeaf = true;
+                });
 
             return services.BuildServiceProvider();
         }
