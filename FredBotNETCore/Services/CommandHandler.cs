@@ -25,13 +25,6 @@ namespace FredBotNETCore
 
         public async Task OnMessageReceived(SocketMessage m)
         {
-#if DEBUG
-            if (m.Author.Id != 181853112045142016)
-            {
-                return;
-            }
-#endif
-
             if (m is not SocketUserMessage msg)
             {
                 return;

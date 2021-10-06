@@ -31,8 +31,6 @@ namespace FredBotNETCore.Services
 
             _client.Ready += OnReady;
 
-#if !DEBUG
-
             ActionLog log = new ActionLog();
 
             _client.MessageUpdated += OnMessageEdited;
@@ -50,8 +48,6 @@ namespace FredBotNETCore.Services
             _client.RoleDeleted += log.AnnounceRoleDeleted;
             _client.RoleUpdated += log.AnnounceRoleUpdated;
             _client.JoinedGuild += log.OnGuildJoin;
-
-#endif
         }
 
         private async Task OnReady()
@@ -66,7 +62,7 @@ namespace FredBotNETCore.Services
             }
         }
 
-        public async Task OnMessageEdited(Cacheable<IMessage, ulong> message, SocketMessage m)
+        public async Task OnMessageEdited(Cacheable<IMessage, ulong> message, SocketMessage m, ISocketMessageChannel channel)
         {
             if (m is not SocketUserMessage msg)
             {
@@ -77,14 +73,16 @@ namespace FredBotNETCore.Services
                 return;
             }
             IMessage message2 = await message.GetOrDownloadAsync();
-            if (message2.Content != msg.Content && msg.Channel is SocketTextChannel channel)
+            if (message2.Content != msg.Content && channel is SocketTextChannel textChannel)
             {
-                if (Extensions.GetLogChannel(channel.Guild) != null && channel != Extensions.GetLogChannel(channel.Guild))
+                if (Extensions.GetLogChannel(textChannel.Guild) != null && channel != Extensions.GetLogChannel(textChannel.Guild))
                 {
-                    if (DiscordStaff.Get(channel.Guild.Id, "u-" + msg.Author.Id).Count <= 0 || (channel.Guild.GetUser(msg.Author.Id).Roles.Count > 1 && DiscordStaff.Get(channel.Guild.Id, "r-" + channel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0))
+                    if (DiscordStaff.Get(textChannel.Guild.Id, "u-" + msg.Author.Id).Count <= 0 
+                        || (textChannel.Guild.GetUser(msg.Author.Id).Roles.Count > 1 
+                        && DiscordStaff.Get(textChannel.Guild.Id, "r-" + textChannel.Guild.GetUser(msg.Author.Id).Roles.Where(x => x.IsEveryone == false).OrderBy(x => x.Position).First().Id).Count > 0))
                     {
                         AutoMod mod = new AutoMod(_client);
-                        await mod.FilterMessage(msg, channel);
+                        await mod.FilterMessage(msg, textChannel);
                     }
                 }
             }

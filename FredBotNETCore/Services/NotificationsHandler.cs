@@ -24,8 +24,6 @@ namespace FredBotNETCore
             HttpClient web = new HttpClient();
             PR2ArtifactHint previousHint = JsonConvert.DeserializeObject<PR2ArtifactHint>(await web.GetStringAsync("https://pr2hub.com/files/level_of_the_week.json"));
 
-#if !DEBUG
-
             while (true)
             {
                 try
@@ -111,7 +109,6 @@ namespace FredBotNETCore
                     await Extensions.LogError(_client, e.Message + e.StackTrace);
                 }
             }
-#endif
         }
 
         public string Name;

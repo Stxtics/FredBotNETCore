@@ -25,7 +25,11 @@ namespace FredBotNETCore.Services
         {
             try
             {
+#if DEBUG
+                string token = File.ReadAllText(Path.Combine(Extensions.downloadPath, "TokenDebug.txt"));
+#else
                 string token = File.ReadAllText(Path.Combine(Extensions.downloadPath, "Token.txt"));
+#endif
                 await _client.LoginAsync(TokenType.Bot, token);
                 await _client.StartAsync();
             }
